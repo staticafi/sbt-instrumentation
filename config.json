@@ -1,0 +1,18 @@
+{
+	[
+		{
+			"from": ["<t1>", "=malloc(", "<t2>", ")"],
+			"to": ["<t1>", "=call_malloc(", "<t1>", "<t2>", ")"],
+			"where": "before"
+		}
+	]
+}
+
+
+/*
+{ list of INSTR: {
+	"what": list of strings
+	"replace": list of strings
+	}
+}
+*/
