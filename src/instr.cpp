@@ -1,14 +1,32 @@
 #include "rewriter.hpp"
-#include "../json/json.h"
+#include "../include/json/json.h"
 #include <iostream>
 #include <fstream>
 #include <exception>
 
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Module.h"
+#include "llvm/Pass.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/TypeBuilder.h"
+#include "llvm/Support/InstIterator.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+
 #define uint unsigned int
+
+using namespace llvm;
 
 using namespace std;
 
-
+/** 
+  Parses json file with configuration.
+ */
 RewriterConfig parse_config(ifstream &config_file) {
 	Json::Value json_rules;
 	Json::Reader reader;
@@ -49,6 +67,32 @@ RewriterConfig parse_config(ifstream &config_file) {
 void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR>" << endl; // TODO
 }
+
+namespace {
+  class Instrument : public ModulePass {
+    public:
+      static char ID;
+
+      Instrument() : ModulePass(ID) {}
+
+      virtual bool runOnModule(Module &M);
+
+    //private:
+    //  void findInitFuns(Module &M);
+  };
+}
+
+static RegisterPass<Instrument> INSTR("instrument",
+                                 "Instrument the code.");
+char Instrument::ID;
+
+
+bool Instrument::runOnModule(Module &M) {
+  
+ 
+  return true;
+}
+
 
 int main(int argc, char *argv[]) {
 	if (argc < 2) {

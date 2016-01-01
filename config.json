@@ -1,4 +1,4 @@
-{
+
 	[
 		{
 			"from": ["<t1>", "=malloc(", "<t2>", ")"],
@@ -6,13 +6,6 @@
 			"where": "before"
 		}
 	]
-}
 
 
-/*
-{ list of INSTR: {
-	"what": list of strings
-	"replace": list of strings
-	}
-}
-*/
+
