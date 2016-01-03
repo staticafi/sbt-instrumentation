@@ -1,10 +1,10 @@
 #include "rewriter.hpp"
-#include "../include/json/json.h"
+#include "../include/json.h"
 #include <iostream>
 #include <fstream>
 #include <exception>
 
-#include "llvm/IR/DataLayout.h"
+/* #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
@@ -16,7 +16,23 @@
 #include "llvm/IR/TypeBuilder.h"
 #include "llvm/Support/InstIterator.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h" */
+
+#include "llvm/Pass.h"
+#include "llvm/IR/Function.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/InstIterator.h"
+#include "llvm/IR/DiagnosticInfo.h"
+#include "llvm/IR/FunctionInfo.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/Support/Endian.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/IRReader/IRReader.h"
+#include <memory>
+#include <string>
 
 #define uint unsigned int
 
@@ -51,10 +67,10 @@ RewriterConfig parse_config(ifstream &config_file) {
 		if (json_rules[i]["where"] == "before") { 
 			r.where = InstrumentPlacement::BEFORE;
 		}
-		if (json_rules[i]["where"] == "after") {
+		else if (json_rules[i]["where"] == "after") {
 			r.where = InstrumentPlacement::AFTER;
 		}
-		if (json_rules[i]["where"] == "replace") {
+		else if (json_rules[i]["where"] == "replace") {
 			r.where = InstrumentPlacement::REPLACE;
 		}
 
@@ -68,10 +84,11 @@ void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR>" << endl; // TODO
 }
 
-namespace {
+/*namespace {
   class Instrument : public ModulePass {
     public:
       static char ID;
+      static RewriterConfig Config;
 
       Instrument() : ModulePass(ID) {}
 
@@ -82,16 +99,47 @@ namespace {
   };
 }
 
-static RegisterPass<Instrument> INSTR("instrument",
+static RegisterPass<Instrument> INSTR("inst",
                                  "Instrument the code.");
 char Instrument::ID;
 
 
 bool Instrument::runOnModule(Module &M) {
-  
+   for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
+	   for (inst_iterator I = inst_begin(&*F), E = inst_end(&*F); I != E;) {
+			cerr << &*I << endl;
+			}	
+	 }
  
   return true;
-}
+}*/
+
+/*Module *load_module(ifstream &stream, LLVMContext &context)
+{
+  if(!stream)
+  {
+    cerr << "error after open stream" << endl;
+    return 0;
+  }
+
+  // load bitcode
+  string ir((istreambuf_iterator<char>(stream)), (istreambuf_iterator<char>()));
+
+  // parse it
+  SMDiagnostic error;
+  MemoryBufferRef mbf(MemoryBuffer::getMemBuffer(StringRef(ir))),
+  Module *module = parseIR(&mbf, error, context);
+
+  if(!module)
+  {
+    string what;
+    raw_string_ostream os(what);
+    error.print("error after ParseIR()", os);
+    cerr << what;
+  } // end if
+
+  return module;
+}*/
 
 
 int main(int argc, char *argv[]) {
@@ -109,6 +157,17 @@ int main(int argc, char *argv[]) {
 
 	RewriterConfig rw_config = parse_config(config_file);
 	//Rewriter rw(rw_config);
+	
+	LLVMContext &Context = getGlobalContext();
+    SMDiagnostic Err;
+    auto Mod = parseIRFile(argv[2], Err, Context);
+
+    if (!Mod) {
+        Err.print(argv[0], errs());
+        return 1;
+    }
+
+
 
 
 	return 0;
