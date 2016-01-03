@@ -3,12 +3,12 @@
 		{
 			"findInstruction": {
 					      "returnValue": "<t1>",
-					      "instruction": "call",
+					      "instruction": "callinst",
 					      "match-parameters": "%s@malloc(%s <t1>)%s"
 					   },
 			"newInstruction": {
 					      "returnValue": "%n",
-					      "instruction": "call",
+					      "instruction": "callinst",
 					      "parameters": [["i8*","<t1>"]]
 					  },
 			"where": "before"

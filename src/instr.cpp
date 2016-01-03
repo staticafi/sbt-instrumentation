@@ -58,11 +58,20 @@ RewriterConfig parse_config(ifstream &config_file) {
 	for (uint i = 0; i < json_rules.size(); ++i) {
 		RewriteRule r;
 
-		for (uint j = 0; j < json_rules[i]["from"].size(); ++j) {
-			r.from.push_back(json_rules[i]["from"][j].asString());
-		}
-		for (uint j = 0; j < json_rules[i]["to"].size(); ++j) {
-			r.to.push_back(json_rules[i]["to"][j].asString());
+		r.foundInstr.returnValue = json_rules[i]["findInstruction"]["returnValue"].asString();
+		r.foundInstr.instruction = json_rules[i]["findInstruction"]["instruction"].asString();
+		r.foundInstr.returnValue = json_rules[i]["findInstruction"]["match-parameters"].asString();
+		
+		r.newInstr.returnValue = json_rules[i]["newInstruction"]["returnValue"].asString();
+		r.newInstr.instruction = json_rules[i]["newInstruction"]["instruction"].asString();
+
+		for (uint j = 0; j < json_rules[i]["newInstruction"]["parameters"].size(); ++j) {
+		    list<string> parameters;
+		    for (uint k = 0; k < json_rules[i]["newInstruction"]["parameters"][j].size(); ++k) {
+                list<string> parameters;
+                parameters.push_back(json_rules[i]["newInstruction"]["parameters"][j][k].asString());
+            }
+			r.newInstr.parameters.push_back(parameters);
 		}
 
 		if (json_rules[i]["where"] == "before") { 

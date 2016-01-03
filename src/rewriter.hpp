@@ -9,10 +9,18 @@ enum class InstrumentPlacement {
 	REPLACE
 };
 
+class InstrumentInstruction {
+ public:
+	std::string returnValue;
+	std::string instruction;
+	std::list<std::list<std::string>> parameters;
+	std::string matchParameters;
+};
+
 class RewriteRule {
  public:
-	std::list<std::string> from;
-	std::list<std::string> to;
+	InstrumentInstruction foundInstr;
+	InstrumentInstruction newInstr;
 	InstrumentPlacement where;
 };
 
