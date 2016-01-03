@@ -60,7 +60,7 @@ RewriterConfig parse_config(ifstream &config_file) {
 
 		r.foundInstr.returnValue = json_rules[i]["findInstruction"]["returnValue"].asString();
 		r.foundInstr.instruction = json_rules[i]["findInstruction"]["instruction"].asString();
-		r.foundInstr.returnValue = json_rules[i]["findInstruction"]["match-parameters"].asString();
+		r.foundInstr.matchParameters = json_rules[i]["findInstruction"]["match-parameters"].asString();
 		
 		r.newInstr.returnValue = json_rules[i]["newInstruction"]["returnValue"].asString();
 		r.newInstr.instruction = json_rules[i]["newInstruction"]["instruction"].asString();
@@ -95,26 +95,38 @@ void usage(char *name) {
 }
 
 /**
+ * Applies rule.
+ */
+void applyRule(Instruction &I, RewriteRule rw_rule) {
+   cout << "applying" << endl; //print name of the called function
+}
+
+/**
  * Instruments given module with rules from json file.
  */
 bool runOnModule(Module &M, RewriterConfig rw_config) {
    for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
 	   for (inst_iterator I = inst_begin(&*F), End = inst_end(&*F); I != End; ++I) {
 		    Instruction *ins = &*I; // get instruction
-			cout << ins << endl; // print instruction
 			
 			// check if instruction is a call
 			if (CallInst *ci = dyn_cast<CallInst>(ins)) {
-			Function *f = ci->getCalledFunction();
-			if (f == NULL) { 
-				Value* v = ci->getCalledValue();
-				f = dyn_cast<Function>(v->stripPointerCasts());
-				if (f == NULL)
-				{
-					continue; 
+				Function *f = ci->getCalledFunction();
+				if (f == NULL) { 
+					Value* v = ci->getCalledValue();
+					f = dyn_cast<Function>(v->stripPointerCasts());
+					if (f == NULL)
+					{
+						continue; 
+					}
 				}
-			}
-			cout << f->getName().data() << endl; //print name of the called function
+				
+				for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
+					RewriteRule rw = *it;
+					string toMatch = f->getName().data();
+					if (rw.foundInstr.matchParameters.find("@" + toMatch + "(")!=string::npos)
+						applyRule(*ins, rw);
+				}
 		    }	
 		}
 	 }
