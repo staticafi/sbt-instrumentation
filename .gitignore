@@ -2,3 +2,10 @@
 /json
 test.bc
 test.c
+include/llvm
+include/json.h
+include/json-forwards.h
+src/jsoncpp.cpp
+lib/Makefile
+*.*~
+docs

@@ -1,7 +1,7 @@
 ﻿
 Download 
 https://github.com/open-source-parsers/jsoncpp
-and install it into `include/json` folder, move `jsoncpp.cpp` into `src` and modify `#include "json.h"` to `#include "../include/json.h"`.  
+and install it into `include/` folder, move `jsoncpp.cpp` into `src` and modify `#include "json.h"` to `#include "../include/json.h"`.  
 
 Json config files should look like this:
 ```
