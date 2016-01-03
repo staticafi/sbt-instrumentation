@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.8)
 project(instr)
 
 # Compiler Options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -Wall -Wextra")
 
 # Define add_llvm_* macro's.
 find_package(LLVM REQUIRED CONFIG)

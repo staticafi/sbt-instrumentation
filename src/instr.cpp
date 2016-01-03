@@ -31,6 +31,7 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/IRReader/IRReader.h"
+#include "llvm/IR/Instruction.h"
 #include <memory>
 #include <string>
 
@@ -84,63 +85,33 @@ void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR>" << endl; // TODO
 }
 
-/*namespace {
-  class Instrument : public ModulePass {
-    public:
-      static char ID;
-      static RewriterConfig Config;
-
-      Instrument() : ModulePass(ID) {}
-
-      virtual bool runOnModule(Module &M);
-
-    //private:
-    //  void findInitFuns(Module &M);
-  };
-}
-
-static RegisterPass<Instrument> INSTR("inst",
-                                 "Instrument the code.");
-char Instrument::ID;
-
-
-bool Instrument::runOnModule(Module &M) {
+/**
+ * Instruments given module with rules from json file.
+ */
+bool runOnModule(Module &M, RewriterConfig rw_config) {
    for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
-	   for (inst_iterator I = inst_begin(&*F), E = inst_end(&*F); I != E;) {
-			cerr << &*I << endl;
-			}	
+	   for (inst_iterator I = inst_begin(&*F), End = inst_end(&*F); I != End; ++I) {
+		    Instruction *ins = &*I; // get instruction
+			cout << ins << endl; // print instruction
+			
+			// check if instruction is a call
+			if (CallInst *ci = dyn_cast<CallInst>(ins)) {
+			Function *f = ci->getCalledFunction();
+			if (f == NULL) { 
+				Value* v = ci->getCalledValue();
+				f = dyn_cast<Function>(v->stripPointerCasts());
+				if (f == NULL)
+				{
+					continue; 
+				}
+			}
+			cout << f->getName().data() << endl; //print name of the called function
+		    }	
+		}
 	 }
  
   return true;
-}*/
-
-/*Module *load_module(ifstream &stream, LLVMContext &context)
-{
-  if(!stream)
-  {
-    cerr << "error after open stream" << endl;
-    return 0;
-  }
-
-  // load bitcode
-  string ir((istreambuf_iterator<char>(stream)), (istreambuf_iterator<char>()));
-
-  // parse it
-  SMDiagnostic error;
-  MemoryBufferRef mbf(MemoryBuffer::getMemBuffer(StringRef(ir))),
-  Module *module = parseIR(&mbf, error, context);
-
-  if(!module)
-  {
-    string what;
-    raw_string_ostream os(what);
-    error.print("error after ParseIR()", os);
-    cerr << what;
-  } // end if
-
-  return module;
-}*/
-
+}
 
 int main(int argc, char *argv[]) {
 	if (argc < 2) {
@@ -155,20 +126,29 @@ int main(int argc, char *argv[]) {
 	ifstream llvmir_file;
 	llvmir_file.open(argv[2]);
 
+	// Parse json file
 	RewriterConfig rw_config = parse_config(config_file);
 	//Rewriter rw(rw_config);
 	
+	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
-    auto Mod = parseIRFile(argv[2], Err, Context);
+    Module* m = parseIRFile(argv[2], Err, Context).release();
 
-    if (!Mod) {
+    if (!m) {
         Err.print(argv[0], errs());
         return 1;
     }
-
-
-
-
-	return 0;
+    
+    // Instrument
+    bool resultOK = runOnModule(*m, rw_config);
+    
+    //TODO fail
+    if(resultOK) {
+		return 0;
+	}
+	else {
+		return 1;
+	}
+    
 }
