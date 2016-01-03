@@ -13,8 +13,7 @@ class InstrumentInstruction {
  public:
 	std::string returnValue;
 	std::string instruction;
-	std::list<std::list<std::string>> parameters;
-	std::string matchParameters;
+	std::list<std::string> parameters;
 };
 
 class RewriteRule {
