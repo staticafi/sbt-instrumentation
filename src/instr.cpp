@@ -96,7 +96,7 @@ void usage(char *name) {
 /**
  * Applies rule.
  */
-void applyRule(Instruction &I, RewriteRule rw_rule) {
+void applyRule(Instruction &I, RewriteRule rw_rule, map <string, Value*> variables) {
 	cout << "applying" << endl; //TODO
 	
 	// create new instruction
@@ -120,6 +120,13 @@ bool runOnModule(Module &M, RewriterConfig rw_config) {
    for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
 	   for (inst_iterator I = inst_begin(&*F), End = inst_end(&*F); I != End; ++I) {
 		    Instruction *ins = &*I; // get instruction
+		    
+		    // Test, delete later
+		    //cout << ins->getNumOperands() << endl;
+		    //cout << (ins->getName()).str() << endl;
+			//cout << (ins->getOperand(0)->getName()).str() << endl;
+			//cout << (ins->getOperand(1)->getName()).str() << endl;
+			//cout << "another one" << endl;
 	
 			// iterate through rewrite rules
 			for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
@@ -128,41 +135,54 @@ bool runOnModule(Module &M, RewriterConfig rw_config) {
 				// if instruction from rewrite rule is the same as current instruction
 				if(ins->getOpcodeName() == rw.foundInstr.instruction) {
 					
-					cout<<(ins->getOperand(0)->getName()).str()<<endl;
 					map <string, Value*> variables;
 					
-					if(rw.foundInstr.returnValue != "%n" && rw.foundInstr.returnValue != "%s") {
+					// check operands
+					int opIndex = 0;
+					bool apply = true;
+					for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
+						string param = *sit; 
+						
+						if(param != "!s" && param != "!n" && param != (ins->getOperand(opIndex)->getName()).str()) {
+							apply = false;
+							break;
+						}
+						
+						if(param[0] == '<' && param[param.size() - 1] == '>') {
+							variables[param] = ins->getOperand(opIndex);
+							cout << (ins->getOperand(1)->getName()).str() << endl;
+						}
+						opIndex++;
+					}
+					
+					if(!apply)
+						continue;
+					
+					// check result value
+					if(rw.foundInstr.returnValue != "!n" && rw.foundInstr.returnValue != "!s") {
 						if(rw.foundInstr.returnValue[0] == '<' && rw.foundInstr.returnValue[rw.foundInstr.returnValue.size() - 1] == '>') {
 							variables[rw.foundInstr.returnValue] = ins;
 						}
-					}
-					
-					// TODO check parameters
-					for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
-						string param = *sit; 
-						if(param[0] == '<' && param[param.size() - 1] == '>') {
-							//variables[param] = ins->getOperand(i);
-						}
-					}
-					
-					//applyRule(*ins, rw);
+					}					
+
+					applyRule(*ins, rw, variables);
+										
 					// check if instruction is a call
-					if (CallInst *ci = dyn_cast<CallInst>(ins)) {
-						Function *f = ci->getCalledFunction();
-						if (f == NULL) { 
-							Value* v = ci->getCalledValue();
-							f = dyn_cast<Function>(v->stripPointerCasts());
-							if (f == NULL)
-							{
-								continue; 
-							}
-						}
-						string toMatch = f->getName().data();
-						applyRule(*ins, rw);	
-						cout << ins->getNumOperands() << endl;
-						cout << (ins->getOperand(0)->getName()).str() << endl;
-						cout << (ins->getOperand(1)->getName()).str() << endl;
-					}
+					//if (CallInst *ci = dyn_cast<CallInst>(ins)) {
+						//Function *f = ci->getCalledFunction();
+						//if (f == NULL) { 
+							//Value* v = ci->getCalledValue();
+							//f = dyn_cast<Function>(v->stripPointerCasts());
+							//if (f == NULL)
+							//{
+								//continue; 
+							//}
+						//}
+						//string toMatch = f->getName().data();
+						//cout << toMatch << endl;
+						//applyRule(*ins, rw);	
+
+					//}
 				}
 					
 		    }	

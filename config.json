@@ -4,10 +4,10 @@
 			"findInstruction": {
 					      "returnValue": "<t1>",
 					      "instruction": "call",
-					      "operands": ["%s", "malloc"]
+					      "operands": ["!s", "malloc"]
 					   },
 			"newInstruction": {
-					      "returnValue": "%n",
+					      "returnValue": "!n",
 					      "instruction": "call",
 					      "operands": ["nameOfFunction","<t1>"]
 					  },
