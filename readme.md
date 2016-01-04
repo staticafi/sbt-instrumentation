@@ -5,24 +5,41 @@ and install it into `include/` folder, move `jsoncpp.cpp` into `src` and modify 
 
 Json config files should look like this:
 ```
-[
-	{
-		"from": list of strings
-		"to": list of strings
-		"where": "before"/"after"/"replace"
-	}
-]
+	[
+		{
+			"findInstruction": {
+					      "returnValue": string,
+					      "instruction": string(callinstr,alloca,...),
+					      "match-parameters": string
+					   },
+			"newInstruction": {
+					      "returnValue": string,
+					      "instruction": string(callinstr,alloca,...),
+					      "parameters": [[type, value]]
+					  },
+			"where": "before"/"after"/"replace"
+		}
+	]
 ```
-\<x\> is variable.
+
+\<x\> is variable, %s matches any string, %n is none.
 
 Example:
 ```json
-[
-	{
-			"from": ["<t1>", "=malloc(", "<t2>", ")"],
-			"to": ["<t1>", "=call_malloc(", "<t1>", "<t2>", ")"],
+	[
+		{
+			"findInstruction": {
+					      "returnValue": "<t1>",
+					      "instruction": "callinst",
+					      "match-parameters": "%s@malloc(%s <t1>)%s"
+					   },
+			"newInstruction": {
+					      "returnValue": "%n",
+					      "instruction": "callinst",
+					      "parameters": [["i8*","<t1>"]]
+					  },
 			"where": "before"
-    }
-]
+		}
+	]
 ```
 
