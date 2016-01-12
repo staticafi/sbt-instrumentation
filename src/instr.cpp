@@ -32,6 +32,12 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Instruction.h"
+//#include "llvm/IR/CallSite.h"
+#include "llvm/IR/Constants.h"
+//#include "llvm/IR/Operator.h"
+//#include "llvm/IR/Type.h"
+//#include "llvm/IR/InstVisitor.h"
+
 #include <memory>
 #include <string>
 
@@ -93,6 +99,86 @@ void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR>" << endl; // TODO
 }
 
+int getOpcodeName(const string OpName) {
+  // switch (OpName) {
+   // Terminators
+   //case "ret":    return Ret;
+   //case "br":     return Br;
+   //case "switch": return Switch;
+   //case "indirectbr": return IndirectBr;
+   //case "invoke": return Invoke;
+   //case "resume": return Resume;
+   //case "unreachable": return Unreachable;
+   //case "cleanupret": return CleanupRet;
+   //case "catchret": return CatchRet;
+   //case "catchpad": return CatchPad;
+   //case "catchswitch": return CatchSwitch;
+ 
+   // Standard binary operators...
+  /* case "add":  return Add;
+   case "fadd": return FAdd;
+   case "sub":  return Sub;
+   case "fsub": return FSub;
+   case "mul":  return Mul;
+   case "fmul": return FMul;
+   case "udiv": return UDiv;
+   case "sdiv": return SDiv;
+   case "fdiv": return FDiv;
+   case "urem": return URem;
+   case "srem": return SRem;
+   case "frem": return FRem;
+ 
+   // Logical operators...
+   case "and": return And;
+   case "or" : return Or;
+   case "xor": return Xor;
+ */
+   // Memory instructions...
+   if (OpName == "alloca") 		  return Instruction::Alloca;
+   if (OpName == "load")          return Instruction::Load;
+   if (OpName == "store")         return Instruction::Store;
+   if (OpName == "cmpxchg") 	  return Instruction::AtomicCmpXchg;
+   if (OpName == "atomicrmw")     return Instruction::AtomicRMW;
+   if (OpName == "fence")         return Instruction::Fence;
+   if (OpName == "getelementptr") return Instruction::GetElementPtr;
+ 
+   // Convert instructions...
+ /*  case "trunc":         return Trunc;
+   case "zext":          return ZExt;
+   case "sext":          return SExt;
+   case "fptrunc":       return FPTrunc;
+   case "fpext":         return FPExt;
+   case "fptoui":        return FPToUI;
+   case "fptosi":        return FPToSI;
+   case "uitofp":        return UIToFP;
+   case "sitofp":        return SIToFP;
+   case "inttoptr":      return IntToPtr;
+   case "ptrtoint":      return PtrToInt;
+   case "bitcast":       return BitCast;
+   case "addrspacecast": return AddrSpaceCast;
+   
+   // Other instructions...
+   case "icmp":           return ICmp;
+   case "fcmp":           return FCmp;
+   case "phi":            return PHI;
+   case "select":         return Select;
+   case "call":           return Call;
+   case "shl":            return Shl;
+   case "lshr"            return LShr;
+   case "ashr":           return AShr;
+   case "va_arg":         return VAArg;
+   case "extractelement": return ExtractElement;
+   case "insertelement":  return InsertElement;
+   case "shufflevector":  return ShuffleVector;
+   case "extractvalue":   return ExtractValue;
+   case "insertvalue":    return InsertValue;
+   case "landingpad":     return LandingPad;
+   case "cleanuppad":     return CleanupPad;*/
+ 
+  // default: return -1;
+   //}
+ }
+
 /**
  * Applies rule.
  */
@@ -100,6 +186,8 @@ void applyRule(Instruction &I, RewriteRule rw_rule, map <string, Value*> variabl
 	cout << "applying" << endl; //TODO
 	
 	// create new instruction
+	//Instruction *newInst = new Instruction(...);
+
 	   
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		//TODO insert before
