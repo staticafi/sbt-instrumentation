@@ -10,33 +10,35 @@ Json config files should look like this:
 			"findInstruction": {
 					      "returnValue": string,
 					      "instruction": string(callinstr,alloca,...),
-					      "match-parameters": string
+					      "operands": list of strings
 					   },
 			"newInstruction": {
 					      "returnValue": string,
 					      "instruction": string(callinstr,alloca,...),
-					      "parameters": [[type, value]]
+					      "operands": list of strings
 					  },
 			"where": "before"/"after"/"replace"
 		}
 	]
 ```
 
-\<x\> is variable, %s matches any string, %n is none.
+\<x\> is variable, !s matches any string, !n is none.
 
 Example:
 ```json
+	
+
 	[
 		{
 			"findInstruction": {
 					      "returnValue": "<t1>",
-					      "instruction": "callinst",
-					      "match-parameters": "%s@malloc(%s <t1>)%s"
+					      "instruction": "call",
+					      "operands": ["!s", "malloc"]
 					   },
 			"newInstruction": {
-					      "returnValue": "%n",
-					      "instruction": "callinst",
-					      "parameters": [["i8*","<t1>"]]
+					      "returnValue": "!n",
+					      "instruction": "call",
+					      "operands": ["nameOfFunction","<t1>"]
 					  },
 			"where": "before"
 		}
