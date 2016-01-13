@@ -6,9 +6,11 @@
 #include <exception>
 
 #include "llvm/Pass.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Support/raw_os_ostream.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
@@ -16,13 +18,17 @@
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/FunctionInfo.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Instruction.h"
-#include "llvm/IR/Constants.h"
-#include "llvm-c/BitWriter.h"
+#include "llvm/Bitcode/ReaderWriter.h"
+
+//#include "llvm-c/BitWriter.h"
+
+
 
 #include <memory>
 #include <string>
@@ -223,11 +229,11 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 	   
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		logger.write_info("Inserting " + rw_rule.newInstr.instruction + " before " + rw_rule.foundInstr.instruction);
-		//newInst->insertBefore(&I);
+		newInst->insertBefore(&I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
 		logger.write_info("Inserting " + rw_rule.newInstr.instruction + " after " + rw_rule.foundInstr.instruction);
-		//newInst->insertAfter(&I);
+		newInst->insertAfter(&I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
 		logger.write_info("Replacing " + rw_rule.foundInstr.instruction + " with " + rw_rule.newInstr.instruction);
@@ -322,10 +328,12 @@ bool runOnModule(Module &M, RewriterConfig rw_config) {
   // Write instrumented module into the output file
 
   ofstream out_file;
-  out_file.open("out.bc", ofstream::out | ofstream::trunc);
+  out_file.open("out.ll", ofstream::out | ofstream::trunc);
   raw_os_ostream rstream(out_file);
+ 
+  M.print(rstream, NULL);
 
-  llvm::WriteBitcodeToFile(&M, rstream); 
+  //llvm::WriteBitcodeToFile(&M, rstream); 
   
   return true;
 }
@@ -344,13 +352,15 @@ int main(int argc, char *argv[]) {
 	llvmir_file.open(argv[2]);
 
 	// Parse json file
-	RewriterConfig rw_config = parse_config(config_file);
+	RewriterConfig rw_config = parse_config(config_file); 
 	//Rewriter rw(rw_config);
 	
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
     Module* m = parseIRFile(argv[2], Err, Context).release();
+    
+   
 
     if (!m) {
         Err.print(argv[0], errs());
