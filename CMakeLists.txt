@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.8)
 project(instr)
 
 # Compiler Options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g  -std=c++11 -Wall -Wextra")
 
 # Define add_llvm_* macro's.
 find_package(LLVM REQUIRED CONFIG)
@@ -44,8 +44,8 @@ add_executable(myexec src/instr.cpp ${JSON_FILES} ${SOURCE_FILES})
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-llvm_map_components_to_libnames(llvm_libs support core irreader)
+llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter)
 
-TARGET_LINK_LIBRARIES(myexec instr_model ${llvm_libs}  )
+TARGET_LINK_LIBRARIES(myexec  ${llvm_libs} instr_model )
 
 
