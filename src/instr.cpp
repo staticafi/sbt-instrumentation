@@ -25,6 +25,7 @@
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/Bitcode/ReaderWriter.h"
+#include <llvm/IRReader/IRReader.h>
 
 //#include "llvm-c/BitWriter.h"
 
@@ -135,13 +136,23 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		}
 		
 		if(variables.find(param) == variables.end()) {
-			//TODO Whoops, what now? Change config json?
+			// TODO Whoops, what now? Change config json? Allow just integers?
+			int paramInt;
+			try {
+				paramInt = stoi(param);
+				LLVMContext &Context = getGlobalContext();
+				Value *intValue = ConstantInt::get(Type::getInt32Ty(Context), paramInt);
+				args.push_back(intValue);
+			}
+			catch (invalid_argument) {
+				// TODO what now?
+			}
+			catch (out_of_range) {
+				// TODO what now
+			}
 		}
 		else {
-			LLVMContext &Context = getGlobalContext();
-			Value *One = ConstantInt::get(Type::getInt32Ty(Context), 1);
-			args.push_back(One);
-			//args.push_back(variables[param]);
+			args.push_back(variables[param]);
 		}
 		
 		i++;
@@ -166,7 +177,7 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		newInst->insertBefore(&I);
 		I.eraseFromParent();
 	}
-	
+
 	return 0;
 }
 
@@ -196,14 +207,34 @@ bool runOnModule(Module &M, RewriterConfig rw_config) {
 				
 				// if instruction from rewrite rule is the same as current instruction
 				if(ins->getOpcodeName() == rw.foundInstr.instruction) {
-					
 					map <string, Value*> variables;
 					
 					// check operands
-					int opIndex = 0;
+					unsigned opIndex = 0;
 					bool apply = true;
 					for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
 						string param = *sit; 
+						
+						// Do we need arguments of called function?
+						if(strcmp(ins->getOpcodeName(),"call") == 0 && ins->getNumOperands() - 1 < opIndex) {
+							if (CallInst *ci = dyn_cast<CallInst>(ins)) {
+								Function *f = ci->getCalledFunction();
+								if (f == NULL) { 
+									Value* v = ci->getCalledValue();
+									f = dyn_cast<Function>(v->stripPointerCasts());
+									if (f == NULL)
+									{
+										apply = false; 
+									}
+								}
+								for (Function::arg_iterator args = f->arg_begin(); args != f->arg_end(); ++args) {
+									if(param[0] == '<' && param[param.size() - 1] == '>') {
+										variables[param] = &*args;										
+									}
+								}
+							}
+							break;
+						}
 						
 						if(param != "!s" && param != "!n" && param != (ins->getOperand(opIndex)->getName()).str()) {
 							apply = false;
@@ -212,25 +243,27 @@ bool runOnModule(Module &M, RewriterConfig rw_config) {
 						
 						if(param[0] == '<' && param[param.size() - 1] == '>') {
 							variables[param] = ins->getOperand(opIndex);
-							cout << (ins->getOperand(1)->getName()).str() << endl;
 						}
 						opIndex++;
 					}
-					
+									
 					if(!apply)
 						continue;
 					
 					// check result value
 					if(rw.foundInstr.returnValue != "!n" && rw.foundInstr.returnValue != "!s") {
+						
 						if(rw.foundInstr.returnValue[0] == '<' && rw.foundInstr.returnValue[rw.foundInstr.returnValue.size() - 1] == '>') {
-							variables[rw.foundInstr.returnValue] = ins;
+							LLVMContext& Ctx = M.getContext();
+							CastInst *CastI = CastInst::CreatePointerCast(ins, Type::getInt8PtrTy(Ctx)); //TODO type is not always the same
+							variables[rw.foundInstr.returnValue] = CastI;
 						}
 					}					
 
 					if(applyRule(M,*ins, rw, variables) == 1) {
 						logger.write_error("Cannot apply rule.");
 						return false;
-					}
+					}<badref>
 				}				
 		    }	
 		}
@@ -272,8 +305,7 @@ int main(int argc, char *argv[]) {
 		logger.write_error(exceptionString.append(ex.what()));
 		return 1;
 	}
-		
-	
+			
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
