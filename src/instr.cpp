@@ -28,8 +28,6 @@
 
 //#include "llvm-c/BitWriter.h"
 
-
-
 #include <memory>
 #include <string>
 
@@ -41,8 +39,11 @@ using namespace std;
 
 Logger logger("log.txt");
 
-/** 
-  Parses json file with configuration.
+ /** 
+ * Parses json file with configuration.
+ * @param config_file stream with opened config file.
+ * @return parsed configuration
+ * @see RewriterConfig
  */
 RewriterConfig parse_config(ifstream &config_file) {
 	Json::Value json_rules;
@@ -53,6 +54,8 @@ RewriterConfig parse_config(ifstream &config_file) {
 			  << reader.getFormattedErrorMessages();
 		throw runtime_error("Config parsing failure.");
 	}
+
+	// TODO catch exceptions here
 
 	RewriterConfig rw_config;
 	for (uint i = 0; i < json_rules.size(); ++i) {
@@ -92,101 +95,20 @@ void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR>" << endl; // TODO
 }
 
-int getOpcode(const string OpName) {
-	
-   // Terminators
-   if (OpName == "ret")    return Instruction::Ret;
-   if (OpName == "br")     return Instruction::Br;
-   if (OpName == "switch") return Instruction::Switch;
-   if (OpName == "indirectbr") return Instruction::IndirectBr;
-   if (OpName == "invoke") return Instruction::Invoke;
-   if (OpName == "resume") return Instruction::Resume;
-   if (OpName == "unreachable") return Instruction::Unreachable;
-   if (OpName == "cleanupret") return Instruction::CleanupRet;
-   if (OpName == "catchret") return Instruction::CatchRet;
-   if (OpName == "catchpad") return Instruction::CatchPad;
-   if (OpName == "catchswitch") return Instruction::CatchSwitch;
- 
-   // Standard binary operators...
-   if (OpName == "add")  return Instruction::Add;
-   if (OpName == "fadd") return Instruction::FAdd;
-   if (OpName == "sub")  return Instruction::Sub;
-   if (OpName == "fsub") return Instruction::FSub;
-   if (OpName == "mul")  return Instruction::Mul;
-   if (OpName == "fmul") return Instruction::FMul;
-   if (OpName == "udiv") return Instruction::UDiv;
-   if (OpName == "sdiv") return Instruction::SDiv;
-   if (OpName == "fdiv") return Instruction::FDiv;
-   if (OpName == "urem") return Instruction::URem;
-   if (OpName == "srem") return Instruction::SRem;
-   if (OpName == "frem") return Instruction::FRem;
- 
-   // Logical operators...
-   if (OpName == "and") return Instruction::And;
-   if (OpName == "or" ) return Instruction::Or;
-   if (OpName == "xor") return Instruction::Xor;
- 
-   // Memory instructions...
-   if (OpName == "alloca") 		  return Instruction::Alloca;
-   if (OpName == "load")          return Instruction::Load;
-   if (OpName == "store")         return Instruction::Store;
-   if (OpName == "cmpxchg") 	  return Instruction::AtomicCmpXchg;
-   if (OpName == "atomicrmw")     return Instruction::AtomicRMW;
-   if (OpName == "fence")         return Instruction::Fence;
-   if (OpName == "getelementptr") return Instruction::GetElementPtr;
- 
-   // Convert instructions...
-   if (OpName == "trunc")         return Instruction::Trunc;
-   if (OpName == "zext")          return Instruction::ZExt;
-   if (OpName == "sext")          return Instruction::SExt;
-   if (OpName == "fptrunc")       return Instruction::FPTrunc;
-   if (OpName == "fpext")         return Instruction::FPExt;
-   if (OpName == "fptoui")        return Instruction::FPToUI;
-   if (OpName == "fptosi")        return Instruction::FPToSI;
-   if (OpName == "uitofp")        return Instruction::UIToFP;
-   if (OpName == "sitofp")        return Instruction::SIToFP;
-   if (OpName == "inttoptr")      return Instruction::IntToPtr;
-   if (OpName == "ptrtoint")      return Instruction::PtrToInt;
-   if (OpName == "bitcast")       return Instruction::BitCast;
-   if (OpName == "addrspacecast") return Instruction::AddrSpaceCast;
-   
-   // Other instructions...
-   if (OpName == "icmp")           return Instruction::ICmp;
-   if (OpName == "fcmp")           return Instruction::FCmp;
-   if (OpName == "phi")            return Instruction::PHI;
-   if (OpName == "select")         return Instruction::Select;
-   if (OpName == "call")           return Instruction::Call;
-   if (OpName == "shl")            return Instruction::Shl;
-   if (OpName == "lshr")            return Instruction::LShr;
-   if (OpName == "ashr")           return Instruction::AShr;
-   if (OpName == "va_arg")         return Instruction::VAArg;
-   if (OpName == "extractelement") return Instruction::ExtractElement;
-   if (OpName == "insertelement")  return Instruction::InsertElement;
-   if (OpName == "shufflevector")  return Instruction::ShuffleVector;
-   if (OpName == "extractvalue")   return Instruction::ExtractValue;
-   if (OpName == "insertvalue")    return Instruction::InsertValue;
-   if (OpName == "landingpad")     return Instruction::LandingPad;
-   if (OpName == "cleanuppad")     return Instruction::CleanupPad;
- 
-   return -1;
- }
 
 /**
- * Applies rule.
+ * Applies a rule.
+ * @param M module
+ * @param I current instruction
+ * @param rw_rule rule to apply
+ * @param variables map of found parameters form config
+ * @return 1 if error
  */
 int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value*> variables) {
 	logger.write_info("Applying rule...");
-	cout << "applying" << endl; //TODO remove
+	cout << "Applying..." << endl; //TODO remove
 
-	// Create new instruction
-	// Get opcode
-	/*int opCode = getOpcode(rw_rule.newInstr.instruction);
-	if(opCode < 0) {
-		cerr << "Unknown instruction: " << rw_rule.newInstr.instruction << endl;
-		logger.write_error("Unknown instruction: " + rw_rule.newInstr.instruction);
-		return 1;
-	}*/
-	
+
 	// Work just with call instructions for now...
 	if(rw_rule.newInstr.instruction != "call") {
 		cerr << "Not working with this instruction: " << rw_rule.newInstr.instruction << endl;
@@ -225,17 +147,21 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		i++;
 	}
 	
+	// Create new call instruction
 	CallInst *newInst = CallInst::Create(CalleeF, args);
 	   
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
+		// Insert before
 		logger.write_info("Inserting " + rw_rule.newInstr.instruction + " before " + rw_rule.foundInstr.instruction);
 		newInst->insertBefore(&I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
+		// Insert after
 		logger.write_info("Inserting " + rw_rule.newInstr.instruction + " after " + rw_rule.foundInstr.instruction);
 		newInst->insertAfter(&I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
+		// Replace
 		logger.write_info("Replacing " + rw_rule.foundInstr.instruction + " with " + rw_rule.newInstr.instruction);
 		newInst->insertBefore(&I);
 		I.eraseFromParent();
@@ -246,6 +172,9 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 
 /**
  * Instruments given module with rules from json file.
+ * @param M module to be instrumented.
+ * @param rw_config parsed rules to apply.
+ * @return true if OK, false otherwise
  */
 bool runOnModule(Module &M, RewriterConfig rw_config) {
    for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
@@ -299,28 +228,10 @@ bool runOnModule(Module &M, RewriterConfig rw_config) {
 					}					
 
 					if(applyRule(M,*ins, rw, variables) == 1) {
-						//TODO
+						logger.write_error("Cannot apply rule.");
 						return false;
 					}
-										
-					// check if instruction is a call
-					//if (CallInst *ci = dyn_cast<CallInst>(ins)) {
-						//Funcllvm/lib/Bitcode/Writer/BitcodeWriter.cpption *f = ci->getCalledFunction();
-						//if (f == NULL) { 
-							//Value* v = ci->getCalledValue();
-							//f = dyn_cast<Function>(v->stripPointerCasts());
-							//if (f == NULL)
-							//{
-								//continue; 
-							//}
-						//}
-						//string toMatch = f->getName().data();
-						//cout << toMatch << endl;
-						//applyRule(*ins, rw);	
-
-					//}
-				}
-					
+				}				
 		    }	
 		}
 	 }
@@ -352,17 +263,23 @@ int main(int argc, char *argv[]) {
 	llvmir_file.open(argv[2]);
 
 	// Parse json file
-	RewriterConfig rw_config = parse_config(config_file); 
-	//Rewriter rw(rw_config);
+	RewriterConfig rw_config;
+	try {
+		rw_config = parse_config(config_file);
+	}
+	catch (runtime_error ex){ //TODO exceptions in c++?
+		string exceptionString = "Error parsing configuration: ";
+		logger.write_error(exceptionString.append(ex.what()));
+		return 1;
+	}
+		
 	
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
     Module* m = parseIRFile(argv[2], Err, Context).release();
-    
-   
-
     if (!m) {
+		logger.write_error("Error parsing .bc file.");
         Err.print(argv[0], errs());
         return 1;
     }
@@ -370,12 +287,12 @@ int main(int argc, char *argv[]) {
     // Instrument
     bool resultOK = runOnModule(*m, rw_config);
     
-    //TODO fail
     if(resultOK) {
+		logger.write_info("DONE.");
 		return 0;
 	}
 	else {
+		logger.write_error("Exiting with error...");
 		return 1;
-	}
-    
+	}   
 }
