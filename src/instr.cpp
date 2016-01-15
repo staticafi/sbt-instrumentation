@@ -181,6 +181,61 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 	return 0;
 }
 
+bool CheckInstruction(Instruction* ins, Module& M,RewriterConfig rw_config) {
+			// iterate through rewrite rules
+			for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
+				RewriteRule rw = *it; 
+				
+				// if instruction from rewrite rule is the same as current instruction
+				if(ins->getOpcodeName() == rw.foundInstr.instruction) {
+					map <string, Value*> variables;
+					
+					// check operands
+					unsigned opIndex = 0;
+					unsigned argIndex = 0;
+					bool apply = true;
+					for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
+						string param = *sit; 
+						
+						// Do we need arguments of called function?
+						if(strcmp(ins->getOpcodeName(),"call") == 0 && ins->getNumOperands() - 1 < opIndex) {
+							if (CallInst *ci = dyn_cast<CallInst>(ins)) { //TODO what if this fails
+								if(ci->getNumArgOperands() > argIndex && param[0] == '<' && param[param.size() - 1] == '>') {
+									variables[param] = ci->getArgOperand(argIndex);									
+								}
+							}
+							argIndex++;
+						}
+						else if(param != "!s" && param != "!n" && param != (ins->getOperand(opIndex)->getName()).str()) {
+							apply = false;
+							break;
+						}
+						else if(param[0] == '<' && param[param.size() - 1] == '>') {
+							variables[param] = ins->getOperand(opIndex);
+						}
+						opIndex++;
+					}
+									
+					if(!apply)
+						continue;
+					
+					// check result value
+					if(rw.foundInstr.returnValue != "!n" && rw.foundInstr.returnValue != "!s") {
+						if(rw.foundInstr.returnValue[0] == '<' && rw.foundInstr.returnValue[rw.foundInstr.returnValue.size() - 1] == '>') {
+							variables[rw.foundInstr.returnValue] = ins;
+						}
+					}					
+
+					if(applyRule(M,*ins, rw, variables) == 1) {
+						logger.write_error("Cannot apply rule.");
+						return false;
+					}
+				}				
+		    }
+		    
+		    return true;
+}
+
 /**
  * Instruments given module with rules from json file.
  * @param M module to be instrumented.
@@ -199,73 +254,8 @@ bool runOnModule(Module &M, RewriterConfig rw_config) {
 	   }
 	   
 	   for (inst_iterator I = inst_begin(&*F), End = inst_end(&*F); I != End; ++I) {
-		    Instruction *ins = &*I; // get instruction
-		    
-			// iterate through rewrite rules
-			for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
-				RewriteRule rw = *it; 
-				
-				// if instruction from rewrite rule is the same as current instruction
-				if(ins->getOpcodeName() == rw.foundInstr.instruction) {
-					map <string, Value*> variables;
-					
-					// check operands
-					unsigned opIndex = 0;
-					bool apply = true;
-					for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
-						string param = *sit; 
-						
-						// Do we need arguments of called function?
-						if(strcmp(ins->getOpcodeName(),"call") == 0 && ins->getNumOperands() - 1 < opIndex) {
-							if (CallInst *ci = dyn_cast<CallInst>(ins)) {
-								Function *f = ci->getCalledFunction();
-								if (f == NULL) { 
-									Value* v = ci->getCalledValue();
-									f = dyn_cast<Function>(v->stripPointerCasts());
-									if (f == NULL)
-									{
-										apply = false; 
-									}
-								}
-								for (Function::arg_iterator args = f->arg_begin(); args != f->arg_end(); ++args) {
-									if(param[0] == '<' && param[param.size() - 1] == '>') {
-										variables[param] = &*args;										
-									}
-								}
-							}
-							break;
-						}
-						
-						if(param != "!s" && param != "!n" && param != (ins->getOperand(opIndex)->getName()).str()) {
-							apply = false;
-							break;
-						}
-						
-						if(param[0] == '<' && param[param.size() - 1] == '>') {
-							variables[param] = ins->getOperand(opIndex);
-						}
-						opIndex++;
-					}
-									
-					if(!apply)
-						continue;
-					
-					// check result value
-					if(rw.foundInstr.returnValue != "!n" && rw.foundInstr.returnValue != "!s") {
-						
-						if(rw.foundInstr.returnValue[0] == '<' && rw.foundInstr.returnValue[rw.foundInstr.returnValue.size() - 1] == '>') {
-							LLVMContext& Ctx = M.getContext();
-							CastInst *CastI = CastInst::CreatePointerCast(ins, Type::getInt8PtrTy(Ctx)); //TODO type is not always the same
-							variables[rw.foundInstr.returnValue] = CastI;
-						}
-					}					
-
-					if(applyRule(M,*ins, rw, variables) == 1) {
-						logger.write_error("Cannot apply rule.");
-						return false;
-					}<badref>
-				}				
-		    }	
+			// Check if the instruction is relevant
+		    if(!CheckInstruction(&*I, M,rw_config)) return false;
 		}
 	 }
  
