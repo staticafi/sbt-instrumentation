@@ -5,27 +5,29 @@
 #include <fstream>
 #include <exception>
 
-#include "llvm/Pass.h"
-#include "llvm/IR/PassManager.h"
-#include "llvm/Support/raw_os_ostream.h"
-#include "llvm/IR/Function.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Bitcode/ReaderWriter.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/InstIterator.h"
-#include "llvm/IR/DiagnosticInfo.h"
-#include "llvm/IR/FunctionInfo.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Constants.h"
-#include "llvm/Support/Endian.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/IRReader/IRReader.h"
-#include "llvm/IR/Instruction.h"
-#include "llvm/Bitcode/ReaderWriter.h"
+#include <llvm/Pass.h>
+#include <llvm/IR/PassManager.h>
+#include <llvm/Support/raw_os_ostream.h>
+#include <llvm/IR/Function.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Module.h>
 #include <llvm/IRReader/IRReader.h>
+#include <llvm/IR/Instruction.h>
+#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/Support/InstIterator.h>
+#include <llvm/Support/SourceMgr.h>
+/*
+#include >llvm/Support/DiagnosticInfo.h"
+#include >llvm/IR/FunctionInfo.h"
+#include >llvm/Support/Endian.h"
+#include "llvm/Support/MemoryBuffer.h"
+*/
 
 //#include "llvm-c/BitWriter.h"
 
@@ -329,7 +331,7 @@ int main(int argc, char *argv[]) {
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
-    Module* m = parseIRFile(argv[2], Err, Context).release();
+    Module* m = ParseIRFile(argv[2], Err, Context);
     if (!m) {
 		logger.write_error("Error parsing .bc file.");
         Err.print(argv[0], errs());
