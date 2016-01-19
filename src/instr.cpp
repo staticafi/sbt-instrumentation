@@ -96,6 +96,35 @@ void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR>" << endl; // TODO
 }
 
+/**
+ * Gets name of the function.
+ * @param f function
+ * @return name of the function
+ */
+string GetNameOfFunction(Function* f) {
+	return f->getName().str(); //TODO does it always have a name? 
+}
+
+/**
+ * Writes log about inserting new call instruction.
+ * @param where before/after
+ * @param calledFunction function from inserted call
+ * @param foundInstr found instruction for instrumentation
+ */
+void LogInsertion(string where, Function* calledFunction, Instruction* foundInstr) {
+	string newCall = GetNameOfFunction(calledFunction);
+	string foundInstrOpName = foundInstr->getOpcodeName();
+	
+	if(foundInstrOpName == "call") {
+		if (CallInst *ci = dyn_cast<CallInst>(foundInstr)) { //TODO what if this fails
+			string name = ci->getCalledFunction()->getName().str();
+			logger.write_info("Inserting " + newCall + " " +  where + " " + foundInstrOpName + " " + name);
+		}
+	}
+	else {
+		logger.write_info("Inserting " + newCall + " " +  where + " " + foundInstrOpName);
+	}
+}
 
 /**
  * Applies a rule.
@@ -163,12 +192,12 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 	   
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
-		logger.write_info("Inserting " + rw_rule.newInstr.instruction + " before " + rw_rule.foundInstr.instruction);
+		LogInsertion("before",CalleeF, &I);
 		newInst->insertBefore(&I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
 		// Insert after
-		logger.write_info("Inserting " + rw_rule.newInstr.instruction + " after " + rw_rule.foundInstr.instruction);
+		LogInsertion("after", CalleeF, &I);
 		newInst->insertAfter(&I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
@@ -180,6 +209,7 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 
 	return 0;
 }
+
 
 bool CheckInstruction(Instruction* ins, Module& M,RewriterConfig rw_config) {
 			// iterate through rewrite rules
@@ -246,7 +276,7 @@ bool runOnModule(Module &M, RewriterConfig rw_config) {
    for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
 	   
 	   // Do not instrument functions linked for instrumentation
-	   string functionName = (F->getName()).str();
+	   string functionName = GetNameOfFunction(&*F);
 	   if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
 		   logger.write_info("Omitting function " + functionName + " from instrumentation.");
 		   cout << "Omitting function " << functionName << " from instrumentation." << endl; // TODO remove
