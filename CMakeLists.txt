@@ -48,6 +48,7 @@ SET(JSON_FILES
 SET(SOURCE_FILES
     src/rewriter.hpp
     src/instr_log.cpp
+    src/instr_log.hpp
 )
 
 # Find the libraries that correspond to the LLVM components
@@ -56,6 +57,6 @@ llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter)
 
 #ADD_LIBRARY(instr_model ${JSON_FILES} ${SOURCE_FILES})
 set(LLVM_LINK_COMPONENTS core engine support)
-#add_executable(instr src/instr.cpp ${JSON_FILES} ${SOURCE_FILES})
-#TARGET_LINK_LIBRARIES(instr ${llvm_libs})
+add_executable(instr src/instr.cpp ${JSON_FILES} ${SOURCE_FILES})
+TARGET_LINK_LIBRARIES(instr ${llvm_libs})
 

@@ -294,61 +294,18 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
  
   // Write instrumented module into the output file
 
-  //ofstream out_file;
-  //out_file.open("out.ll", ofstream::out | ofstream::trunc);
-  //raw_os_ostream rstream(out_file);
+  ofstream out_file;
+  out_file.open("out.bc", ofstream::out | ofstream::trunc);
+  raw_os_ostream rstream(out_file);
  
   //M.print(rstream, NULL);
 
-  //llvm::WriteBitcodeToFile(&M, rstream); 
+  WriteBitcodeToFile(&M, rstream); 
   
   return true;
 }
 
-class Instr: public ModulePass
-{
-  public:
-    static char ID;
-
-    Instr() : ModulePass(ID) {}
-
-    virtual bool runOnModule(Module &F);
-};
-
-static RegisterPass<Instr> INS("instrument", "instrument llvm code");
-char Instr::ID;
-
-bool Instr::runOnModule(Module &M) {
-
-	// TODO: Check for failure
-	ifstream config_file;
-	config_file.open("config.json");
-
-	// Parse json file
-	RewriterConfig rw_config;
-	try {
-		rw_config = parse_config(config_file);
-	}
-	catch (runtime_error ex){ //TODO exceptions in c++?
-		string exceptionString = "Error parsing configuration: ";
-		logger.write_error(exceptionString.append(ex.what()));
-		return 1;
-	}
-    
-    // Instrument
-    bool resultOK = instrumentModule(M, rw_config);
-    
-    if(resultOK) {
-		logger.write_info("DONE.");
-	}
-	else {
-		logger.write_error("FAILED.");
-	}   
-
-  return false;
-}
-
-/*int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	if (argc < 2) {
 		usage(argv[0]);
 		exit(1);
@@ -383,14 +340,14 @@ bool Instr::runOnModule(Module &M) {
     }
     
     // Instrument
-    bool resultOK = runOnModule(*m, rw_config);
+    bool resultOK = instrumentModule(*m, rw_config);
     
     if(resultOK) {
 		logger.write_info("DONE.");
 		return 0;
 	}
 	else {
-		logger.write_error("Exiting with error...");
+		logger.write_error("FAILED.");
 		return 1;
 	}   
-}*/
+}
