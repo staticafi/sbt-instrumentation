@@ -14,7 +14,7 @@ Json config files should look like this:
 					   },
 			"newInstruction": {
 					      "returnValue": string,
-					      "instruction": string(callinstr,alloca,...),
+					      "instruction": call,
 					      "operands": list of strings
 					  },
 			"where": "before"/"after"/"replace"
@@ -22,7 +22,7 @@ Json config files should look like this:
 	]
 ```
 
-\<x\> is variable, !s matches any string, !n is none.
+\<x\> is variable, !s matches any string, !n is none. The new instruction can be only a call for now.
 
 Example:
 ```json
