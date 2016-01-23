@@ -11,7 +11,7 @@ from subprocess import call, Popen, PIPE, STDOUT
 # ---------------------
 
 usage_msg = """
-Usage: symbiotic OPTS config.json source.c
+Usage: ./instr OPTS config.json source.c
 and OPTS can be following:
 	--output=FILE		Specify output file
 	--help			Show help message
@@ -103,7 +103,7 @@ def parse_command_line():
             dbg('Output will be stored to {0}'.format(arg))
         elif opt == '--bc':
             global source_is_bc
-            source_is_bc = True
+            source_is_bc = Truehttps://gist.github.com/xvitovs1/f6cbc677ca95cc7e1284
             dbg('Given code is bytecode')
         elif opt == '--ll':
             global generate_ll
