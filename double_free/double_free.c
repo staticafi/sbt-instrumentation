@@ -1,7 +1,8 @@
 #include <stdlib.h>
+#include <stdint.h>
+#include <assert.h>
 
-
-typedef int fsm_id; // TODO: Is this sufficient?
+typedef int8_t* fsm_id; 
 
 typedef enum {
 	FSM_STATE_ALLOCATED,
@@ -16,14 +17,14 @@ typedef enum {
 
 // finite state machine
 typedef struct {
-	fsm_id id; 
+	fsm_id id;
 	fsm_state state;
 } fsm;
 
 
 // FSM list type
 typedef struct fsm_list_node{
-	fsm *fsm; 
+	fsm *fsm;
 	struct fsm_list_node *next;
 } fsm_list_node;
 
@@ -31,11 +32,11 @@ fsm_list_node *fsm_list = NULL;
 
 void __INSTR_fsm_list_append(fsm_list_node *node) {
 	fsm_list_node *cur = fsm_list;
-	
+
 	while((cur) && (&(cur->next))) {
 	  cur = cur->next;
 	}
-	
+
 	if (cur == NULL) {
 		cur = node;
 		fsm_list = node;
@@ -83,16 +84,32 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 		m->state = fsm_transition_table[m->state][action];
 	} else {
 		if (action == FSM_ALPHABET_FREE) {
-			// TODO: ERROR
+			assert(0);
+			//exit(EXIT_FAILURE);
 		}
-		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED); 	
+		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED);
 	}
 
 	if (m->state == FSM_STATE_ERROR) {
-		// TODO
+	        assert(0);
+		//exit(EXIT_FAILURE);
 	}
 }
 
 void __INSTR_fsm_destroy(fsm_id id) {
-  //TODO
+    fsm_list_node *cur = fsm_list;
+
+    if(cur && cur->fsm->id == id) {
+        cur = cur->next;
+        return;
+    }
+
+  	while((cur) && (cur->next)) {
+  	  if ((*cur->next->fsm).id == id) {
+
+			cur->next = cur->next->next;
+			return;
+      }
+	  cur = cur->next;
+	}
 }

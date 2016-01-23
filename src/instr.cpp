@@ -87,8 +87,6 @@ void LogInsertion(string where, Function* calledFunction, Instruction* foundInst
  */
 int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value*> variables) {
 	logger.write_info("Applying rule...");
-	cout << "Applying..." << endl; //TODO remove
-
 
 	// Work just with call instructions for now...
 	if(rw_rule.newInstr.instruction != "call") {
@@ -230,7 +228,6 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
 	   string functionName = GetNameOfFunction(&*F);
 	   if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
 		   logger.write_info("Omitting function " + functionName + " from instrumentation.");
-		   cout << "Omitting function " << functionName << " from instrumentation." << endl; // TODO remove
 		   continue;
 	   }
 	   
@@ -272,9 +269,8 @@ int main(int argc, char *argv[]) {
 	Rewriter rw;
 	try {
 		rw.parseConfig(config_file);
-		//rw_config = parse_config(config_file);
 	}
-	catch (runtime_error ex){ //TODO exceptions in c++?
+	catch (runtime_error ex){ 
 		string exceptionString = "Error parsing configuration: ";
 		logger.write_error(exceptionString.append(ex.what()));
 		return 1;

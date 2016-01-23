@@ -157,6 +157,7 @@ def run():
 	if ret != 0:
 		err('Instrumentation failed!')
 	else:
+		dbg('Instrumentation done.')
 		if(generate_ll):
 			ret = call(['llvm-dis-3.4 {0}'.format(final_output)], shell=True)
 			if ret != 0:
