@@ -1,4 +1,6 @@
-
+{	
+	"file": "double_free.c",
+	"rules":
 	[
 		{
 			"findInstruction": {
@@ -28,6 +30,7 @@
 			"where": "before"
 		}
 	]
+}
 
 
 

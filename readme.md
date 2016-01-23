@@ -1,10 +1,15 @@
 ﻿
 Download 
 https://github.com/open-source-parsers/jsoncpp
-and install it into `include/` folder, move `jsoncpp.cpp` into `src` and modify `#include "json.h"` to `#include "../include/json.h"`.  
+and install it into `include/` folder, move `jsoncpp.cpp` into `src` and modify `#include "json.h"` to `#include "../include/json.h"`. 
+
+Run script `instr`.
 
 Json config files should look like this:
 ```
+    {
+	"file": string,
+	"rules":	
 	[
 		{
 			"findInstruction": {
@@ -20,6 +25,7 @@ Json config files should look like this:
 			"where": "before"/"after"/"replace"
 		}
 	]
+    }
 ```
 
 \<x\> is variable, !s matches any string, !n is none. The new instruction can be only a call for now.
@@ -27,7 +33,9 @@ Json config files should look like this:
 Example:
 ```json
 	
-
+    {
+	"file": "example.c",
+	"rules":
 	[
 		{
 			"findInstruction": {
@@ -43,5 +51,6 @@ Example:
 			"where": "before"
 		}
 	]
+    }
 ```
 
