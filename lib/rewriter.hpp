@@ -1,5 +1,7 @@
 #include <list>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 
 // Configuration
@@ -27,9 +29,11 @@ typedef std::list<RewriteRule> RewriterConfig;
 
 // Rewriter
 class Rewriter {
- RewriterConfig config;
-
- public:
-	Rewriter(RewriterConfig config) : config(config) {}
-
+	RewriterConfig config;
+	std::string cFile;
+	public:
+		//Rewriter(std::ifstream &config_file);
+		std::string CFileName();
+		RewriterConfig getConfig();
+		void parseConfig(std::ifstream &config_file);
 };

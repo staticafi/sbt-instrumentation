@@ -46,9 +46,10 @@ SET(JSON_FILES
 )
 
 SET(SOURCE_FILES
-    src/rewriter.hpp
+    lib/instr_log.hpp
+    lib/rewriter.hpp
+    src/rewriter.cpp
     src/instr_log.cpp
-    src/instr_log.hpp
 )
 
 # Find the libraries that correspond to the LLVM components

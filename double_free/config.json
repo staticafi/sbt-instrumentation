@@ -12,13 +12,13 @@
 					      "operands": ["__INSTR_fsm_change_state","<t1>", "1"]
 					  },
 			"where": "after"
-		}
+		},
 		
 		{
 			"findInstruction": {
 					      "returnValue": "!n",
 					      "instruction": "call",
-					      "operands": ["free", "<t1>"]
+					      "operands": ["!s", "free", "<t1>"]
 					   },
 			"newInstruction": {
 					      "returnValue": "!n",

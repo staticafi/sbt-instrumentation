@@ -1,4 +1,4 @@
-#include "instr_log.hpp"
+#include "../lib/instr_log.hpp"
 #include <fstream>
 #include <string>
 

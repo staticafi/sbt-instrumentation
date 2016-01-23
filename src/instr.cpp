@@ -1,6 +1,5 @@
-#include "rewriter.hpp"
-#include "instr_log.hpp"
-#include "../include/json.h"
+#include "../lib/rewriter.hpp"
+#include "../lib/instr_log.hpp"
 #include <iostream>
 #include <fstream>
 #include <exception>
@@ -40,60 +39,7 @@ using namespace llvm;
 
 using namespace std;
 
-Logger logger("log.txt");
-
-
- /** 
- * Parses json file with configuration.
- * @param config_file stream with opened config file.
- * @return parsed configuration
- * @see RewriterConfig
- */
-RewriterConfig parse_config(ifstream &config_file) {
-	Json::Value json_rules;
-	Json::Reader reader;
-	bool parsingSuccessful = reader.parse(config_file, json_rules);
-	if (!parsingSuccessful)	{
-		cerr  << "Failed to parse configuration\n"
-			  << reader.getFormattedErrorMessages();
-		throw runtime_error("Config parsing failure.");
-	}
-
-	// TODO catch exceptions here
-
-	RewriterConfig rw_config;
-	for (uint i = 0; i < json_rules.size(); ++i) {
-		RewriteRule r;
-
-		// TODO make function from this
-		r.foundInstr.returnValue = json_rules[i]["findInstruction"]["returnValue"].asString();
-		r.foundInstr.instruction = json_rules[i]["findInstruction"]["instruction"].asString();
-		for (uint j = 0; j < json_rules[i]["findInstruction"]["operands"].size(); ++j) {
-			r.foundInstr.parameters.push_back(json_rules[i]["findInstruction"]["operands"][j].asString());
-		}
-		
-		r.newInstr.returnValue = json_rules[i]["newInstruction"]["returnValue"].asString();
-		r.newInstr.instruction = json_rules[i]["newInstruction"]["instruction"].asString();
-
-		for (uint j = 0; j < json_rules[i]["newInstruction"]["operands"].size(); ++j) {
-			r.newInstr.parameters.push_back(json_rules[i]["newInstruction"]["operands"][j].asString());
-		}
-
-		if (json_rules[i]["where"] == "before") { 
-			r.where = InstrumentPlacement::BEFORE;
-		}
-		else if (json_rules[i]["where"] == "after") {
-			r.where = InstrumentPlacement::AFTER;
-		}
-		else if (json_rules[i]["where"] == "replace") {
-			r.where = InstrumentPlacement::REPLACE;
-		}
-
-		rw_config.push_back(r);
-	}
-
-	return rw_config;
-}
+Logger logger("log.txt"); 
 
 void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR>" << endl; // TODO
@@ -319,15 +265,18 @@ int main(int argc, char *argv[]) {
 	llvmir_file.open(argv[2]);
 
 	// Parse json file
-	RewriterConfig rw_config;
+	Rewriter rw;
 	try {
-		rw_config = parse_config(config_file);
+		rw.parseConfig(config_file);
+		//rw_config = parse_config(config_file);
 	}
 	catch (runtime_error ex){ //TODO exceptions in c++?
 		string exceptionString = "Error parsing configuration: ";
 		logger.write_error(exceptionString.append(ex.what()));
 		return 1;
 	}
+	
+	RewriterConfig rw_config = rw.getConfig();
 			
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
