@@ -54,5 +54,5 @@ Example:
     }
 ```
 
-In `.c` file given in `.json` file all function names should start with `__INSTR_` or else they will be instrumented too.
+In `.c` file given in `.json` file all function names should start with `__INSTR_` or else they will be instrumented too. For now, if a function from this file has an argument that will not be passed from the program that is being instrumented, it has to be an integer.
 
