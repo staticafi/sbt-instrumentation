@@ -103,7 +103,7 @@ def parse_command_line():
             dbg('Output will be stored to {0}'.format(arg))
         elif opt == '--bc':
             global source_is_bc
-            source_is_bc = Truehttps://gist.github.com/xvitovs1/f6cbc677ca95cc7e1284
+            source_is_bc = True
             dbg('Given code is bytecode')
         elif opt == '--ll':
             global generate_ll
