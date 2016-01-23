@@ -20,30 +20,30 @@ void Rewriter::parseConfig(ifstream &config_file) {
 	// TODO catch exceptions here
 
 	RewriterConfig rw_config;
-	for (uint i = 0; i < json_rules.size(); ++i) {
+	for (uint i = 0; i < json_rules["rules"].size(); ++i) {
 		RewriteRule r;
 
 		// TODO make function from this
-		r.foundInstr.returnValue = json_rules[i]["findInstruction"]["returnValue"].asString();
-		r.foundInstr.instruction = json_rules[i]["findInstruction"]["instruction"].asString();
-		for (uint j = 0; j < json_rules[i]["findInstruction"]["operands"].size(); ++j) {
-			r.foundInstr.parameters.push_back(json_rules[i]["findInstruction"]["operands"][j].asString());
+		r.foundInstr.returnValue = json_rules["rules"][i]["findInstruction"]["returnValue"].asString();
+		r.foundInstr.instruction = json_rules["rules"][i]["findInstruction"]["instruction"].asString();
+		for (uint j = 0; j < json_rules["rules"][i]["findInstruction"]["operands"].size(); ++j) {
+			r.foundInstr.parameters.push_back(json_rules["rules"][i]["findInstruction"]["operands"][j].asString());
 		}
 		
-		r.newInstr.returnValue = json_rules[i]["newInstruction"]["returnValue"].asString();
-		r.newInstr.instruction = json_rules[i]["newInstruction"]["instruction"].asString();
+		r.newInstr.returnValue = json_rules["rules"][i]["newInstruction"]["returnValue"].asString();
+		r.newInstr.instruction = json_rules["rules"][i]["newInstruction"]["instruction"].asString();
 
-		for (uint j = 0; j < json_rules[i]["newInstruction"]["operands"].size(); ++j) {
-			r.newInstr.parameters.push_back(json_rules[i]["newInstruction"]["operands"][j].asString());
+		for (uint j = 0; j < json_rules["rules"][i]["newInstruction"]["operands"].size(); ++j) {
+			r.newInstr.parameters.push_back(json_rules["rules"][i]["newInstruction"]["operands"][j].asString());
 		}
 
-		if (json_rules[i]["where"] == "before") { 
+		if (json_rules["rules"][i]["where"] == "before") { 
 			r.where = InstrumentPlacement::BEFORE;
 		}
-		else if (json_rules[i]["where"] == "after") {
+		else if (json_rules["rules"][i]["where"] == "after") {
 			r.where = InstrumentPlacement::AFTER;
 		}
-		else if (json_rules[i]["where"] == "replace") {
+		else if (json_rules["rules"][i]["where"] == "replace") {
 			r.where = InstrumentPlacement::REPLACE;
 		}
 
@@ -51,6 +51,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
 	}
 
 	this->config = rw_config;
+	this->cFile = json_rules["file"].asString();
 }
 
 std::string Rewriter::CFileName() {

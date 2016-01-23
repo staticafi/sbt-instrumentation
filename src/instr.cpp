@@ -41,8 +41,10 @@ using namespace std;
 
 Logger logger("log.txt"); 
 
+string outputName;
+
 void usage(char *name) {
-	cerr << "Usage: " << name << " <config.json> <llvm IR>" << endl; // TODO
+	cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName>" << endl; 
 }
 
 /**
@@ -241,7 +243,7 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
   // Write instrumented module into the output file
 
   ofstream out_file;
-  out_file.open("out.bc", ofstream::out | ofstream::trunc);
+  out_file.open(outputName, ofstream::out | ofstream::trunc);
   raw_os_ostream rstream(out_file);
  
   //M.print(rstream, NULL);
@@ -252,7 +254,7 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc < 2) {
+	if (argc < 3) {
 		usage(argv[0]);
 		exit(1);
 	}
@@ -263,6 +265,8 @@ int main(int argc, char *argv[]) {
 
 	ifstream llvmir_file;
 	llvmir_file.open(argv[2]);
+	
+	outputName = argv[3];
 
 	// Parse json file
 	Rewriter rw;
