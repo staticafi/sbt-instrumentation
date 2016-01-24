@@ -33,7 +33,7 @@ fsm_list_node *fsm_list = NULL;
 void __INSTR_fsm_list_append(fsm_list_node *node) {
 	fsm_list_node *cur = fsm_list;
 
-	while((cur) && (&(cur->next))) {
+	while((cur) && (cur->next)) {
 	  cur = cur->next;
 	}
 
