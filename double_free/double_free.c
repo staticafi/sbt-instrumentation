@@ -46,11 +46,11 @@ void __INSTR_fsm_list_append(fsm_list_node *node) {
 }
 
 fsm* __INSTR_fsm_create(fsm_id id, fsm_state state) {
-	fsm *new_fsm = (fsm *) malloc(sizeof(fsm*));
+	fsm *new_fsm = (fsm *) malloc(sizeof(fsm));
 	new_fsm->id = id;
 	new_fsm->state = state;
 
-	fsm_list_node *node = (fsm_list_node *) malloc(sizeof(fsm_list_node*));
+	fsm_list_node *node = (fsm_list_node *) malloc(sizeof(fsm_list_node));
 	node->next = NULL;
 	node->fsm = new_fsm;
 
@@ -100,16 +100,23 @@ void __INSTR_fsm_destroy(fsm_id id) {
     fsm_list_node *cur = fsm_list;
 
     if(cur && cur->fsm->id == id) {
-        cur = cur->next;
+        fsm_list_node *newHead = cur->next;
+        free(cur->fsm);
+        free(cur);
+        fsm_list = newHead;
         return;
     }
 
   	while((cur) && (cur->next)) {
+  	printf("%d\n",(*cur->next->fsm).id);
   	  if ((*cur->next->fsm).id == id) {
-
-			cur->next = cur->next->next;
-			return;
-      }
+            fsm_list_node *tmp = cur->next->next;
+            free(cur->next->fsm);
+            free(cur->next);
+	    cur->next = tmp;
+	    return;
+	  }
 	  cur = cur->next;
 	}
+
 }
