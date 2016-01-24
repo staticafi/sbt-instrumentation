@@ -95,31 +95,37 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		return 1;
 	}
 	
+	//TODO remove this block
+	string foundInstrOpName = I.getOpcodeName();	
+	if(foundInstrOpName == "call") {
+		if (CallInst *ci = dyn_cast<CallInst>(&I)) { //TODO what if this fails
+			string name = ci->getCalledFunction()->getName().str();
+			logger.write_info("Inserting " +foundInstrOpName + " " + name);
+		}
+	}
+	
 	// Get operands
 	std::vector<Value *> args;
-	int i = 0;
 	Function *CalleeF = NULL;
-	for (list<string>::iterator sit=rw_rule.newInstr.parameters.begin(); sit != rw_rule.newInstr.parameters.end(); ++sit) {
-		string param = *sit; 
-		
-		if(rw_rule.newInstr.instruction == "call" && i == 0) {
-			 CalleeF = M.getFunction(param);
-			 if (!CalleeF) {
-				cerr << "Unknown function " << param << endl;
-				logger.write_error("Unknown function: " + param);	
-				return 1;
-			 }
-			 i++;
-			 continue;
-		}
-		
-		if(variables.find(param) == variables.end()) {
+	
+	string param = *rw_rule.newInstr.parameters.begin(); 
+	CalleeF = M.getFunction(param);
+	if (!CalleeF) {
+		cerr << "Unknown function " << param << endl;
+		logger.write_error("Unknown function: " + param);	
+		return 1;
+	}
+	
+	for (list<string>::iterator sit=rw_rule.newInstr.arguments.begin(); sit != rw_rule.newInstr.arguments.end(); ++sit) {
+		string arg = *sit; 
+
+		if(variables.find(arg) == variables.end()) {
 			// TODO Whoops, what now? Change config json? Allow just integers?
-			int paramInt;
+			int argInt;
 			try {
-				paramInt = stoi(param);
+				argInt = stoi(arg);
 				LLVMContext &Context = getGlobalContext();
-				Value *intValue = ConstantInt::get(Type::getInt32Ty(Context), paramInt);
+				Value *intValue = ConstantInt::get(Type::getInt32Ty(Context), argInt);
 				args.push_back(intValue);
 			}
 			catch (invalid_argument) {
@@ -130,10 +136,8 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 			}
 		}
 		else {
-			args.push_back(variables[param]);
+			args.push_back(variables[arg]);
 		}
-		
-		i++;
 	}
 	
 	// Create new call instruction
@@ -169,30 +173,49 @@ bool CheckInstruction(Instruction* ins, Module& M,RewriterConfig rw_config) {
 				if(ins->getOpcodeName() == rw.foundInstr.instruction) {
 					map <string, Value*> variables;
 					
-					// check operands
+					// check operands				
 					unsigned opIndex = 0;
-					unsigned argIndex = 0;
 					bool apply = true;
 					for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
 						string param = *sit; 
 						
-						// Do we need arguments of called function?
-						if(strcmp(ins->getOpcodeName(),"call") == 0 && ins->getNumOperands() - 1 < opIndex) {
-							if (CallInst *ci = dyn_cast<CallInst>(ins)) { //TODO what if this fails
-								if(ci->getNumArgOperands() > argIndex && param[0] == '<' && param[param.size() - 1] == '>') {
-									variables[param] = ci->getArgOperand(argIndex);									
-								}
-							}
-							argIndex++;
-						}
-						else if(param != "!s" && param != "!n" && param != (ins->getOperand(opIndex)->getName()).str()) {
+						if(opIndex > ins->getNumOperands() - 1) {
 							apply = false;
 							break;
 						}
+						
+						if(param != "!s" && param != "!n" && param != (ins->getOperand(opIndex)->getName()).str()) {
+							apply = false;
+							break;
+						}
+						
 						else if(param[0] == '<' && param[param.size() - 1] == '>') {
 							variables[param] = ins->getOperand(opIndex);
 						}
+						
 						opIndex++;
+					}
+					
+					// Do we need arguments of called function?
+					if(strcmp(ins->getOpcodeName(),"call") == 0) {
+						if (CallInst *ci = dyn_cast<CallInst>(ins)) { //TODO what if this fails
+							unsigned argIndex = 0;
+							for (list<string>::iterator sit=rw.foundInstr.arguments.begin(); sit != rw.foundInstr.arguments.end(); ++sit) {
+								string arg = *sit; 
+								
+								if(ci->getNumArgOperands() - 1 < argIndex) {
+									apply = false;
+									break;
+								}
+								
+								if(arg[0] == '<' && arg[arg.size() - 1] == '>') {
+									variables[arg] = ci->getArgOperand(argIndex);									
+								}
+								
+								argIndex++;
+							}
+						}
+						
 					}
 									
 					if(!apply)
