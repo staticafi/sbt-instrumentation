@@ -108,7 +108,6 @@ void __INSTR_fsm_destroy(fsm_id id) {
     }
 
   	while((cur) && (cur->next)) {
-  	printf("%d\n",(*cur->next->fsm).id);
   	  if ((*cur->next->fsm).id == id) {
             fsm_list_node *tmp = cur->next->next;
             free(cur->next->fsm);
