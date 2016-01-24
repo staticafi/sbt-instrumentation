@@ -16,7 +16,7 @@ Json config files should look like this:
 						      "returnValue": string,
 						      "instruction": string(callinstr,alloca,...),
 						      "operands": list of strings,
-						      "arguments": list of strings
+						      "arguments": list of strings(empty if instruction is not call)
 						   },
 				"newInstruction": {
 						      "returnValue": string,
