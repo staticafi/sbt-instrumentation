@@ -123,11 +123,11 @@ void __INSTR_fsm_destroy(fsm_id id) {
 void __INSTR_fsm_list_destroy() {
     fsm_list_node *cur = fsm_list;
 
-  	while(cur) {
+    while(cur) {
         fsm_list_node *tmp = cur->next;
         free(cur->fsm);
         free(cur);
         cur = tmp;
-	}
+    }
 
 }
