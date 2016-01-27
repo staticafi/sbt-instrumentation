@@ -14,7 +14,7 @@ Json config files should look like this:
 			{
 				"findInstruction": {
 						      "returnValue": string,
-						      "instruction": string(callinstr,alloca,...),
+						      "instruction": string(call,alloca,...),
 						      "operands": list of strings,
 						      "arguments": list of strings(empty if instruction is not call)
 						   },
