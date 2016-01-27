@@ -89,15 +89,6 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		return 1;
 	}
 	
-	//TODO remove this block
-	string foundInstrOpName = I.getOpcodeName();	
-	if(foundInstrOpName == "call") {
-		if (CallInst *ci = dyn_cast<CallInst>(&I)) { //TODO what if this fails
-			string name = ci->getCalledFunction()->getName().str();
-			logger.write_info("Inserting " +foundInstrOpName + " " + name);
-		}
-	}
-	
 	// Get operands
 	std::vector<Value *> args;
 	Function *CalleeF = NULL;

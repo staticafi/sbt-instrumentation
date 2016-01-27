@@ -56,11 +56,6 @@ void Rewriter::parseConfig(ifstream &config_file) {
 	}
 
 	this->config = rw_config;
-	this->cFile = json_rules["file"].asString();
-}
-
-std::string Rewriter::CFileName() {
-	return this->cFile;
 }
 
 RewriterConfig Rewriter::getConfig() {
