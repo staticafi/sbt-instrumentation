@@ -30,7 +30,7 @@ Json config files should look like this:
     }
 ```
 
-`\<x\>` is variable, `*` matches any string. The new instruction can be only a call for now (with one operand with function name).
+`<x>` is variable, `*` matches any string. The new instruction can be only a call for now (with one operand with function name).
 
 Example:
 ```json
