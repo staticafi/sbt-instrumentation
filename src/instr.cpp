@@ -178,7 +178,7 @@ bool CheckInstruction(Instruction* ins, Module& M, RewriterConfig rw_config) {
 					if(param[0] == '<' && param[param.size() - 1] == '>') {
 						variables[param] = ins->getOperand(opIndex);
 					}	
-					else if(param != "!s" && param != "!n" && param != (ins->getOperand(opIndex)->getName()).str()) {
+					else if(param != "*" && param != (ins->getOperand(opIndex)->getName()).str()) {
 						apply = false;
 						break;
 					}						
@@ -211,7 +211,7 @@ bool CheckInstruction(Instruction* ins, Module& M, RewriterConfig rw_config) {
 					continue;
 					
 				// check return value
-				if(rw.foundInstr.returnValue != "!n" && rw.foundInstr.returnValue != "!s") {
+				if(rw.foundInstr.returnValue != "*") {
 					if(rw.foundInstr.returnValue[0] == '<' && rw.foundInstr.returnValue[rw.foundInstr.returnValue.size() - 1] == '>') {
 						variables[rw.foundInstr.returnValue] = ins;
 					}

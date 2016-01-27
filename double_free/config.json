@@ -6,11 +6,11 @@
 			"findInstruction": {
 					      "returnValue": "<t1>",
 					      "instruction": "call",
-					      "operands": ["!s", "malloc"],
-					      "arguments": ["!s"]
+					      "operands": ["*", "malloc"],
+					      "arguments": ["*"]
 					   },
 			"newInstruction": {
-					      "returnValue": "!n",
+					      "returnValue": "*",
 					      "instruction": "call",
 					      "operands": ["__INSTR_fsm_change_state"],
 					      "arguments": ["<t1>", "1"]
@@ -20,13 +20,13 @@
 		
 		{
 			"findInstruction": {
-					      "returnValue": "!n",
+					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["!s", "free"],
+					      "operands": ["*", "free"],
 					      "arguments": ["<t1>"]
 					   },
 			"newInstruction": {
-					      "returnValue": "!n",
+					      "returnValue": "*",
 					      "instruction": "call",
 					      "operands": ["__INSTR_fsm_change_state"],
 					      "arguments": ["<t1>", "0"]

@@ -30,7 +30,7 @@ Json config files should look like this:
     }
 ```
 
-\<x\> is variable, !s matches any string, !n is none. The new instruction can be only a call for now (with one operand with function name).
+`\<x\>` is variable, `*` matches any string. The new instruction can be only a call for now (with one operand with function name).
 
 Example:
 ```json
@@ -43,11 +43,11 @@ Example:
 				"findInstruction": {
 						      "returnValue": "<t1>",
 						      "instruction": "call",
-						      "operands": ["!s", "malloc"],
-						      "arguments": ["!s"]
+						      "operands": ["*", "malloc"],
+						      "arguments": ["*"]
 						   },
 				"newInstruction": {
-						      "returnValue": "!n",
+						      "returnValue": "*",
 						      "instruction": "call",
 						      "operands": ["nameOfFunction"],
 						      "arguments": ["<t1>"]
