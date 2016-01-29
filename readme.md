@@ -15,14 +15,12 @@ Json config files should look like this:
 				"findInstruction": {
 						      "returnValue": string,
 						      "instruction": string(call,alloca,...),
-						      "operands": list of strings,
-						      "arguments": list of strings(empty if instruction is not call)
+						      "operands": list of strings
 						   },
 				"newInstruction": {
 						      "returnValue": string,
 						      "instruction": call,
-						      "operands": ["nameOfFunction"],
-						      "arguments": list of strings
+						      "operands": list of strings
 						  },
 				"where": "before"/"after"/"replace"
 			}
@@ -30,7 +28,7 @@ Json config files should look like this:
     }
 ```
 
-`<x>` is variable, `*` matches any string. The new instruction can be only a call for now (with one operand with function name).
+`<x>` is variable, `*` matches any string. The new instruction can be only a call for now.
 
 Example:
 ```json
@@ -44,13 +42,11 @@ Example:
 						      "returnValue": "<t1>",
 						      "instruction": "call",
 						      "operands": ["*", "malloc"],
-						      "arguments": ["*"]
 						   },
 				"newInstruction": {
 						      "returnValue": "*",
 						      "instruction": "call",
-						      "operands": ["nameOfFunction"],
-						      "arguments": ["<t1>"]
+						      "operands": ["<t1>","nameOfFunction"],
 						  },
 				"where": "before"
 			}

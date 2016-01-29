@@ -29,18 +29,12 @@ void Rewriter::parseConfig(ifstream &config_file) {
 		for (uint j = 0; j < json_rules["rules"][i]["findInstruction"]["operands"].size(); ++j) {
 			r.foundInstr.parameters.push_back(json_rules["rules"][i]["findInstruction"]["operands"][j].asString());
 		}
-		for (uint j = 0; j < json_rules["rules"][i]["findInstruction"]["arguments"].size(); ++j) {
-			r.foundInstr.arguments.push_back(json_rules["rules"][i]["findInstruction"]["arguments"][j].asString());
-		}
 		
 		r.newInstr.returnValue = json_rules["rules"][i]["newInstruction"]["returnValue"].asString();
 		r.newInstr.instruction = json_rules["rules"][i]["newInstruction"]["instruction"].asString();
 		for (uint j = 0; j < json_rules["rules"][i]["newInstruction"]["operands"].size(); ++j) {
 			r.newInstr.parameters.push_back(json_rules["rules"][i]["newInstruction"]["operands"][j].asString());
 		}		
-		for (uint j = 0; j < json_rules["rules"][i]["newInstruction"]["arguments"].size(); ++j) {
-			r.newInstr.arguments.push_back(json_rules["rules"][i]["newInstruction"]["arguments"][j].asString());
-		}
 
 		if (json_rules["rules"][i]["where"] == "before") { 
 			r.where = InstrumentPlacement::BEFORE;

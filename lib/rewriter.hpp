@@ -16,7 +16,6 @@ class InstrumentInstruction {
 	std::string returnValue;
 	std::string instruction;
 	std::list<std::string> parameters;
-	std::list<std::string> arguments;
 };
 
 class RewriteRule {

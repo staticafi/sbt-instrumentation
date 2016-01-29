@@ -93,7 +93,7 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 	std::vector<Value *> args;
 	Function *CalleeF = NULL;
 	
-	string param = *rw_rule.newInstr.parameters.begin(); 
+	string param = *(--rw_rule.newInstr.parameters.end()); 
 	CalleeF = M.getFunction(param);
 	if (!CalleeF) {
 		cerr << "Unknown function " << param << endl;
@@ -101,7 +101,13 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		return 1;
 	}
 	
-	for (list<string>::iterator sit=rw_rule.newInstr.arguments.begin(); sit != rw_rule.newInstr.arguments.end(); ++sit) {
+	unsigned i = 0;
+	for (list<string>::iterator sit=rw_rule.newInstr.parameters.begin(); sit != rw_rule.newInstr.parameters.end(); ++sit) {
+		
+		if(i == rw_rule.newInstr.parameters.size() - 1) {
+			break;
+		}
+		
 		string arg = *sit; 
 
 		if(variables.find(arg) == variables.end()) {
@@ -123,6 +129,8 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		else {
 			args.push_back(variables[arg]);
 		}
+		
+		i++;
 	}
 	
 	// Create new call instruction
@@ -169,11 +177,32 @@ bool CheckInstruction(Instruction* ins, Module& M, RewriterConfig rw_config) {
 				bool apply = true;
 				for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
 					string param = *sit; 
-						
+					
 					if(opIndex > ins->getNumOperands() - 1) {
 						apply = false;
 						break;
 					}
+					
+					// Do we need arguments of called function?
+			/*		if(strcmp(ins->getOpcodeName(),"call") == 0) {
+						if (CallInst *ci = dyn_cast<CallInst>(ins)) { //TODO what if this fails
+							unsigned argIndex = 0;
+							for (list<string>::iterator sit=rw.foundInstr.arguments.begin(); sit != rw.foundInstr.arguments.end(); ++sit) {
+								string arg = *sit; 
+									
+								if(ci->getNumArgOperands() - 1 < argIndex) {
+									apply = false;
+									break;
+								}
+									
+								if(arg[0] == '<' && arg[arg.size() - 1] == '>') {
+									variables[arg] = ci->getArgOperand(argIndex);									
+								}
+									
+								argIndex++;
+							}
+						}						
+					}*/
 						
 					if(param[0] == '<' && param[param.size() - 1] == '>') {
 						variables[param] = ins->getOperand(opIndex);
@@ -185,28 +214,7 @@ bool CheckInstruction(Instruction* ins, Module& M, RewriterConfig rw_config) {
 				
 					opIndex++;
 				}
-					
-				// Do we need arguments of called function?
-				if(strcmp(ins->getOpcodeName(),"call") == 0) {
-					if (CallInst *ci = dyn_cast<CallInst>(ins)) { //TODO what if this fails
-						unsigned argIndex = 0;
-						for (list<string>::iterator sit=rw.foundInstr.arguments.begin(); sit != rw.foundInstr.arguments.end(); ++sit) {
-							string arg = *sit; 
-								
-							if(ci->getNumArgOperands() - 1 < argIndex) {
-								apply = false;
-								break;
-							}
-								
-							if(arg[0] == '<' && arg[arg.size() - 1] == '>') {
-								variables[arg] = ci->getArgOperand(argIndex);									
-							}
-								
-							argIndex++;
-						}
-					}						
-				}
-									
+													
 				if(!apply)
 					continue;
 					
