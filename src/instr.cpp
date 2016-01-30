@@ -127,7 +127,27 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 			}
 		}
 		else {
-			args.push_back(variables[arg]);
+			
+			//check type of parameter
+			unsigned argIndex = 0;
+			for (Function::ArgumentListType::iterator sit=CalleeF->getArgumentList().begin(); sit != CalleeF->getArgumentList().end(); ++sit) {
+				Value *argV = sit; 
+										
+				if(i == argIndex) {
+					if(argV->getType() != variables[arg]->getType()) {
+						//TODO other types?
+						CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
+						CastI->insertBefore(&I);
+						args.push_back(CastI);
+					}
+					else{
+						args.push_back(variables[arg]);
+					}
+					break;
+				}
+										
+				argIndex++;
+			}			
 		}
 		
 		i++;
@@ -135,7 +155,7 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 	
 	// Create new call instruction
 	CallInst *newInst = CallInst::Create(CalleeF, args);
-	   
+
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
 		LogInsertion("before",CalleeF, &I);
@@ -182,28 +202,7 @@ bool CheckInstruction(Instruction* ins, Module& M, RewriterConfig rw_config) {
 						apply = false;
 						break;
 					}
-					
-					// Do we need arguments of called function?
-			/*		if(strcmp(ins->getOpcodeName(),"call") == 0) {
-						if (CallInst *ci = dyn_cast<CallInst>(ins)) { //TODO what if this fails
-							unsigned argIndex = 0;
-							for (list<string>::iterator sit=rw.foundInstr.arguments.begin(); sit != rw.foundInstr.arguments.end(); ++sit) {
-								string arg = *sit; 
-									
-								if(ci->getNumArgOperands() - 1 < argIndex) {
-									apply = false;
-									break;
-								}
-									
-								if(arg[0] == '<' && arg[arg.size() - 1] == '>') {
-									variables[arg] = ci->getArgOperand(argIndex);									
-								}
-									
-								argIndex++;
-							}
-						}						
-					}*/
-						
+										
 					if(param[0] == '<' && param[param.size() - 1] == '>') {
 						variables[param] = ins->getOperand(opIndex);
 					}	
@@ -244,9 +243,10 @@ bool CheckInstruction(Instruction* ins, Module& M, RewriterConfig rw_config) {
  */
 bool instrumentModule(Module &M, RewriterConfig rw_config) {
    for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
-	   
+	   	   						
 	   // Do not instrument functions linked for instrumentation
 	   string functionName = GetNameOfFunction(&*F);
+
 	   if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
 		   logger.write_info("Omitting function " + functionName + " from instrumentation.");
 		   continue;
@@ -257,9 +257,8 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
 		    if(!CheckInstruction(&*I, M,rw_config)) return false;
 		}
 	 }
- 
-  // Write instrumented module into the output file
 
+  // Write instrumented module into the output file
   ofstream out_file;
   out_file.open(outputName, ofstream::out | ofstream::trunc);
   raw_os_ostream rstream(out_file);
