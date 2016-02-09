@@ -22,7 +22,8 @@ Json config files should look like this:
 						      "instruction": call,
 						      "operands": list of strings
 						  },
-				"where": "before"/"after"/"replace"
+				"where": "before"/"after"/"replace",
+				"in": string (name of function, can be "*" for any function)
 			}
 		]
     }
@@ -48,7 +49,8 @@ Example:
 						      "instruction": "call",
 						      "operands": ["<t1>","nameOfFunction"],
 						  },
-				"where": "before"
+				"where": "before",
+				"in": "main"
 			}
 		]
     }
