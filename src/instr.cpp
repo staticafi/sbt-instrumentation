@@ -148,8 +148,7 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 										
 				argIndex++;
 			}			
-		}
-		
+		}		
 		i++;
 	}
 	
@@ -183,10 +182,16 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
  * @param rw_config parsed rules to apply.
  * @return true if OK, false otherwise
  */
-bool CheckInstruction(Instruction* ins, Module& M, RewriterConfig rw_config) {
+bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config) {
 		// iterate through rewrite rules
 		for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
 			RewriteRule rw = *it; 
+			
+			// check if this rule should be applied in this function
+			string functionName = GetNameOfFunction(F);
+			
+			if(rw.inFunction != "*" && rw.inFunction!=functionName)
+				continue;
 			
 			// if instruction from rewrite rule is the same as current instruction
 			if(ins->getOpcodeName() == rw.foundInstr.instruction) {
@@ -254,7 +259,7 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
 	   
 	   for (inst_iterator I = inst_begin(&*F), End = inst_end(&*F); I != End; ++I) {
 			// Check if the instruction is relevant
-		    if(!CheckInstruction(&*I, M,rw_config)) return false;
+		    if(!CheckInstruction(&*I, M, &*F, rw_config)) return false;
 		}
 	 }
 

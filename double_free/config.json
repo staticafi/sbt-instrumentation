@@ -13,7 +13,8 @@
 					      "instruction": "call",
 					      "operands": ["<t1>", "1","__INSTR_fsm_change_state"]
 					  },
-			"where": "after"
+			"where": "after",
+			"in": "*"
 		},
 		
 		{
@@ -27,7 +28,23 @@
 					      "instruction": "call",
 					      "operands": ["<t1>", "0","__INSTR_fsm_change_state"]
 					  },
-			"where": "before"
+			"where": "before",
+			"in": "*"
+		},
+		
+		{
+			"findInstruction": {
+					      "returnValue": "*",
+					      "instruction": "ret",
+					      "operands": ["*"]
+					   },
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["__INSTR_fsm_list_destroy"]
+					  },
+			"where": "before",
+			"in": "main"
 		}
 	]
 }

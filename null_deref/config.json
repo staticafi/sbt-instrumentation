@@ -13,7 +13,8 @@
 					      "instruction": "call",
 					      "operands": ["<t1>", "__INSTR_check_pointer"]
 					  },
-			"where": "before"
+			"where": "before",
+			"in": "*"
 		}
 	]
 }

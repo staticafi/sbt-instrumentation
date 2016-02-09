@@ -23,6 +23,7 @@ class RewriteRule {
 	InstrumentInstruction foundInstr;
 	InstrumentInstruction newInstr;
 	InstrumentPlacement where;
+	std::string inFunction;
 };
 
 typedef std::list<RewriteRule> RewriterConfig;
