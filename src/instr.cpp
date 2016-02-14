@@ -72,6 +72,96 @@ void LogInsertion(string where, Function* calledFunction, Instruction* foundInst
 }
 
 /**
+ * Inserts new call instruction.
+ * @param CalleeF function to be called
+ * @param args arguments of the function to be called
+ * @param rw_rule relevant rewrite rule
+ * @param I current instruction
+ */
+void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule rw_rule, Instruction &I) {
+	// Create new call instruction
+	CallInst *newInst = CallInst::Create(CalleeF, args);
+
+	if(rw_rule.where == InstrumentPlacement::BEFORE) {
+		// Insert before
+		LogInsertion("before",CalleeF, &I);
+		newInst->insertBefore(&I);
+	}
+	else if(rw_rule.where == InstrumentPlacement::AFTER) {
+		// Insert after
+		LogInsertion("after", CalleeF, &I);
+		newInst->insertAfter(&I);
+	}
+	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
+		// Replace
+		logger.write_info("Replacing " + rw_rule.foundInstr.instruction + " with " + rw_rule.newInstr.instruction);
+		newInst->insertBefore(&I);
+		I.eraseFromParent();
+	}
+}
+
+/**
+ * Inserts argument.
+ * @param Irw_rule rewrite rule
+ * @param I instruction
+ * @param CalleeF function to be called
+ * @param variables map of found parameters form config
+ */
+vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* CalleeF, map <string, Value*> variables) {	
+	std::vector<Value *> args;
+	unsigned i = 0;
+	for (list<string>::iterator sit=rw_rule.newInstr.parameters.begin(); sit != rw_rule.newInstr.parameters.end(); ++sit) {
+		
+		if(i == rw_rule.newInstr.parameters.size() - 1) {
+			break;
+		}
+		
+		string arg = *sit; 
+		
+		if(variables.find(arg) == variables.end()) {
+			// TODO Whoops, what now? Change config json? Allow just integers?
+			int argInt;
+			try {
+				argInt = stoi(arg);
+				LLVMContext &Context = getGlobalContext();
+				Value *intValue = ConstantInt::get(Type::getInt32Ty(Context), argInt);
+				args.push_back(intValue);
+			}
+			catch (invalid_argument) {
+				// TODO what now?
+			}
+			catch (out_of_range) {
+				// TODO what now
+			}
+		}
+		else {	
+			unsigned argIndex = 0;
+			for (Function::ArgumentListType::iterator sit=CalleeF->getArgumentList().begin(); sit != CalleeF->getArgumentList().end(); ++sit) {
+				Value *argV = sit; 
+												
+				if(i == argIndex) {
+					if(argV->getType() != variables[arg]->getType()) {
+						//TODO other types?
+						CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
+						CastI->insertBefore(&I);
+						args.push_back(CastI);
+					}
+					else{
+						args.push_back(variables[arg]);
+					}
+					break;
+				}
+															
+				argIndex++;
+			}	
+		}	
+			
+		i++;
+	}
+	return args;
+}
+
+/**
  * Applies a rule.
  * @param M module
  * @param I current instruction
@@ -93,6 +183,7 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 	std::vector<Value *> args;
 	Function *CalleeF = NULL;
 	
+	// Get name of function
 	string param = *(--rw_rule.newInstr.parameters.end()); 
 	CalleeF = M.getFunction(param);
 	if (!CalleeF) {
@@ -101,78 +192,45 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		return 1;
 	}
 	
-	unsigned i = 0;
-	for (list<string>::iterator sit=rw_rule.newInstr.parameters.begin(); sit != rw_rule.newInstr.parameters.end(); ++sit) {
-		
-		if(i == rw_rule.newInstr.parameters.size() - 1) {
-			break;
-		}
-		
-		string arg = *sit; 
-
-		if(variables.find(arg) == variables.end()) {
-			// TODO Whoops, what now? Change config json? Allow just integers?
-			int argInt;
-			try {
-				argInt = stoi(arg);
-				LLVMContext &Context = getGlobalContext();
-				Value *intValue = ConstantInt::get(Type::getInt32Ty(Context), argInt);
-				args.push_back(intValue);
-			}
-			catch (invalid_argument) {
-				// TODO what now?
-			}
-			catch (out_of_range) {
-				// TODO what now
-			}
-		}
-		else {
-			
-			//check type of parameter
-			unsigned argIndex = 0;
-			for (Function::ArgumentListType::iterator sit=CalleeF->getArgumentList().begin(); sit != CalleeF->getArgumentList().end(); ++sit) {
-				Value *argV = sit; 
-										
-				if(i == argIndex) {
-					if(argV->getType() != variables[arg]->getType()) {
-						//TODO other types?
-						CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
-						CastI->insertBefore(&I);
-						args.push_back(CastI);
-					}
-					else{
-						args.push_back(variables[arg]);
-					}
-					break;
-				}
-										
-				argIndex++;
-			}			
-		}		
-		i++;
-	}
+	// Insert arguments
+	args = InsertArgument(rw_rule, I, CalleeF, variables);	
 	
-	// Create new call instruction
-	CallInst *newInst = CallInst::Create(CalleeF, args);
-
-	if(rw_rule.where == InstrumentPlacement::BEFORE) {
-		// Insert before
-		LogInsertion("before",CalleeF, &I);
-		newInst->insertBefore(&I);
-	}
-	else if(rw_rule.where == InstrumentPlacement::AFTER) {
-		// Insert after
-		LogInsertion("after", CalleeF, &I);
-		newInst->insertAfter(&I);
-	}
-	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
-		// Replace
-		logger.write_info("Replacing " + rw_rule.foundInstr.instruction + " with " + rw_rule.newInstr.instruction);
-		newInst->insertBefore(&I);
-		I.eraseFromParent();
-	}
+	// Insert new call instruction
+	InsertCallInstruction(CalleeF, args, rw_rule, I);
 
 	return 0;
+}
+
+/**
+ * Checks if the operands of instruction match.
+ * @param rw rewrite rule.
+ * @param ins instruction to be checked.
+ * @param variables map for remembering some parameters.
+ * @return true if OK, false otherwise
+ */
+bool CheckOperands(RewriteRule rw, Instruction* ins, map <string, Value*> &variables) {
+	unsigned opIndex = 0;
+	bool apply = true;
+	for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
+		string param = *sit; 
+						
+		if(opIndex > ins->getNumOperands() - 1) {
+			apply = false;
+			break;
+		}
+									
+		if(param[0] == '<' && param[param.size() - 1] == '>') {
+			variables[param] = ins->getOperand(opIndex);
+		}	
+		else if(param != "*" && param != (ins->getOperand(opIndex)->getName()).str()) {
+			apply = false;
+			break;
+		}						
+					
+		opIndex++;
+	}
+
+	return apply;
 }
 
 /**
@@ -197,29 +255,8 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 			if(ins->getOpcodeName() == rw.foundInstr.instruction) {
 				map <string, Value*> variables;
 					
-				// check operands				
-				unsigned opIndex = 0;
-				bool apply = true;
-				for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
-					string param = *sit; 
-					
-					if(opIndex > ins->getNumOperands() - 1) {
-						apply = false;
-						break;
-					}
-										
-					if(param[0] == '<' && param[param.size() - 1] == '>') {
-						variables[param] = ins->getOperand(opIndex);
-					}	
-					else if(param != "*" && param != (ins->getOperand(opIndex)->getName()).str()) {
-						apply = false;
-						break;
-					}						
-				
-					opIndex++;
-				}
-													
-				if(!apply)
+				// check operands															
+				if(!CheckOperands(rw, ins, variables))
 					continue;
 					
 				// check return value
