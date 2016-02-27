@@ -1,4 +1,4 @@
-{	
+{
 	"file": "null_deref.c",
 	"rules":
 	[
@@ -15,7 +15,22 @@
 					  },
 			"where": "before",
 			"in": "*"
+		},
+        {
+			"findInstruction": {
+					      "returnValue": "*",
+					      "instruction": "store",
+					      "operands": ["<t1>", "<t2>"]
+					   },
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t2>", "__INSTR_check_pointer"]
+					  },
+			"where": "before",
+			"in": "*"
 		}
+
 	]
 }
 

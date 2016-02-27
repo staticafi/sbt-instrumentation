@@ -84,14 +84,14 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 		m->state = fsm_transition_table[m->state][action];
 	} else {
 		if (action == FSM_ALPHABET_FREE) {
-			assert(0);
+			assert(0 && "free on non-allocated memory");
 			//exit(EXIT_FAILURE);
 		}
 		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED);
 	}
 
 	if (m->state == FSM_STATE_ERROR) {
-	        assert(0);
+	        assert(0 && "double free");
 		//exit(EXIT_FAILURE);
 	}
 }

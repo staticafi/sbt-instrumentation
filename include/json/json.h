@@ -87,10 +87,10 @@ license you like.
 #ifndef JSON_VERSION_H_INCLUDED
 # define JSON_VERSION_H_INCLUDED
 
-# define JSONCPP_VERSION_STRING "1.6.5"
+# define JSONCPP_VERSION_STRING "1.7.0"
 # define JSONCPP_VERSION_MAJOR 1
-# define JSONCPP_VERSION_MINOR 6
-# define JSONCPP_VERSION_PATCH 5
+# define JSONCPP_VERSION_MINOR 7
+# define JSONCPP_VERSION_PATCH 0
 # define JSONCPP_VERSION_QUALIFIER
 # define JSONCPP_VERSION_HEXA ((JSONCPP_VERSION_MAJOR << 24) | (JSONCPP_VERSION_MINOR << 16) | (JSONCPP_VERSION_PATCH << 8))
 
@@ -116,6 +116,7 @@ license you like.
 
 #ifndef JSON_CONFIG_H_INCLUDED
 #define JSON_CONFIG_H_INCLUDED
+#include <stddef.h>
 
 /// If defined, indicates that json library is embedded in CppTL library.
 //# define JSON_IN_CPPTL 1
@@ -167,33 +168,66 @@ license you like.
 // Storages, and 64 bits integer support is disabled.
 // #define JSON_NO_INT64 1
 
-#if defined(_MSC_VER) && _MSC_VER <= 1200 // MSVC 6
-// Microsoft Visual Studio 6 only support conversion from __int64 to double
-// (no conversion from unsigned __int64).
-#define JSON_USE_INT64_DOUBLE_CONVERSION 1
-// Disable warning 4786 for VS6 caused by STL (identifier was truncated to '255'
-// characters in the debug information)
-// All projects I've ever seen with VS6 were using this globally (not bothering
-// with pragma push/pop).
-#pragma warning(disable : 4786)
-#endif // if defined(_MSC_VER)  &&  _MSC_VER < 1200 // MSVC 6
+#if defined(_MSC_VER) // MSVC
+#  if _MSC_VER <= 1200 // MSVC 6
+    // Microsoft Visual Studio 6 only support conversion from __int64 to double
+    // (no conversion from unsigned __int64).
+#    define JSON_USE_INT64_DOUBLE_CONVERSION 1
+    // Disable warning 4786 for VS6 caused by STL (identifier was truncated to '255'
+    // characters in the debug information)
+    // All projects I've ever seen with VS6 were using this globally (not bothering
+    // with pragma push/pop).
+#    pragma warning(disable : 4786)
+#  endif // MSVC 6
 
-#if defined(_MSC_VER) && _MSC_VER >= 1500 // MSVC 2008
-/// Indicates that the following function is deprecated.
-#define JSONCPP_DEPRECATED(message) __declspec(deprecated(message))
-#elif defined(__clang__) && defined(__has_feature)
-#if __has_feature(attribute_deprecated_with_message)
-#define JSONCPP_DEPRECATED(message)  __attribute__ ((deprecated(message)))
+#  if _MSC_VER >= 1500 // MSVC 2008
+    /// Indicates that the following function is deprecated.
+#    define JSONCPP_DEPRECATED(message) __declspec(deprecated(message))
+#  endif
+
+#endif // defined(_MSC_VER)
+
+
+#ifndef JSON_HAS_RVALUE_REFERENCES
+
+#if defined(_MSC_VER) && _MSC_VER >= 1600 // MSVC >= 2010
+#define JSON_HAS_RVALUE_REFERENCES 1
+#endif // MSVC >= 2010
+
+#ifdef __clang__
+#if __has_feature(cxx_rvalue_references)
+#define JSON_HAS_RVALUE_REFERENCES 1
+#endif  // has_feature
+
+#elif defined __GNUC__ // not clang (gcc comes later since clang emulates gcc)
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L)
+#define JSON_HAS_RVALUE_REFERENCES 1
+#endif  // GXX_EXPERIMENTAL
+
+#endif // __clang__ || __GNUC__
+
+#endif // not defined JSON_HAS_RVALUE_REFERENCES
+
+#ifndef JSON_HAS_RVALUE_REFERENCES
+#define JSON_HAS_RVALUE_REFERENCES 0
 #endif
-#elif defined(__GNUC__) &&  (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
-#define JSONCPP_DEPRECATED(message)  __attribute__ ((deprecated(message)))
-#elif defined(__GNUC__) &&  (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
-#define JSONCPP_DEPRECATED(message)  __attribute__((__deprecated__))
-#endif
+
+#ifdef __clang__
+#elif defined __GNUC__ // not clang (gcc comes later since clang emulates gcc)
+#  if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#    define JSONCPP_DEPRECATED(message)  __attribute__ ((deprecated(message)))
+#  elif (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+#    define JSONCPP_DEPRECATED(message)  __attribute__((__deprecated__))
+#  endif  // GNUC version
+#endif // __clang__ || __GNUC__
 
 #if !defined(JSONCPP_DEPRECATED)
 #define JSONCPP_DEPRECATED(message)
 #endif // if !defined(JSONCPP_DEPRECATED)
+
+#if __GNUC__ >= 6
+#  define JSON_USE_INT64_DOUBLE_CONVERSION 1
+#endif
 
 namespace Json {
 typedef int Int;
@@ -396,10 +430,10 @@ namespace Json {
 class JSON_API Exception : public std::exception {
 public:
   Exception(std::string const& msg);
-  virtual ~Exception() throw();
-  virtual char const* what() const throw();
+  ~Exception() throw() override;
+  char const* what() const throw() override;
 protected:
-  std::string const msg_;
+  std::string msg_;
 };
 
 /** Exceptions which the user cannot easily avoid.
@@ -568,6 +602,9 @@ private:
     CZString(ArrayIndex index);
     CZString(char const* str, unsigned length, DuplicationPolicy allocate);
     CZString(CZString const& other);
+#if JSON_HAS_RVALUE_REFERENCES
+    CZString(CZString&& other);
+#endif
     ~CZString();
     CZString& operator=(CZString other);
     bool operator<(CZString const& other) const;
@@ -650,6 +687,10 @@ Json::Value obj_value(Json::objectValue); // {}
   Value(bool value);
   /// Deep copy.
   Value(const Value& other);
+#if JSON_HAS_RVALUE_REFERENCES
+  /// Move constructor
+  Value(Value&& other);
+#endif
   ~Value();
 
   /// Deep copy, then swap(other).
@@ -903,10 +944,10 @@ Json::Value obj_value(Json::objectValue); // {}
 
   // Accessors for the [start, limit) range of bytes within the JSON text from
   // which this value was parsed, if any.
-  void setOffsetStart(size_t start);
-  void setOffsetLimit(size_t limit);
-  size_t getOffsetStart() const;
-  size_t getOffsetLimit() const;
+  void setOffsetStart(ptrdiff_t start);
+  void setOffsetLimit(ptrdiff_t limit);
+  ptrdiff_t getOffsetStart() const;
+  ptrdiff_t getOffsetLimit() const;
 
 private:
   void initBasic(ValueType type, bool allocated = false);
@@ -947,8 +988,8 @@ private:
 
   // [start, limit) byte offsets in the source JSON text from which this Value
   // was extracted.
-  size_t start_;
-  size_t limit_;
+  ptrdiff_t start_;
+  ptrdiff_t limit_;
 };
 
 /** \brief Experimental and untested: represents an element of the "path" to
@@ -1094,6 +1135,7 @@ public:
   typedef ValueConstIterator SelfType;
 
   ValueConstIterator();
+  ValueConstIterator(ValueIterator const& other);
 
 private:
 /*! \internal Use by Value to create an iterator.
@@ -1143,7 +1185,7 @@ public:
   typedef ValueIterator SelfType;
 
   ValueIterator();
-  ValueIterator(const ValueConstIterator& other);
+  explicit ValueIterator(const ValueConstIterator& other);
   ValueIterator(const ValueIterator& other);
 
 private:
@@ -1253,8 +1295,8 @@ public:
    *
    */
   struct StructuredError {
-    size_t offset_start;
-    size_t offset_limit;
+    ptrdiff_t offset_start;
+    ptrdiff_t offset_limit;
     std::string message;
   };
 
@@ -1479,7 +1521,7 @@ public:
       char const* beginDoc, char const* endDoc,
       Value* root, std::string* errs) = 0;
 
-  class Factory {
+  class JSON_API Factory {
   public:
     virtual ~Factory() {}
     /** \brief Allocate a CharReader via operator new().
@@ -1532,6 +1574,9 @@ public:
         the JSON value in the input string.
     - `"rejectDupKeys": false or true`
       - If true, `parse()` returns false when a key is duplicated within an object.
+    - `"allowSpecialFloats": false or true`
+      - If true, special float values (NaNs and infinities) are allowed 
+        and their values are lossfree restorable.
 
     You can examine 'settings_` yourself
     to see the defaults. You can also write and read them just like any
@@ -1541,9 +1586,9 @@ public:
   Json::Value settings_;
 
   CharReaderBuilder();
-  virtual ~CharReaderBuilder();
+  ~CharReaderBuilder() override;
 
-  virtual CharReader* newCharReader() const;
+  CharReader* newCharReader() const override;
 
   /** \return true if 'settings' are legal and consistent;
    *   otherwise, indicate bad settings via 'invalid'.
@@ -1725,6 +1770,10 @@ public:
         Strictly speaking, this is not valid JSON. But when the output is being
         fed to a browser's Javascript, it makes for smaller output and the
         browser can handle the output just fine.
+    - "useSpecialFloats": false or true
+      - If true, outputs non-finite floating point values in the following way:
+        NaN values as "NaN", positive infinity as "Infinity", and negative infinity
+        as "-Infinity".
 
     You can examine 'settings_` yourself
     to see the defaults. You can also write and read them just like any
@@ -1734,12 +1783,12 @@ public:
   Json::Value settings_;
 
   StreamWriterBuilder();
-  virtual ~StreamWriterBuilder();
+  ~StreamWriterBuilder() override;
 
   /**
    * \throw std::exception if something goes wrong (e.g. invalid settings)
    */
-  virtual StreamWriter* newStreamWriter() const;
+  StreamWriter* newStreamWriter() const override;
 
   /** \return true if 'settings' are legal and consistent;
    *   otherwise, indicate bad settings via 'invalid'.
@@ -1780,7 +1829,7 @@ class JSON_API FastWriter : public Writer {
 
 public:
   FastWriter();
-  virtual ~FastWriter() {}
+  ~FastWriter() override {}
 
   void enableYAMLCompatibility();
 
@@ -1794,7 +1843,7 @@ public:
   void omitEndingLineFeed();
 
 public: // overridden from Writer
-  virtual std::string write(const Value& root);
+  std::string write(const Value& root) override;
 
 private:
   void writeValue(const Value& value);
@@ -1832,14 +1881,14 @@ private:
 class JSON_API StyledWriter : public Writer {
 public:
   StyledWriter();
-  virtual ~StyledWriter() {}
+  ~StyledWriter() override {}
 
 public: // overridden from Writer
   /** \brief Serialize a Value in <a HREF="http://www.json.org">JSON</a> format.
    * \param root Value to serialize.
    * \return String containing the JSON document that represents the root value.
    */
-  virtual std::string write(const Value& root);
+  std::string write(const Value& root) override;
 
 private:
   void writeValue(const Value& value);
@@ -1860,8 +1909,8 @@ private:
   ChildValues childValues_;
   std::string document_;
   std::string indentString_;
-  int rightMargin_;
-  int indentSize_;
+  unsigned int rightMargin_;
+  unsigned int indentSize_;
   bool addChildValues_;
 };
 
@@ -1924,7 +1973,7 @@ private:
   ChildValues childValues_;
   std::ostream* document_;
   std::string indentString_;
-  int rightMargin_;
+  unsigned int rightMargin_;
   std::string indentation_;
   bool addChildValues_ : 1;
   bool indented_ : 1;

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include "../lib/rewriter.hpp"
-#include "../include/json.h"
+#include "json/json.h"
 
 using namespace std;
 
