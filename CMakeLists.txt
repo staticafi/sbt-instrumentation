@@ -38,6 +38,7 @@ message(STATUS "LLVM definitions: ${LLVM_DEFINITIONS}")
 
 add_subdirectory(src)
 add_subdirectory(include)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 SET(JSON_FILES 
     src/jsoncpp.cpp
