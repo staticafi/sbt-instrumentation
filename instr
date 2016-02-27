@@ -137,7 +137,7 @@ def run():
 			err('Linking files failed!')
 			return
 		else:
-			dbg('Surce files linked.')
+			dbg('Source files linked.')
 	else:
 		ret = call(['clang -S -emit-llvm -o {0} {1}'.format(bcSourceFile, cFile)], shell=True)
 		if ret != 0:
