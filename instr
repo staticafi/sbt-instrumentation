@@ -175,9 +175,9 @@ if __name__ == "__main__":
 
 	configFile = args[0]
 	cFile = args[1]
-	fileToLink = parseJson()
+	fileToLink = os.path.join(os.path.dirname(configFile), parseJson())
 	run()
-	
+
 	sys.stderr.flush()
 	sys.stdout.flush()
 
