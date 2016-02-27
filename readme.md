@@ -1,7 +1,13 @@
 ﻿
-Download 
-https://github.com/open-source-parsers/jsoncpp
-and install it into `include/` folder, move `jsoncpp.cpp` into `src` and modify `#include "json.h"` to `#include "../include/json.h"`. 
+Download
+https://github.com/open-source-parsers/jsoncpp and amalgamate the `jsonccp.cpp` source:
+```
+cd jsoncpp
+python amalgamate.py
+```
+Move newly created `jsoncpp.cpp` into `LLVMInstrument/src` folder.
+Then cofigure the project using `cmake` and build it in the usual way
+using `make`.
 
 Run script `instr`.
 
