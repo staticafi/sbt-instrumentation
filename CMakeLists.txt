@@ -40,10 +40,10 @@ add_subdirectory(src)
 add_subdirectory(include)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-SET(JSON_FILES 
+SET(JSON_FILES
     src/jsoncpp.cpp
-    include/json.h
-    include/json-forwards.h
+    include/json/json.h
+    include/json/json-forwards.h
 )
 
 SET(SOURCE_FILES

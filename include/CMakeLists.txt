@@ -1,6 +1,6 @@
-install(FILES json.h
+install(FILES json/json.h
 	DESTINATION ${INSTALL_INC_DIR}/json)
 
-install(FILES json-forwards.h
+install(FILES json/json-forwards.h
 	DESTINATION ${INSTALL_INC_DIR}/json)
-	
+
