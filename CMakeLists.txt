@@ -60,4 +60,5 @@ llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter)
 set(LLVM_LINK_COMPONENTS core engine support)
 add_executable(LLVMinstr src/instr.cpp ${JSON_FILES} ${SOURCE_FILES})
 TARGET_LINK_LIBRARIES(LLVMinstr ${llvm_libs})
+INSTALL(TARGETS LLVMinstr RUNTIME DESTINATION bin)
 
