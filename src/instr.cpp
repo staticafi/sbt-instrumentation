@@ -62,8 +62,16 @@ void LogInsertion(string where, Function* calledFunction, Instruction* foundInst
 	
 	if(foundInstrOpName == "call") {
 		if (CallInst *ci = dyn_cast<CallInst>(foundInstr)) { //TODO what if this fails
-			string name = ci->getCalledFunction()->getName().str();
-			logger.write_info("Inserting " + newCall + " " +  where + " " + foundInstrOpName + " " + name);
+			// get called value and strip away any bitcasts
+			llvm::Value *calledVal = ci->getCalledValue()->stripPointerCasts();
+			string name;
+			if (calledVal->hasName())
+				name = calledVal->getName().str();
+			else
+				name = "<func pointer>";
+
+			logger.write_info("Inserting " + newCall + " " +  where + " " +
+			                  foundInstrOpName + " " + name);
 		}
 	}
 	else {
@@ -218,15 +226,19 @@ bool CheckOperands(RewriteRule rw, Instruction* ins, map <string, Value*> &varia
 			apply = false;
 			break;
 		}
-									
+
+		llvm::Value *op = ins->getOperand(opIndex);
 		if(param[0] == '<' && param[param.size() - 1] == '>') {
-			variables[param] = ins->getOperand(opIndex);
-		}	
-		else if(param != "*" && param != (ins->getOperand(opIndex)->getName()).str()) {
+			variables[param] = op;
+		} else if(param != "*"
+				  && param != (op->stripPointerCasts()->getName()).str()) {
+				  // NOTE: we're comparing a name of the value, but the name
+				  // is set only sometimes. Since we're now matching just CallInst
+				  // it is OK, but it may not be OK in the future
 			apply = false;
 			break;
-		}						
-					
+		}
+
 		opIndex++;
 	}
 
@@ -256,8 +268,9 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 				map <string, Value*> variables;
 					
 				// check operands															
-				if(!CheckOperands(rw, ins, variables))
+				if(!CheckOperands(rw, ins, variables)) {
 					continue;
+                }
 					
 				// check return value
 				if(rw.foundInstr.returnValue != "*") {
