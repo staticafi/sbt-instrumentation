@@ -131,3 +131,17 @@ void __INSTR_fsm_list_destroy() {
     }
 
 }
+
+void __INSTR_fsm_list_destroy_checked() {
+    fsm_list_node *cur = fsm_list;
+
+    while(cur) {
+        fsm_list_node *tmp = cur->next;
+	if (cur->fsm->state == FSM_STATE_ALLOCATED)
+		assert(0 && "memory leak detected");
+
+        free(cur->fsm);
+        free(cur);
+        cur = tmp;
+    }
+}

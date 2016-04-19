@@ -1,0 +1,53 @@
+{	
+	"file": "double_free.c",
+	"rules":
+	[
+		{
+			"findInstruction": {
+					      "returnValue": "<t1>",
+					      "instruction": "call",
+					      "operands": ["*", "malloc"]
+					   },
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "1","__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		
+		{
+			"findInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "free"]
+					   },
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "0","__INSTR_fsm_change_state"]
+					  },
+			"where": "before",
+			"in": "*"
+		},
+		
+		{
+			"findInstruction": {
+					      "returnValue": "*",
+					      "instruction": "ret",
+					      "operands": ["*"]
+					   },
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["__INSTR_fsm_list_destroy_checked"]
+					  },
+			"where": "before",
+			"in": "main"
+		}
+	]
+}
+
+
+
