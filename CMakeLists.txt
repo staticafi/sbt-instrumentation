@@ -4,12 +4,12 @@ project(instr)
 # Compiler Options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g  -std=c++11 -Wall -Wextra")
 
-# Define add_llvm_* macro's.
 find_package(LLVM REQUIRED CONFIG)
+if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}")
+  include(LLVMConfig)
+endif()
 include(AddLLVM)
-
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}")
-#include(LLVMConfig)
 
 add_definitions(${LLVM_DEFINITIONS})
 include_directories(${LLVM_INCLUDE_DIRS})
@@ -54,7 +54,11 @@ SET(SOURCE_FILES
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter)
+if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
+  llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter)
+else()
+  llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter)
+endif()
 
 #ADD_LIBRARY(instr_model ${JSON_FILES} ${SOURCE_FILES})
 set(LLVM_LINK_COMPONENTS core engine support)
