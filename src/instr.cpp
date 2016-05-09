@@ -19,7 +19,7 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/LLVMContext.h>
-#if (LLVM_VERSION_MINOR >= 8)
+#if (LLVM_VERSION_MINOR >= 5)
   #include "llvm/IR/InstIterator.h"
 #else
   #include "llvm/Support/InstIterator.h"
@@ -360,7 +360,7 @@ int main(int argc, char *argv[]) {
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
-#if (LLVM_VERSION_MINOR >= 8)
+#if (LLVM_VERSION_MINOR >= 6)
     std::unique_ptr<Module> _m = parseIRFile(argv[2], Err, Context);
     Module *m = _m.release();
 #else
