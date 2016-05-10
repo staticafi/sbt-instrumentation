@@ -19,7 +19,11 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/LLVMContext.h>
-#include <llvm/Support/InstIterator.h>
+#if (LLVM_VERSION_MINOR >= 5)
+  #include "llvm/IR/InstIterator.h"
+#else
+  #include "llvm/Support/InstIterator.h"
+#endif
 #include <llvm/Support/SourceMgr.h>
 
 //#include "llvm-c/BitWriter.h"
@@ -145,7 +149,7 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 		else {	
 			unsigned argIndex = 0;
 			for (Function::ArgumentListType::iterator sit=CalleeF->getArgumentList().begin(); sit != CalleeF->getArgumentList().end(); ++sit) {
-				Value *argV = sit; 
+				Value *argV = &*sit; 
 												
 				if(i == argIndex) {
 					if(argV->getType() != variables[arg]->getType()) {
@@ -356,7 +360,12 @@ int main(int argc, char *argv[]) {
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
-    Module* m = ParseIRFile(argv[2], Err, Context);
+#if (LLVM_VERSION_MINOR >= 6)
+    std::unique_ptr<Module> _m = parseIRFile(argv[2], Err, Context);
+    Module *m = _m.release();
+#else
+    Module *m = ParseIRFile(argv[2], Err, Context);
+#endif
     if (!m) {
 		logger.write_error("Error parsing .bc file.");
         Err.print(argv[0], errs());
