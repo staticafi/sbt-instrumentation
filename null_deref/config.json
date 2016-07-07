@@ -3,11 +3,13 @@
 	"rules":
 	[
 		{
-			"findInstruction": {
-					      "returnValue": "*",
-					      "instruction": "load",
-					      "operands": ["<t1>"]
-					   },
+			"findInstructions": [
+						   {
+							  "returnValue": "*",
+							  "instruction": "load",
+							  "operands": ["<t1>"]
+						   }
+					   ],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
@@ -17,11 +19,13 @@
 			"in": "*"
 		},
         {
-			"findInstruction": {
-					      "returnValue": "*",
-					      "instruction": "store",
-					      "operands": ["<t1>", "<t2>"]
-					   },
+			"findInstructions": [
+							{
+							  "returnValue": "*",
+							  "instruction": "store",
+							  "operands": ["<t1>", "<t2>"]
+						    }
+					   ],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",

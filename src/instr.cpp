@@ -84,6 +84,32 @@ void LogInsertion(string where, Function* calledFunction, Instruction* foundInst
 }
 
 /**
+ * Writes log about replacing instruction.
+ * @param foundInstrs found instructions for instrumentation
+ * @param newInstr name of the new instruction
+ */
+void LogInsertion(InstrumentSequence foundInstrs, string newInstr) {
+	
+	string instructions;
+	uint i = 0;
+	
+	for (list<InstrumentInstruction>::iterator sit=foundInstrs.begin(); sit != foundInstrs.end(); ++sit) {
+		InstrumentInstruction foundInstr = *sit;
+		
+		if(i < foundInstrs.size() - 1) {
+			instructions += foundInstr.instruction + ", ";
+		}
+		else {
+			instructions += foundInstr.instruction;
+		}
+		
+		i++;
+	}
+		
+	logger.write_info("Replacing " + instructions + " with " + newInstr);
+}
+
+/**
  * Inserts new call instruction.
  * @param CalleeF function to be called
  * @param args arguments of the function to be called
@@ -106,7 +132,7 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
 		// Replace
-		logger.write_info("Replacing " + rw_rule.foundInstr.instruction + " with " + rw_rule.newInstr.instruction);
+		LogInsertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
 		newInst->insertBefore(&I);
 		I.eraseFromParent();
 	}

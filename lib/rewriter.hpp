@@ -18,9 +18,11 @@ class InstrumentInstruction {
 	std::list<std::string> parameters;
 };
 
+typedef std::list<InstrumentInstruction> InstrumentSequence;
+
 class RewriteRule {
  public:
-	InstrumentInstruction foundInstr;
+	InstrumentSequence foundInstrs;
 	InstrumentInstruction newInstr;
 	InstrumentPlacement where;
 	std::string inFunction;

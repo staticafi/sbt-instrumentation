@@ -24,11 +24,17 @@ void Rewriter::parseConfig(ifstream &config_file) {
 		RewriteRule r;
 
 		// TODO make function from this
-		r.foundInstr.returnValue = json_rules["rules"][i]["findInstruction"]["returnValue"].asString();
-		r.foundInstr.instruction = json_rules["rules"][i]["findInstruction"]["instruction"].asString();
-		for (uint j = 0; j < json_rules["rules"][i]["findInstruction"]["operands"].size(); ++j) {
-			r.foundInstr.parameters.push_back(json_rules["rules"][i]["findInstruction"]["operands"][j].asString());
+		for (uint k = 0; k < json_rules["rules"][i]["findInstructions"].size(); ++k) {
+			InstrumentInstruction instr;
+			instr.returnValue = json_rules["rules"][i]["findInstructions"][k]["returnValue"].asString();
+			instr.instruction = json_rules["rules"][i]["findInstructions"][k]["instruction"].asString();
+			for (uint j = 0; j < json_rules["rules"][i]["findInstructions"][k]["operands"].size(); ++j) {
+				instr.parameters.push_back(json_rules["rules"][i]["findInstructions"][k]["operands"][j].asString());
+			}
+			r.foundInstrs.push_back(instr);
 		}
+		
+		
 		
 		r.newInstr.returnValue = json_rules["rules"][i]["newInstruction"]["returnValue"].asString();
 		r.newInstr.instruction = json_rules["rules"][i]["newInstruction"]["instruction"].asString();
