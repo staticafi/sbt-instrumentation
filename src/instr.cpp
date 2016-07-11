@@ -122,19 +122,20 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
 
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
-		LogInsertion("before",CalleeF, &I);
 		newInst->insertBefore(&I);
+		LogInsertion("before",CalleeF, &I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
 		// Insert after
-		LogInsertion("after", CalleeF, &I);
 		newInst->insertAfter(&I);
+		LogInsertion("after", CalleeF, &I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
 		// Replace
-		LogInsertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
+		//TODO !!!!erase whole sequence
 		newInst->insertBefore(&I);
 		I.eraseFromParent();
+		LogInsertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
 	}
 }
 
@@ -241,15 +242,15 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 
 /**
  * Checks if the operands of instruction match.
- * @param rw rewrite rule.
+ * @param rwIns instruction from rewrite rule.
  * @param ins instruction to be checked.
  * @param variables map for remembering some parameters.
  * @return true if OK, false otherwise
  */
-bool CheckOperands(RewriteRule rw, Instruction* ins, map <string, Value*> &variables) {
+bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
 	unsigned opIndex = 0;
 	bool apply = true;
-	for (list<string>::iterator sit=rw.foundInstr.parameters.begin(); sit != rw.foundInstr.parameters.end(); ++sit) {
+	for (list<string>::iterator sit=rwIns.parameters.begin(); sit != rwIns.parameters.end(); ++sit) {
 		string param = *sit; 
 						
 		if(opIndex > ins->getNumOperands() - 1) {
@@ -276,6 +277,18 @@ bool CheckOperands(RewriteRule rw, Instruction* ins, map <string, Value*> &varia
 }
 
 /**
+ * Returns the next instruction after the one specified.
+ * @param ins specified instruction
+ * @return next instruction or null, if ins is the last one.
+ */
+Instruction* GetNextInstruction(Instruction* ins) {
+	 BasicBlock::iterator I(ins);
+     if (++I == ins->getParent()->end())
+       return NULL;
+     return &*I;
+}
+
+/**
  * Checks if the given instruction should be instrumented.
  * @param ins instruction to be checked.
  * @param M module.
@@ -292,29 +305,70 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 			
 			if(rw.inFunction != "*" && rw.inFunction!=functionName)
 				continue;
-			
-			// if instruction from rewrite rule is the same as current instruction
-			if(ins->getOpcodeName() == rw.foundInstr.instruction) {
-				map <string, Value*> variables;
-					
-				// check operands															
-				if(!CheckOperands(rw, ins, variables)) {
-					continue;
-                }
-					
-				// check return value
-				if(rw.foundInstr.returnValue != "*") {
-					if(rw.foundInstr.returnValue[0] == '<' && rw.foundInstr.returnValue[rw.foundInstr.returnValue.size() - 1] == '>') {
-						variables[rw.foundInstr.returnValue] = ins;
-					}
-				}					
-
-				// try to apply rule
-				if(applyRule(M,*ins, rw, variables) == 1) {
-					logger.write_error("Cannot apply rule.");
-					return false;
+				
+			// check sequence of instructions
+			map <string, Value*> variables;
+			bool instrument = false;
+			Instruction* currentInstr = ins; //TODO
+			for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
+				
+				// if the instruction from rewrite rule is the same as current instruction
+				
+				if(currentInstr == NULL) {
+				    break;
 				}
-			}				
+				
+				InstrumentInstruction checkInstr = *iit;
+				// check the name
+				if(currentInstr->getOpcodeName() == checkInstr.instruction) {
+
+					// check operands															
+					if(!CheckOperands(checkInstr, currentInstr, variables)) {
+						break;
+					}
+					
+									logger.write_error("NEW");
+				logger.write_error(currentInstr->getOpcodeName());
+				logger.write_error(checkInstr.instruction);
+						
+					// check return value
+					if(checkInstr.returnValue != "*") {
+						if(checkInstr.returnValue[0] == '<' 
+						&& checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
+							variables[checkInstr.returnValue] = currentInstr;
+						}
+					}					
+					
+					// load next instruction to be checked
+					list<InstrumentInstruction>::iterator final_iter = rw.foundInstrs.end();
+					--final_iter;
+					if (iit != final_iter) {
+						currentInstr =  GetNextInstruction(ins);
+					}
+					else {
+						instrument = true;
+						logger.write_error("OK");
+					}
+				}	
+			 }		
+			 
+			 // if all instructions match, try to instrument the code
+			 if(instrument) {
+				 	// try to apply rule
+				 	if(rw.where == InstrumentPlacement::AFTER){
+						if(applyRule(M, *currentInstr, rw, variables) == 1) {
+							logger.write_error("Cannot apply rule.");
+							return false;
+						}
+					}
+					else{
+						if(applyRule(M, *ins, rw, variables) == 1) {
+							logger.write_error("Cannot apply rule.");
+							return false;
+						}
+					}
+
+			 }		
 		  }
 		    
 		  return true;
@@ -347,8 +401,6 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
   ofstream out_file;
   out_file.open(outputName, ofstream::out | ofstream::trunc);
   raw_os_ostream rstream(out_file);
- 
-  //M.print(rstream, NULL);
 
   WriteBitcodeToFile(&M, rstream); 
   
