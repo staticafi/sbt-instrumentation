@@ -313,12 +313,12 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 			for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
 				
 				// if the instruction from rewrite rule is the same as current instruction
-				
 				if(currentInstr == NULL) {
 				    break;
 				}
 				
 				InstrumentInstruction checkInstr = *iit;
+				
 				// check the name
 				if(currentInstr->getOpcodeName() == checkInstr.instruction) {
 
@@ -326,11 +326,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 					if(!CheckOperands(checkInstr, currentInstr, variables)) {
 						break;
 					}
-					
-									logger.write_error("NEW");
-				logger.write_error(currentInstr->getOpcodeName());
-				logger.write_error(checkInstr.instruction);
-						
+										
 					// check return value
 					if(checkInstr.returnValue != "*") {
 						if(checkInstr.returnValue[0] == '<' 
@@ -349,6 +345,9 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 						instrument = true;
 						logger.write_error("OK");
 					}
+				}
+				else {
+					break;
 				}	
 			 }		
 			 

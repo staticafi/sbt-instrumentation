@@ -46,9 +46,9 @@ SET(JSON_FILES
 )
 
 SET(SOURCE_FILES
-    lib/instr_log.hpp
     lib/rewriter.hpp
     src/rewriter.cpp
+    lib/instr_log.hpp
     src/instr_log.cpp
 )
 
