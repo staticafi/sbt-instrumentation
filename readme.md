@@ -21,11 +21,20 @@ Json config files should look like this:
 		"rules":
 		[
 			{
-				"findInstruction": {
-						      "returnValue": string,
-						      "instruction": string(call,alloca,...),
-						      "operands": list of strings
-						   },
+				"findInstructions": sequence of instructions we are looking for, e.g.
+						   [
+							   { 
+							      "returnValue": string,
+							      "instruction": string(call,alloca,...),
+							      "operands": list of strings
+							   },
+							   {
+							      "returnValue": string,
+							      "instruction": string(call,alloca,...),
+							      "operands": list of strings
+							   },
+							   ...
+						   ],
 				"newInstruction": {
 						      "returnValue": string,
 						      "instruction": call,
@@ -48,11 +57,13 @@ Example:
 		"rules":
 		[
 			{
-				"findInstruction": {
-						      "returnValue": "<t1>",
-						      "instruction": "call",
-						      "operands": ["*", "malloc"],
-						   },
+				"findInstructions": [
+							{
+							      "returnValue": "<t1>",
+							      "instruction": "call",
+							      "operands": ["*", "malloc"]
+						   	}
+						    ],
 				"newInstruction": {
 						      "returnValue": "*",
 						      "instruction": "call",
