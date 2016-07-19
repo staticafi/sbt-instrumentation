@@ -1,3 +1,6 @@
+#ifndef REWRITER_H
+#define REWRITER_H
+
 #include <list>
 #include <string>
 #include <iostream>
@@ -37,3 +40,5 @@ class Rewriter {
 		RewriterConfig getConfig();
 		void parseConfig(std::ifstream &config_file);
 };
+
+#endif

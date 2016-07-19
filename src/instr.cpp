@@ -46,70 +46,6 @@ void usage(char *name) {
 }
 
 /**
- * Gets name of the function.
- * @param f function
- * @return name of the function
- */
-string GetNameOfFunction(Function* f) {
-	return f->getName().str(); //TODO does it always have a name? 
-}
-
-/**
- * Writes log about inserting new call instruction.
- * @param where before/after
- * @param calledFunction function from inserted call
- * @param foundInstr found instruction for instrumentation
- */
-void LogInsertion(string where, Function* calledFunction, Instruction* foundInstr) {
-	string newCall = GetNameOfFunction(calledFunction);
-	string foundInstrOpName = foundInstr->getOpcodeName();
-	
-	if(foundInstrOpName == "call") {
-		if (CallInst *ci = dyn_cast<CallInst>(foundInstr)) { //TODO what if this fails
-			// get called value and strip away any bitcasts
-			llvm::Value *calledVal = ci->getCalledValue()->stripPointerCasts();
-			string name;
-			if (calledVal->hasName())
-				name = calledVal->getName().str();
-			else
-				name = "<func pointer>";
-
-			logger.write_info("Inserting " + newCall + " " +  where + " " +
-			                  foundInstrOpName + " " + name);
-		}
-	}
-	else {
-		logger.write_info("Inserting " + newCall + " " +  where + " " + foundInstrOpName);
-	}
-}
-
-/**
- * Writes log about replacing instruction.
- * @param foundInstrs found instructions for instrumentation
- * @param newInstr name of the new instruction
- */
-void LogInsertion(InstrumentSequence foundInstrs, string newInstr) {
-	
-	string instructions;
-	uint i = 0;
-	
-	for (list<InstrumentInstruction>::iterator sit=foundInstrs.begin(); sit != foundInstrs.end(); ++sit) {
-		InstrumentInstruction foundInstr = *sit;
-		
-		if(i < foundInstrs.size() - 1) {
-			instructions += foundInstr.instruction + ", ";
-		}
-		else {
-			instructions += foundInstr.instruction;
-		}
-		
-		i++;
-	}
-		
-	logger.write_info("Replacing " + instructions + " with " + newInstr);
-}
-
-/**
  * Inserts new call instruction.
  * @param CalleeF function to be called
  * @param args arguments of the function to be called
@@ -123,19 +59,19 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
 		newInst->insertBefore(&I);
-		LogInsertion("before",CalleeF, &I);
+		logger.LogInsertion("before",CalleeF, &I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
 		// Insert after
 		newInst->insertAfter(&I);
-		LogInsertion("after", CalleeF, &I);
+		logger.LogInsertion("after", CalleeF, &I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
 		// Replace
 		//TODO !!!!erase whole sequence
 		newInst->insertBefore(&I);
 		I.eraseFromParent();
-		LogInsertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
+		logger.LogInsertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
 	}
 }
 
@@ -301,7 +237,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 			RewriteRule rw = *it; 
 			
 			// check if this rule should be applied in this function
-			string functionName = GetNameOfFunction(F);
+			string functionName = F->getName().str();
 			
 			if(rw.inFunction != "*" && rw.inFunction!=functionName)
 				continue;
@@ -383,7 +319,7 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
    for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
 	   	   						
 	   // Do not instrument functions linked for instrumentation
-	   string functionName = GetNameOfFunction(&*F);
+	   string functionName = (&*F)->getName().str();
 
 	   if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
 		   logger.write_info("Omitting function " + functionName + " from instrumentation.");
