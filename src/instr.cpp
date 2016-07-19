@@ -185,13 +185,16 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
  */
 bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
 	unsigned opIndex = 0;
-	bool apply = true;
+	
 	for (list<string>::iterator sit=rwIns.parameters.begin(); sit != rwIns.parameters.end(); ++sit) {
 		string param = *sit; 
+		
+		if(rwIns.parameters.size() == 1 && param=="*"){
+			return true; 
+		}
 						
 		if(opIndex > ins->getNumOperands() - 1) {
-			apply = false;
-			break;
+			return false;
 		}
 
 		llvm::Value *op = ins->getOperand(opIndex);
@@ -202,14 +205,13 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 				  // NOTE: we're comparing a name of the value, but the name
 				  // is set only sometimes. Since we're now matching just CallInst
 				  // it is OK, but it may not be OK in the future
-			apply = false;
-			break;
+			return false;
 		}
 
 		opIndex++;
 	}
 
-	return apply;
+	return true;
 }
 
 /**
