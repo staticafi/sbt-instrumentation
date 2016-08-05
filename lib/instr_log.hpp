@@ -22,14 +22,14 @@ class Logger {
 	 * @param calledFunction function from inserted call
 	 * @param foundInstr found instruction for instrumentation
 	 */
-	void LogInsertion(std::string where, llvm::Function* calledFunction, llvm::Instruction* foundInstr);
+	void log_insertion(std::string where, llvm::Function* calledFunction, llvm::Instruction* foundInstr);
 
 	/**
 	 * Writes log about replacing instruction.
 	 * @param foundInstrs found instructions for instrumentation
 	 * @param newInstr name of the new instruction
 	 */
-	void LogInsertion(InstrumentSequence foundInstrs, std::string newInstr);
+	void log_insertion(InstrumentSequence foundInstrs, std::string newInstr);
 };
 
 #endif

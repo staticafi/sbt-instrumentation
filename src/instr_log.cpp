@@ -33,7 +33,7 @@ void Logger::write_info(const string &text)
  * @param calledFunction function from inserted call
  * @param foundInstr found instruction for instrumentation
  */
-void Logger::LogInsertion(string where, Function* calledFunction, Instruction* foundInstr) {
+void Logger::log_insertion(string where, Function* calledFunction, Instruction* foundInstr) {
 	string newCall = calledFunction->getName().str();
 	string foundInstrOpName = foundInstr->getOpcodeName();
 	
@@ -61,7 +61,7 @@ void Logger::LogInsertion(string where, Function* calledFunction, Instruction* f
  * @param foundInstrs found instructions for instrumentation
  * @param newInstr name of the new instruction
  */
-void Logger::LogInsertion(InstrumentSequence foundInstrs, string newInstr) {
+void Logger::log_insertion(InstrumentSequence foundInstrs, string newInstr) {
 	
 	string instructions;
 	uint i = 0;

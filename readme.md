@@ -40,14 +40,14 @@ Json config files should look like this:
 						      "instruction": call,
 						      "operands": list of strings
 						  },
-				"where": "before"/"after"/"replace",
+				"where": "before"/"after",
 				"in": string (name of function, can be "*" for any function)
 			}
 		]
     }
 ```
 
-`<x>` is variable, `*` matches any string. The new instruction can be only a call for now.
+`<x>` is variable, `*` matches any string. The new instruction can be only a call for now. 
 
 Example:
 ```json

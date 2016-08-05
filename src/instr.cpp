@@ -46,6 +46,36 @@ void usage(char *name) {
 }
 
 /**
+ * Returns the next instruction after the one specified.
+ * @param ins specified instruction
+ * @return next instruction or null, if ins is the last one.
+ */
+Instruction* GetNextInstruction(Instruction* ins) {
+	 BasicBlock::iterator I(ins);
+     if (++I == ins->getParent()->end())
+       return NULL;
+     return &*I;
+}
+
+/**
+ * Inserts new call instruction.
+ * @param I first instruction to be removed
+ * @param count number of instructions to be removed
+ */
+void EraseInstructions(Instruction &I, int count) {
+	Instruction* currentInstr = &I;
+	for (int i = 0; i < count; i++) {
+		if (!currentInstr){
+			return;
+		}
+		Instruction* nextInstr =  GetNextInstruction(currentInstr);
+		currentInstr->eraseFromParent();
+		currentInstr = nextInstr;
+	}
+	
+}
+
+/**
  * Inserts new call instruction.
  * @param CalleeF function to be called
  * @param args arguments of the function to be called
@@ -59,28 +89,30 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
 		newInst->insertBefore(&I);
-		logger.LogInsertion("before",CalleeF, &I);
+		logger.log_insertion("before",CalleeF, &I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
 		// Insert after
 		newInst->insertAfter(&I);
-		logger.LogInsertion("after", CalleeF, &I);
+		logger.log_insertion("after", CalleeF, &I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
-		// Replace
-		//TODO !!!!erase whole sequence
-		newInst->insertBefore(&I);
+		// TODO Replace
+		
+		/*
+		EraseInstructions(I, rw_rule.foundInstrs.size());
 		I.eraseFromParent();
-		logger.LogInsertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
+		logger.log_insertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);*/
 	}
 }
 
+
 /**
- * Inserts argument.
+ * Inserts an argument.
  * @param Irw_rule rewrite rule
  * @param I instruction
  * @param CalleeF function to be called
- * @param variables map of found parameters form config
+ * @param variables map of found parameters from config
  */
 vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* CalleeF, map <string, Value*> variables) {	
 	std::vector<Value *> args;
@@ -94,7 +126,7 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 		string arg = *sit; 
 		
 		if(variables.find(arg) == variables.end()) {
-			// TODO Whoops, what now? Change config json? Allow just integers?
+			// NOTE: in future think also about other types than ConstantInt
 			int argInt;
 			try {
 				argInt = stoi(arg);
@@ -103,10 +135,10 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 				args.push_back(intValue);
 			}
 			catch (invalid_argument) {
-				// TODO what now?
+				logger.write_error("Problem with instruction arguments: invalid argument.");
 			}
 			catch (out_of_range) {
-				// TODO what now
+				logger.write_error("Problem with instruction arguments: out of range.");
 			}
 		}
 		else {	
@@ -215,18 +247,6 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 }
 
 /**
- * Returns the next instruction after the one specified.
- * @param ins specified instruction
- * @return next instruction or null, if ins is the last one.
- */
-Instruction* GetNextInstruction(Instruction* ins) {
-	 BasicBlock::iterator I(ins);
-     if (++I == ins->getParent()->end())
-       return NULL;
-     return &*I;
-}
-
-/**
  * Checks if the given instruction should be instrumented.
  * @param ins instruction to be checked.
  * @param M module.
@@ -247,19 +267,17 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 			// check sequence of instructions
 			map <string, Value*> variables;
 			bool instrument = false;
-			Instruction* currentInstr = ins; //TODO
+			Instruction* currentInstr = ins; 
+								   	   			    		  	    
 			for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
 				
-				// if the instruction from rewrite rule is the same as current instruction
 				if(currentInstr == NULL) {
 				    break;
 				}
-				
-				InstrumentInstruction checkInstr = *iit;
-				
+   			    		  	   
+				InstrumentInstruction checkInstr = *iit;   	
 				// check the name
-				if(currentInstr->getOpcodeName() == checkInstr.instruction) {
-
+				if(currentInstr->getOpcodeName() == checkInstr.instruction) {	    		  	    
 					// check operands															
 					if(!CheckOperands(checkInstr, currentInstr, variables)) {
 						break;
@@ -281,16 +299,16 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 					}
 					else {
 						instrument = true;
-						logger.write_error("OK");
 					}
 				}
-				else {
+				else {										   	   							 
 					break;
 				}	
 			 }		
 			 
 			 // if all instructions match, try to instrument the code
 			 if(instrument) {
+				 					   	   							
 				 	// try to apply rule
 				 	if(rw.where == InstrumentPlacement::AFTER){
 						if(applyRule(M, *currentInstr, rw, variables) == 1) {
@@ -304,10 +322,9 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 							return false;
 						}
 					}
-
 			 }		
 		  }
-		    
+
 		  return true;
 }
 
@@ -319,7 +336,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
  */
 bool instrumentModule(Module &M, RewriterConfig rw_config) {
    for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
-	   	   						
+ 						
 	   // Do not instrument functions linked for instrumentation
 	   string functionName = (&*F)->getName().str();
 
@@ -367,6 +384,8 @@ int main(int argc, char *argv[]) {
 	catch (runtime_error ex){ 
 		string exceptionString = "Error parsing configuration: ";
 		logger.write_error(exceptionString.append(ex.what()));
+		config_file.close();
+		llvmir_file.close();
 		return 1;
 	}
 	
@@ -384,11 +403,16 @@ int main(int argc, char *argv[]) {
     if (!m) {
 		logger.write_error("Error parsing .bc file.");
         Err.print(argv[0], errs());
+        config_file.close();
+		llvmir_file.close();
         return 1;
     }
     
     // Instrument
     bool resultOK = instrumentModule(*m, rw_config);
+    
+    config_file.close();
+    llvmir_file.close();
     
     if(resultOK) {
 		logger.write_info("DONE.");
