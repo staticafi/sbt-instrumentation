@@ -51,10 +51,10 @@ void usage(char *name) {
  * @return next instruction or null, if ins is the last one.
  */
 Instruction* GetNextInstruction(Instruction* ins) {
-	 BasicBlock::iterator I(ins);
-     if (++I == ins->getParent()->end())
-       return NULL;
-     return &*I;
+	BasicBlock::iterator I(ins);
+    if (++I == ins->getParent()->end())
+      return NULL;
+    return &*I;
 }
 
 /**
@@ -97,12 +97,18 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
 		logger.log_insertion("after", CalleeF, &I);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
-		// TODO Replace
-		
+		// TODO: Make the functions use the iterator instead of 
+		// the instruction then check this works
+		// In the end we move the iterator to the newInst position
+		// so we can safely remove the sequence of instructions being
+		// replaced
 		/*
+		newInst->insertAfter(&I);
+		BasicBlock::iterator helper(*Iiterator);
+		Iiterator = ++helper;
 		EraseInstructions(I, rw_rule.foundInstrs.size());
-		I.eraseFromParent();
-		logger.log_insertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);*/
+		logger.log_insertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
+		*/
 	}
 }
 
@@ -270,7 +276,6 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 			Instruction* currentInstr = ins; 
 								   	   			    		  	    
 			for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
-				
 				if(currentInstr == NULL) {
 				    break;
 				}
@@ -278,7 +283,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 				InstrumentInstruction checkInstr = *iit;   	
 				// check the name
 				if(currentInstr->getOpcodeName() == checkInstr.instruction) {	    		  	    
-					// check operands															
+					// check operands
 					if(!CheckOperands(checkInstr, currentInstr, variables)) {
 						break;
 					}
@@ -295,7 +300,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 					list<InstrumentInstruction>::iterator final_iter = rw.foundInstrs.end();
 					--final_iter;
 					if (iit != final_iter) {
-						currentInstr =  GetNextInstruction(ins);
+						currentInstr = GetNextInstruction(ins);
 					}
 					else {
 						instrument = true;
@@ -308,24 +313,26 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 			 
 			 // if all instructions match, try to instrument the code
 			 if(instrument) {
-				 					   	   							
 				 	// try to apply rule
-				 	if(rw.where == InstrumentPlacement::AFTER){
-						if(applyRule(M, *currentInstr, rw, variables) == 1) {
-							logger.write_error("Cannot apply rule.");
-							return false;
-						}
+					Instruction *where;
+				 	if(rw.where == InstrumentPlacement::BEFORE){
+						where = ins;
+					} 
+					else {
+						// It is important in the REPLACE case that
+						// we first place the new instruction after
+						// the sequence
+						where = currentInstr;
 					}
-					else{
-						if(applyRule(M, *ins, rw, variables) == 1) {
-							logger.write_error("Cannot apply rule.");
-							return false;
-						}
+
+					if(applyRule(M, *where, rw, variables) == 1) {
+						logger.write_error("Cannot apply rule.");
+						return false;
 					}
 			 }		
 		  }
 
-		  return true;
+	return true;
 }
 
 /**
@@ -346,6 +353,8 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
 	   }
 	   
 	   for (inst_iterator I = inst_begin(&*F), End = inst_end(&*F); I != End; ++I) {
+		// This iterator may be replaced (by an iterator to the following
+		// instruction) in the InsertCallInstruction function
 			// Check if the instruction is relevant
 		    if(!CheckInstruction(&*I, M, &*F, rw_config)) return false;
 		}
