@@ -37,12 +37,12 @@ using namespace llvm;
 
 using namespace std;
 
-Logger logger("log.txt"); 
+Logger logger("log.txt");
 
 string outputName;
 
 void usage(char *name) {
-	cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName>" << endl; 
+	cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName>" << endl;
 }
 
 /**
@@ -58,6 +58,18 @@ Instruction* GetNextInstruction(Instruction* ins) {
 }
 
 /**
+ * Returns the previous instruction before the one specified.
+ * @param ins specified instruction
+ * @return previous instruction or null, if ins is the first one.
+ */
+Instruction* GetPreviousInstruction(Instruction* ins) {
+	BasicBlock::iterator I(ins);
+    if (--I == ins->getParent()->begin())
+      return NULL;
+    return &*I;
+}
+
+/**
  * Inserts new call instruction.
  * @param I first instruction to be removed
  * @param count number of instructions to be removed
@@ -68,11 +80,11 @@ void EraseInstructions(Instruction &I, int count) {
 		if (!currentInstr){
 			return;
 		}
-		Instruction* nextInstr =  GetNextInstruction(currentInstr);
+		Instruction* prevInstr = GetPreviousInstruction(currentInstr);
 		currentInstr->eraseFromParent();
-		currentInstr = nextInstr;
+		currentInstr = prevInstr;
 	}
-	
+
 }
 
 /**
@@ -80,35 +92,35 @@ void EraseInstructions(Instruction &I, int count) {
  * @param CalleeF function to be called
  * @param args arguments of the function to be called
  * @param rw_rule relevant rewrite rule
- * @param I current instruction
+ * @param currentInstr current instruction
+ * @param Iiterator pointer to instructions iterator
  */
-void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule rw_rule, Instruction &I) {
+void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule rw_rule, Instruction &currentInstr, inst_iterator *Iiterator) {
 	// Create new call instruction
-	CallInst *newInst = CallInst::Create(CalleeF, args);
+	CallInst *newInstr = CallInst::Create(CalleeF, args);
 
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
-		newInst->insertBefore(&I);
-		logger.log_insertion("before",CalleeF, &I);
+		newInstr->insertBefore(&currentInstr);
+		logger.log_insertion("before",CalleeF, &currentInstr);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
 		// Insert after
-		newInst->insertAfter(&I);
-		logger.log_insertion("after", CalleeF, &I);
+		newInstr->insertAfter(&currentInstr);
+		logger.log_insertion("after", CalleeF, &currentInstr);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
-		// TODO: Make the functions use the iterator instead of 
+		// TODO: Make the functions use the iterator instead of
 		// the instruction then check this works
 		// In the end we move the iterator to the newInst position
 		// so we can safely remove the sequence of instructions being
 		// replaced
-		/*
-		newInst->insertAfter(&I);
-		BasicBlock::iterator helper(*Iiterator);
-		Iiterator = ++helper;
-		EraseInstructions(I, rw_rule.foundInstrs.size());
+
+		newinstr->insertafter(&currentinstr);
+		inst_iterator helper(*Iiterator);
+		*Iiterator = ++helper;
+		EraseInstructions(currentInstr, rw_rule.foundInstrs.size());
 		logger.log_insertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
-		*/
 	}
 }
 
@@ -120,17 +132,17 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
  * @param CalleeF function to be called
  * @param variables map of found parameters from config
  */
-vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* CalleeF, map <string, Value*> variables) {	
+vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* CalleeF, map <string, Value*> variables) {
 	std::vector<Value *> args;
 	unsigned i = 0;
 	for (list<string>::iterator sit=rw_rule.newInstr.parameters.begin(); sit != rw_rule.newInstr.parameters.end(); ++sit) {
-		
+
 		if(i == rw_rule.newInstr.parameters.size() - 1) {
 			break;
 		}
-		
-		string arg = *sit; 
-		
+
+		string arg = *sit;
+
 		if(variables.find(arg) == variables.end()) {
 			// NOTE: in future think also about other types than ConstantInt
 			int argInt;
@@ -147,11 +159,11 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 				logger.write_error("Problem with instruction arguments: out of range.");
 			}
 		}
-		else {	
+		else {
 			unsigned argIndex = 0;
 			for (Function::ArgumentListType::iterator sit=CalleeF->getArgumentList().begin(); sit != CalleeF->getArgumentList().end(); ++sit) {
-				Value *argV = &*sit; 
-												
+				Value *argV = &*sit;
+
 				if(i == argIndex) {
 					if(argV->getType() != variables[arg]->getType()) {
 						//TODO other types?
@@ -164,11 +176,11 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 					}
 					break;
 				}
-															
+
 				argIndex++;
-			}	
-		}	
-			
+			}
+		}
+
 		i++;
 	}
 	return args;
@@ -180,9 +192,10 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
  * @param I current instruction
  * @param rw_rule rule to apply
  * @param variables map of found parameters form config
+ * @param Iiterator pointer to instructions iterator
  * @return 1 if error
  */
-int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value*> variables) {
+int applyRule(Module &M, Instruction &currentInstr, RewriteRule rw_rule, map <string, Value*> variables, inst_iterator *Iiterator) {
 	logger.write_info("Applying rule...");
 
 	// Work just with call instructions for now...
@@ -191,25 +204,25 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
 		logger.write_error("Not working with this instruction: " + rw_rule.newInstr.instruction);
 		return 1;
 	}
-	
+
 	// Get operands
 	std::vector<Value *> args;
 	Function *CalleeF = NULL;
-	
+
 	// Get name of function
-	string param = *(--rw_rule.newInstr.parameters.end()); 
+	string param = *(--rw_rule.newInstr.parameters.end());
 	CalleeF = M.getFunction(param);
 	if (!CalleeF) {
 		cerr << "Unknown function " << param << endl;
-		logger.write_error("Unknown function: " + param);	
+		logger.write_error("Unknown function: " + param);
 		return 1;
 	}
-	
+
 	// Insert arguments
-	args = InsertArgument(rw_rule, I, CalleeF, variables);	
-	
+	args = InsertArgument(rw_rule, currentInstr, CalleeF, variables);
+
 	// Insert new call instruction
-	InsertCallInstruction(CalleeF, args, rw_rule, I);
+	InsertCallInstruction(CalleeF, args, rw_rule, currentInstr, Iiterator);
 
 	return 0;
 }
@@ -223,14 +236,14 @@ int applyRule(Module &M, Instruction &I, RewriteRule rw_rule, map <string, Value
  */
 bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
 	unsigned opIndex = 0;
-	
+
 	for (list<string>::iterator sit=rwIns.parameters.begin(); sit != rwIns.parameters.end(); ++sit) {
-		string param = *sit; 
-		
+		string param = *sit;
+
 		if(rwIns.parameters.size() == 1 && param=="*"){
-			return true; 
+			return true;
 		}
-						
+
 		if(opIndex > ins->getNumOperands() - 1) {
 			return false;
 		}
@@ -257,45 +270,46 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
  * @param ins instruction to be checked.
  * @param M module.
  * @param rw_config parsed rules to apply.
+ * @param Iiterator pointer to instructions iterator
  * @return true if OK, false otherwise
  */
-bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config) {
+bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator) {
 		// iterate through rewrite rules
 		for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
-			RewriteRule rw = *it; 
-			
+			RewriteRule rw = *it;
+
 			// check if this rule should be applied in this function
 			string functionName = F->getName().str();
-			
+
 			if(rw.inFunction != "*" && rw.inFunction!=functionName)
 				continue;
-				
+
 			// check sequence of instructions
 			map <string, Value*> variables;
 			bool instrument = false;
-			Instruction* currentInstr = ins; 
-								   	   			    		  	    
+			Instruction* currentInstr = ins;
+
 			for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
 				if(currentInstr == NULL) {
 				    break;
 				}
-   			    		  	   
-				InstrumentInstruction checkInstr = *iit;   	
+
+				InstrumentInstruction checkInstr = *iit;
 				// check the name
-				if(currentInstr->getOpcodeName() == checkInstr.instruction) {	    		  	    
+				if(currentInstr->getOpcodeName() == checkInstr.instruction) {
 					// check operands
 					if(!CheckOperands(checkInstr, currentInstr, variables)) {
 						break;
 					}
-										
+
 					// check return value
 					if(checkInstr.returnValue != "*") {
-						if(checkInstr.returnValue[0] == '<' 
+						if(checkInstr.returnValue[0] == '<'
 						&& checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
 							variables[checkInstr.returnValue] = currentInstr;
 						}
-					}					
-					
+					}
+
 					// load next instruction to be checked
 					list<InstrumentInstruction>::iterator final_iter = rw.foundInstrs.end();
 					--final_iter;
@@ -306,18 +320,18 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 						instrument = true;
 					}
 				}
-				else {										   	   							 
+				else {
 					break;
-				}	
-			 }		
-			 
+				}
+			 }
+
 			 // if all instructions match, try to instrument the code
 			 if(instrument) {
 				 	// try to apply rule
 					Instruction *where;
 				 	if(rw.where == InstrumentPlacement::BEFORE){
 						where = ins;
-					} 
+					}
 					else {
 						// It is important in the REPLACE case that
 						// we first place the new instruction after
@@ -325,11 +339,11 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 						where = currentInstr;
 					}
 
-					if(applyRule(M, *where, rw, variables) == 1) {
+					if(applyRule(M, *where, rw, variables, Iiterator) == 1) {
 						logger.write_error("Cannot apply rule.");
 						return false;
 					}
-			 }		
+			 }
 		  }
 
 	return true;
@@ -342,21 +356,21 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
  * @return true if OK, false otherwise
  */
 bool instrumentModule(Module &M, RewriterConfig rw_config) {
-   for (Module::iterator F = M.begin(), E = M.end(); F != E; ++F) {
- 						
+   for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
+
 	   // Do not instrument functions linked for instrumentation
-	   string functionName = (&*F)->getName().str();
+	   string functionName = (&*Fiterator)->getName().str();
 
 	   if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
 		   logger.write_info("Omitting function " + functionName + " from instrumentation.");
 		   continue;
 	   }
-	   
-	   for (inst_iterator I = inst_begin(&*F), End = inst_end(&*F); I != End; ++I) {
+
+	   for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
 		// This iterator may be replaced (by an iterator to the following
 		// instruction) in the InsertCallInstruction function
 			// Check if the instruction is relevant
-		    if(!CheckInstruction(&*I, M, &*F, rw_config)) return false;
+		    if(!CheckInstruction(&*Iiterator, M, &*Fiterator, rw_config, &Iiterator)) return false;
 		}
 	 }
 
@@ -365,8 +379,8 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
   out_file.open(outputName, ofstream::out | ofstream::trunc);
   raw_os_ostream rstream(out_file);
 
-  WriteBitcodeToFile(&M, rstream); 
-  
+  WriteBitcodeToFile(&M, rstream);
+
   return true;
 }
 
@@ -382,7 +396,7 @@ int main(int argc, char *argv[]) {
 
 	ifstream llvmir_file;
 	llvmir_file.open(argv[2]);
-	
+
 	outputName = argv[3];
 
 	// Parse json file
@@ -390,16 +404,16 @@ int main(int argc, char *argv[]) {
 	try {
 		rw.parseConfig(config_file);
 	}
-	catch (runtime_error ex){ 
+	catch (runtime_error ex){
 		string exceptionString = "Error parsing configuration: ";
 		logger.write_error(exceptionString.append(ex.what()));
 		config_file.close();
 		llvmir_file.close();
 		return 1;
 	}
-	
+
 	RewriterConfig rw_config = rw.getConfig();
-			
+
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
@@ -416,13 +430,13 @@ int main(int argc, char *argv[]) {
 		llvmir_file.close();
         return 1;
     }
-    
+
     // Instrument
     bool resultOK = instrumentModule(*m, rw_config);
-    
+
     config_file.close();
     llvmir_file.close();
-    
+
     if(resultOK) {
 		logger.write_info("DONE.");
 		return 0;
@@ -430,5 +444,5 @@ int main(int argc, char *argv[]) {
 	else {
 		logger.write_error("FAILED.");
 		return 1;
-	}   
+	}
 }
