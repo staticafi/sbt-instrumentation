@@ -1,0 +1,42 @@
+{
+	"file": "int_overflow.c",
+	"rules":
+	[
+		{
+			"findInstructions": [
+						   {
+							  "returnValue": "*",
+							  "instruction": "add",
+							  "operands": ["<t1>","<t2>"]
+						   }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_check_addition"]
+					  },
+			"where": "before",
+			"in": "*"
+		},
+        {
+			"findInstructions": [
+							{
+							  "returnValue": "*",
+							  "instruction": "sub",
+							  "operands": ["<t1>", "<t2>"]
+						    }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_check_subtraction"]
+					  },
+			"where": "before",
+			"in": "*"
+		}
+
+	]
+}
+
+
+
