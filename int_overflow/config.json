@@ -3,13 +3,14 @@
 	"rules":
 	[
 		{
-			"findInstructions": [
-						   {
-							  "returnValue": "*",
-							  "instruction": "add",
-							  "operands": ["<t1>","<t2>"]
-						   }
-					   ],
+			"findInstructions":
+				[
+					{
+					 	"returnValue": "*",
+						"instruction": "add",
+						"operands": ["<t1>","<t2>"]
+					}
+				],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
@@ -18,14 +19,15 @@
 			"where": "before",
 			"in": "*"
 		},
-        {
-			"findInstructions": [
-							{
-							  "returnValue": "*",
-							  "instruction": "sub",
-							  "operands": ["<t1>", "<t2>"]
-						    }
-					   ],
+       		{
+			"findInstructions":
+				[
+					{
+						"returnValue": "*",
+						"instruction": "sub",
+						"operands": ["<t1>", "<t2>"]
+					}
+				],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
@@ -33,7 +35,27 @@
 					  },
 			"where": "before",
 			"in": "*"
+		},
+
+        	{
+			"findInstructions":
+				[
+					{
+						"returnValue": "*",
+						"instruction": "mul",
+						"operands": ["<t1>", "<t2>"]
+					}
+				],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_check_multiplication"]
+					  },
+			"where": "before",
+			"in": "*"
 		}
+
+
 
 	]
 }

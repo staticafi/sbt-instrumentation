@@ -29,4 +29,7 @@ void __INSTR_check_subtraction(int x, int y) {
 
 void __INSTR_check_multiplication(int x, int y) {
 	//TODO
+	if ((x > INT_MAX / y) || (x < INT_MIN / y)) {
+		assert(0);
+	}
 }
