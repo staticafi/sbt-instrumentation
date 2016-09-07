@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-typedef int8_t* fsm_id; 
+typedef int8_t* fsm_id;
 
 typedef enum {
 	FSM_STATE_ALLOCATED,
@@ -76,7 +76,7 @@ fsm* __INSTR_fsm_list_search(fsm_id id) {
 
 fsm_state fsm_transition_table[3][2] = {{ FSM_STATE_FREED, FSM_STATE_ALLOCATED},
                                         { FSM_STATE_ERROR, FSM_STATE_ALLOCATED},
-                                        { FSM_STATE_ERROR, FSM_STATE_ERROR }}; // TODO: 3 vs number of elements in enum states?
+                                        { FSM_STATE_ERROR, FSM_STATE_ERROR }};
 
 void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 	fsm *m = __INSTR_fsm_list_search(id);
