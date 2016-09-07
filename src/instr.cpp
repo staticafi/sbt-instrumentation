@@ -116,7 +116,7 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
 		// so we can safely remove the sequence of instructions being
 		// replaced
 
-		newinstr->insertafter(&currentinstr);
+		newInstr->insertAfter(&currentInstr);
 		inst_iterator helper(*Iiterator);
 		*Iiterator = ++helper;
 		EraseInstructions(currentInstr, rw_rule.foundInstrs.size());
