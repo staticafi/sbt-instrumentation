@@ -3,11 +3,13 @@
 	"rules":
 	[
 		{
-			"findInstruction": {
-					      "returnValue": "<t1>",
-					      "instruction": "call",
-					      "operands": ["*", "malloc"]
-					   },
+			"findInstructions": [
+					      {
+						  "returnValue": "<t1>",
+						  "instruction": "call",
+						  "operands": ["*", "malloc"]
+					      }
+					   ],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
@@ -18,11 +20,13 @@
 		},
 		
 		{
-			"findInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t1>", "free"]
-					   },
+			"findInstructions": [
+					      {
+						  "returnValue": "*",
+						  "instruction": "call",
+						  "operands": ["<t1>", "free"]
+					      }
+					    ],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
@@ -31,13 +35,14 @@
 			"where": "before",
 			"in": "*"
 		},
-		
 		{
-			"findInstruction": {
-					      "returnValue": "*",
-					      "instruction": "ret",
-					      "operands": ["*"]
-					   },
+			"findInstructions": [
+					      {
+						"returnValue": "*",
+						"instruction": "ret",
+						"operands": ["*"]
+					      }
+					    ],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
@@ -48,6 +53,10 @@
 		}
 	]
 }
+
+
+
+
 
 
 
