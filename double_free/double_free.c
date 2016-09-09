@@ -85,14 +85,14 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 	} else {
 		if (action == FSM_ALPHABET_FREE) {
 			assert(0 && "free on non-allocated memory");
-			//exit(EXIT_FAILURE);
+			__VERIFIER_error();
 		}
 		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED);
 	}
 
 	if (m->state == FSM_STATE_ERROR) {
 	        assert(0 && "double free");
-		//exit(EXIT_FAILURE);
+		__VERIFIER_error();
 	}
 }
 
@@ -137,8 +137,10 @@ void __INSTR_fsm_list_destroy_checked() {
 
     while(cur) {
         fsm_list_node *tmp = cur->next;
-	if (cur->fsm->state == FSM_STATE_ALLOCATED)
+	if (cur->fsm->state == FSM_STATE_ALLOCATED){
 		assert(0 && "memory leak detected");
+		__VERIFIER_error();
+	}
 
         free(cur->fsm);
         free(cur);
