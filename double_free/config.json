@@ -35,25 +35,28 @@
 			"where": "before",
 			"in": "*"
 		},
-		
 		{
 			"findInstructions": [
 					      {
-						  "returnValue": "*",
-						  "instruction": "ret",
-						  "operands": ["*"]
+						"returnValue": "*",
+						"instruction": "ret",
+						"operands": ["*"]
 					      }
 					    ],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["__INSTR_fsm_list_destroy"]
+					      "operands": ["__INSTR_fsm_list_destroy_checked"]
 					  },
 			"where": "before",
 			"in": "main"
 		}
 	]
 }
+
+
+
+
 
 
 
