@@ -1,4 +1,4 @@
-{	
+{
 	"file": "double_free.c",
 	"rules":
 	[
@@ -15,10 +15,10 @@
 					      "instruction": "call",
 					      "operands": ["<t1>", "1","__INSTR_fsm_change_state"]
 					  },
-			"where": "after",
+			"where": "before",
 			"in": "*"
 		},
-		
+
 		{
 			"findInstructions": [
 					      {
