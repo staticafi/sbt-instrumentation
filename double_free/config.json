@@ -15,7 +15,7 @@
 					      "instruction": "call",
 					      "operands": ["<t1>", "1","__INSTR_fsm_change_state"]
 					  },
-			"where": "before",
+			"where": "after",
 			"in": "*"
 		},
 
