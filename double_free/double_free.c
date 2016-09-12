@@ -79,6 +79,12 @@ fsm_state fsm_transition_table[3][2] = {{ FSM_STATE_FREED, FSM_STATE_ALLOCATED},
                                         { FSM_STATE_ERROR, FSM_STATE_ERROR }};
 
 void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
+
+	// there is no FSM for NULL
+	if (id == 0) {
+		return;
+	}
+
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
 		m->state = fsm_transition_table[m->state][action];
