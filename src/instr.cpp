@@ -249,6 +249,7 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 		}
 
 		llvm::Value *op = ins->getOperand(opIndex);
+
 		if(param[0] == '<' && param[param.size() - 1] == '>') {
 			variables[param] = op;
 		} else if(param != "*"
@@ -295,6 +296,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 				}
 
 				InstrumentInstruction checkInstr = *iit;
+
 				// check the name
 				if(currentInstr->getOpcodeName() == checkInstr.instruction) {
 					// check operands

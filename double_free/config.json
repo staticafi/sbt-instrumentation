@@ -50,7 +50,24 @@
 					  },
 			"where": "before",
 			"in": "main"
+		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t2>",
+						  "instruction": "call",
+						  "operands": ["*","*", "calloc"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t2>", "1","__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
 		}
+
 	]
 }
 
