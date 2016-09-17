@@ -199,7 +199,7 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 int applyRule(Module &M, Instruction &currentInstr, RewriteRule rw_rule, map <string, Value*> variables, inst_iterator *Iiterator) {
 
 	// Check with static analysis if this instruction should be instrumented
-	if(!Analyzer::shouldInstrument(rw_rule.analysisPath, &M)) return 1;
+	if(!Analyzer::shouldInstrument(rw_rule.analysisPath, &M)) return 0;
 
 	logger.write_info("Applying rule...");
 
