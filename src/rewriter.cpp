@@ -33,16 +33,16 @@ void Rewriter::parseConfig(ifstream &config_file) {
 			}
 			r.foundInstrs.push_back(instr);
 		}
-		
-		
-		
+
+
+
 		r.newInstr.returnValue = json_rules["rules"][i]["newInstruction"]["returnValue"].asString();
 		r.newInstr.instruction = json_rules["rules"][i]["newInstruction"]["instruction"].asString();
 		for (uint j = 0; j < json_rules["rules"][i]["newInstruction"]["operands"].size(); ++j) {
 			r.newInstr.parameters.push_back(json_rules["rules"][i]["newInstruction"]["operands"][j].asString());
-		}		
+		}
 
-		if (json_rules["rules"][i]["where"] == "before") { 
+		if (json_rules["rules"][i]["where"] == "before") {
 			r.where = InstrumentPlacement::BEFORE;
 		}
 		else if (json_rules["rules"][i]["where"] == "after") {
@@ -51,8 +51,10 @@ void Rewriter::parseConfig(ifstream &config_file) {
 		else if (json_rules["rules"][i]["where"] == "replace") {
 			r.where = InstrumentPlacement::REPLACE;
 		}
-		
+
 		r.inFunction = json_rules["rules"][i]["in"].asString();
+
+		r.analysisPath = json_rules["rules"][i]["analysis"].asString();
 
 		rw_config.push_back(r);
 	}

@@ -50,6 +50,9 @@ SET(SOURCE_FILES
     src/rewriter.cpp
     lib/instr_log.hpp
     src/instr_log.cpp
+    lib/instr_plugin.hpp
+    lib/instr_analyzer.hpp
+    src/instr_analyzer.cpp
 )
 
 # Find the libraries that correspond to the LLVM components
