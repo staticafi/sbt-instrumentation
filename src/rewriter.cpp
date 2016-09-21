@@ -20,6 +20,13 @@ void Rewriter::parseConfig(ifstream &config_file) {
 	// TODO catch exceptions here
 
 	RewriterConfig rw_config;
+
+	// load paths to analyses
+	for(uint i = 0; i < json_rules["analyses"].size(); ++i){
+		this->analysisPaths.push_back(json_rules["anlyses"][i].asString());
+	}
+
+	// load rewrite rules
 	for (uint i = 0; i < json_rules["rules"].size(); ++i) {
 		RewriteRule r;
 
@@ -33,8 +40,6 @@ void Rewriter::parseConfig(ifstream &config_file) {
 			}
 			r.foundInstrs.push_back(instr);
 		}
-
-
 
 		r.newInstr.returnValue = json_rules["rules"][i]["newInstruction"]["returnValue"].asString();
 		r.newInstr.instruction = json_rules["rules"][i]["newInstruction"]["instruction"].asString();
@@ -54,7 +59,9 @@ void Rewriter::parseConfig(ifstream &config_file) {
 
 		r.inFunction = json_rules["rules"][i]["in"].asString();
 
-		r.analysisPath = json_rules["rules"][i]["analysis"].asString();
+		for(uint j = 0; j < json_rules["rules"][i]["condition"].size(); ++j){
+			r.condition.push_back(json_rules["rules"][i]["condition"][j].asString());
+		}
 
 		rw_config.push_back(r);
 	}
@@ -65,6 +72,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
 RewriterConfig Rewriter::getConfig() {
 	return this->config;
 }
+
 
 
 

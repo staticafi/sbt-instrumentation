@@ -29,7 +29,7 @@ class RewriteRule {
 	InstrumentInstruction newInstr;
 	InstrumentPlacement where;
 	std::string inFunction;
-	std::string analysisPath;
+	std::list<std::string> condition;
 };
 
 typedef std::list<RewriteRule> RewriterConfig;
@@ -40,6 +40,7 @@ class Rewriter {
 	public:
 		RewriterConfig getConfig();
 		void parseConfig(std::ifstream &config_file);
+		std::list<std::string> analysisPaths;
 };
 
 #endif
