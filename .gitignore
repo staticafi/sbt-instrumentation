@@ -8,6 +8,7 @@ src/jsoncpp.cpp
 lib/Makefile
 *.*~
 docs
+*.swp
 
 CMakeCache.txt
 CMakeFiles/
