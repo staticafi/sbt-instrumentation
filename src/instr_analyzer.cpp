@@ -1,30 +1,29 @@
 #include "../lib/instr_analyzer.hpp"
-#include "../lib/instr_plugin.hpp"
 #include <fstream>
 #include <string>
 #include <dlfcn.h>
 
+#include <llvm/IR/Module.h>
+
 using namespace std;
 
-bool Analyzer::shouldInstrument(const string &path, llvm::Module* module){
+InstrPlugin* Analyzer::analyze(const string &path, llvm::Module* module){
 
 	if(path.empty()){
-		return true;
+		return NULL;
 	}
 
 	void* handle = dlopen(path.c_str(), RTLD_LAZY);
 
-	InstrPlugin* (*create)();
+	InstrPlugin* (*create)(llvm::Module* module);
 	void (*destroy)(InstrPlugin*);
 
-	create = (InstrPlugin* (*)())dlsym(handle, "create_object");
-	destroy = (void (*)(InstrPlugin*))dlsym(handle, "destroy_object");
+	create = (InstrPlugin* (*)(llvm::Module*))dlsym(handle, "create_object");
+	//destroy = (void (*)(InstrPlugin*))dlsym(handle, "destroy_object");
 
-	InstrPlugin* plugin = (InstrPlugin*)create();
-	bool analyze = plugin->Analyze(module);
-	destroy(plugin);
+	InstrPlugin* plugin = (InstrPlugin*)create(module);
 
-	return analyze;
+	return plugin;
 }
 
 
