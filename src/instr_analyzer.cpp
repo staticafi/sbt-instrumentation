@@ -6,7 +6,7 @@
 
 using namespace std;
 
-InstrPlugin* Analyzer::analyze(const string &path, llvm::Module* module){
+unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module){
 
 	if(path.empty()){
 		return NULL;
@@ -14,18 +14,18 @@ InstrPlugin* Analyzer::analyze(const string &path, llvm::Module* module){
 
 	void* handle = dlopen(path.c_str(), RTLD_LAZY);
 
-	InstrPlugin* (*create)(llvm::Module* module);
+	unique_ptr<InstrPlugin> (*create)(llvm::Module* module);
 	void (*destroy)(InstrPlugin*);
 
-	create = (InstrPlugin* (*)(llvm::Module*))dlsym(handle, "create_object");
+	create = (unique_ptr<InstrPlugin> (*)(llvm::Module*))dlsym(handle, "create_object");
 	//destroy = (void (*)(InstrPlugin*))dlsym(handle, "destroy_object");
 
-	InstrPlugin* plugin = (InstrPlugin*)create(module);
+	unique_ptr<InstrPlugin> plugin = (unique_ptr<InstrPlugin>)create(module);
 
 	return plugin;
 }
 
-bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, llvm::Value* a, llvm::Value* b){
+bool Analyzer::shouldInstrument(unique_ptr<InstrPlugin> plugin, const string &condition, llvm::Value* a, llvm::Value* b){
 
 	if(condition.compare("!constant")){
 		return !(plugin->isConstant(a));

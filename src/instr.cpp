@@ -39,6 +39,7 @@ using namespace llvm;
 using namespace std;
 
 Logger logger("log.txt");
+list<unique_ptr<InstrPlugin>> plugins;
 
 string outputName;
 
@@ -388,6 +389,12 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
   return true;
 }
 
+void loadPlugins(Rewriter rw, Module* module){
+	for(list<string>::iterator it=rw.analysisPaths.begin(); it != rw.analysisPaths.end(); ++it){
+		plugins.push_back(Analyzer::analyze(*it,module));
+	}
+}
+
 int main(int argc, char *argv[]) {
 	if (argc < 3) {
 		usage(argv[0]);
@@ -434,6 +441,8 @@ int main(int argc, char *argv[]) {
 		llvmir_file.close();
         return 1;
     }
+
+	loadPlugins(rw,m);
 
     // Instrument
     bool resultOK = instrumentModule(*m, rw_config);
