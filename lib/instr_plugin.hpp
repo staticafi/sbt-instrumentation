@@ -13,7 +13,7 @@ class InstrPlugin
 	  virtual bool isEqual(llvm::Value* a, llvm::Value* b);
 	  virtual bool isNotEqual(llvm::Value* a, llvm::Value* b);
 	  virtual bool greaterThan(llvm::Value* a, llvm::Value* b);
-	  virtual bool lesserThan(llvm::Value* a, llvm::Value* b);
+	  virtual bool lessThan(llvm::Value* a, llvm::Value* b);
 	  virtual bool lessOrEqual(llvm::Value* a, llvm::Value* b);
 	  virtual bool greaterOrEqual(llvm::Value* a, llvm::Value* b);
 	  virtual bool isConstant(llvm::Value* a);
