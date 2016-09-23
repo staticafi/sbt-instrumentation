@@ -203,7 +203,6 @@ int applyRule(Module &M, Instruction &currentInstr, RewriteRule rw_rule, map <st
 
 	// Work just with call instructions for now...
 	if(rw_rule.newInstr.instruction != "call") {
-		cerr << "Not working with this instruction: " << rw_rule.newInstr.instruction << endl;
 		logger.write_error("Not working with this instruction: " + rw_rule.newInstr.instruction);
 		return 1;
 	}
@@ -216,7 +215,6 @@ int applyRule(Module &M, Instruction &currentInstr, RewriteRule rw_rule, map <st
 	string param = *(--rw_rule.newInstr.parameters.end());
 	CalleeF = M.getFunction(param);
 	if (!CalleeF) {
-		cerr << "Unknown function " << param << endl;
 		logger.write_error("Unknown function: " + param);
 		return 1;
 	}
@@ -267,6 +265,40 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 	}
 
 	return true;
+}
+
+/**
+ * Runs all plugins for static analyses and decides, whether to
+ * instrument or not.
+ * @param condition condition that must be satisfied to instrument
+ * @param variables
+ * @return true if condition is ok, false otherwise
+ */
+bool checkAnalysis(list<string> condition, map<string, Value*> variables){
+	// condition: first element is operator, other one or two elements
+	// are variables, TODO do we need more than two variables?
+	string conditionOp = condition.front();
+	list<string>::iterator it = condition.begin();
+	it++;
+	string aName = *it;
+	string bName = "";
+
+	Value* aValue = (variables.find(aName))->second;
+	Value* bValue = NULL;
+	if(condition.size()>2){
+		it++;
+		bName = *it;
+		bValue = (variables.find(bName))->second;
+	}
+
+	bool shouldInstrument = true;
+	for (list<unique_ptr<InstrPlugin>>::const_iterator ci = plugins.begin(); ci != plugins.end(); ++ci){
+		if(!Analyzer::shouldInstrument((*ci).get(), conditionOp, aValue, bValue)){
+			shouldInstrument = false;
+			break;
+		}
+	}
+	return shouldInstrument;
 }
 
 /**
@@ -331,7 +363,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 			 }
 
 			 // if all instructions match, try to instrument the code
-			 if(instrument) {
+			 if(instrument && checkAnalysis(rw.condition,variables)) {
 				 	// try to apply rule
 					Instruction *where;
 				 	if(rw.where == InstrumentPlacement::BEFORE){
@@ -388,6 +420,8 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
 
   return true;
 }
+
+
 
 void loadPlugins(Rewriter rw, Module* module){
 	for(list<string>::iterator it=rw.analysisPaths.begin(); it != rw.analysisPaths.end(); ++it){

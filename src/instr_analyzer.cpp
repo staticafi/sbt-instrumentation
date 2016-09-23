@@ -25,7 +25,7 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	return plugin;
 }
 
-bool Analyzer::shouldInstrument(unique_ptr<InstrPlugin> plugin, const string &condition, llvm::Value* a, llvm::Value* b){
+bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, llvm::Value* a, llvm::Value* b){
 
 	if(condition.compare("!constant")){
 		return !(plugin->isConstant(a));
