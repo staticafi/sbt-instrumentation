@@ -48,8 +48,15 @@ void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName>" << endl;
 }
 
-uint64_t getAllocatedSize(Type *Ty, Module* M){
+uint64_t getAllocatedSize(Instruction *I, Module* M){
 	DataLayout* DL = new DataLayout(M);
+
+	const AllocaInst *AI = dyn_cast<AllocaInst>(I);
+
+	if(!AI)
+		return 0;
+
+	Type* Ty = AI->getAllocatedType();
 
 	if(!Ty->isSized())
 		return 0;
@@ -160,6 +167,7 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 		string arg = *sit;
 
 		if(variables.find(arg) == variables.end()) {
+			logger.write_info(arg);
 			// NOTE: in future think also about other types than ConstantInt
 			int argInt;
 			try {
@@ -375,6 +383,17 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 					break;
 				}
 			 }
+
+	if(rw.foundInstrs.size() == 1){
+		InstrumentInstruction allocaIns = rw.foundInstrs.front();
+		if(!allocaIns.getSizeTo.empty()){
+			logger.write_info(allocaIns.getSizeTo);
+			LLVMContext &Context = getGlobalContext();
+			variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(Context), getAllocatedSize(ins,&M));
+		}
+
+	}
+
 
 			 // if all instructions match, try to instrument the code
 			 if(instrument && checkAnalysis(rw.condition,variables)) {

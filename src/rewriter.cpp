@@ -38,6 +38,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
 			for (uint j = 0; j < json_rules["rules"][i]["findInstructions"][k]["operands"].size(); ++j) {
 				instr.parameters.push_back(json_rules["rules"][i]["findInstructions"][k]["operands"][j].asString());
 			}
+			instr.getSizeTo = json_rules["rules"][i]["findInstructions"][k]["getSizeTo"].asString();
 			r.foundInstrs.push_back(instr);
 		}
 

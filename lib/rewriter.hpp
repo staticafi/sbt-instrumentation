@@ -19,6 +19,7 @@ class InstrumentInstruction {
 	std::string returnValue;
 	std::string instruction;
 	std::list<std::string> parameters;
+	std::string getSizeTo;
 };
 
 typedef std::list<InstrumentInstruction> InstrumentSequence;
