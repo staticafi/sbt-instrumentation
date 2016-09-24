@@ -14,6 +14,7 @@
 #include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/DataLayout.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/Bitcode/ReaderWriter.h>
@@ -45,6 +46,19 @@ string outputName;
 
 void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName>" << endl;
+}
+
+uint64_t getAllocatedSize(Type *Ty, Module* M){
+	DataLayout* DL = new DataLayout(M);
+
+	if(!Ty->isSized())
+		return 0;
+
+	uint64_t size = DL->getTypeAllocSize(Ty);
+
+	delete DL;
+
+	return size;
 }
 
 /**
