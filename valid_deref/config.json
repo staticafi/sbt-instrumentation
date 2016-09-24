@@ -1,0 +1,43 @@
+{
+	"file": "valid_deref.c",
+	"rules":
+	[
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "alloca",
+							"operands": ["*"],
+							"getSizeTo": "<t2>"
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_remember"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+        {
+			"findInstructions": [
+						{
+							"returnValue": "*",
+							"instruction": "call",
+							"operands": ["<t3>", "<t4>", "memset"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t3>","*","<t4>", "__INSTR_check_range"]
+					  },
+			"where": "before",
+			"in": "*"
+		}
+
+	]
+}
+
+
+
