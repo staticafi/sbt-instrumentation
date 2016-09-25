@@ -48,8 +48,9 @@ Json config files should look like this:
     }
 ```
 
-`<x>` is variable, `*` matches any string. The new instruction can be
-only a call for now.
+`<x>` is variable, `*` matches any string. The new instruction can only be a `call` for now. 
+
+`getSizeTo` can be used to get allocated size when instrumenting `alloca` instruction. It cannot be used when looking for a sequence of instructions.
 
 Example:
 ```json
