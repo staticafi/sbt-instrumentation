@@ -23,10 +23,11 @@ Json config files should look like this:
 			{
 				"findInstructions": sequence of instructions we are looking for, e.g.
 						   [
-							   { 
+							   {
 							      "returnValue": string,
 							      "instruction": string(call,alloca,...),
 							      "operands": list of strings
+							      "getSizeTo": string (can only be used when looking for one alloca instruction!)
 							   },
 							   {
 							      "returnValue": string,
@@ -47,7 +48,8 @@ Json config files should look like this:
     }
 ```
 
-`<x>` is variable, `*` matches any string. The new instruction can be only a call for now. 
+`<x>` is variable, `*` matches any string. The new instruction can be
+only a call for now.
 
 Example:
 ```json

@@ -62,7 +62,7 @@ rec* __INSTR_rec_list_search(rec_id id) {
 	return NULL;
 }
 
-void __INSTR_check_range(rec_id id, a_size range){
+void __INSTR_check_range(rec_id id, int range){
 	rec *r = __INSTR_rec_list_search(id);
 
 	if(r != NULL){

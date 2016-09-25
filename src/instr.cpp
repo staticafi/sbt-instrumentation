@@ -191,9 +191,13 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 				if(i == argIndex) {
 					if(argV->getType() != variables[arg]->getType()) {
 						//TODO other types?
-						CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
-						CastI->insertBefore(&I);
-						args.push_back(CastI);
+						if(!variables[arg]->getType()->isPtrOrPtrVectorTy()){
+							args.push_back(variables[arg]);
+						}else{
+							CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
+							CastI->insertBefore(&I);
+							args.push_back(CastI);
+						}
 					}
 					else{
 						args.push_back(variables[arg]);
@@ -259,10 +263,8 @@ int applyRule(Module &M, Instruction &currentInstr, RewriteRule rw_rule, map <st
  */
 bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
 	unsigned opIndex = 0;
-
 	for (list<string>::iterator sit=rwIns.parameters.begin(); sit != rwIns.parameters.end(); ++sit) {
 		string param = *sit;
-
 		if(rwIns.parameters.size() == 1 && param=="*"){
 			return true;
 		}
@@ -272,7 +274,6 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 		}
 
 		llvm::Value *op = ins->getOperand(opIndex);
-
 		if(param[0] == '<' && param[param.size() - 1] == '>') {
 			variables[param] = op;
 		} else if(param != "*"
