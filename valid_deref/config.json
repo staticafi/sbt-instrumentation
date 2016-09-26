@@ -19,12 +19,28 @@
 			"where": "after",
 			"in": "*"
 		},
-        {
+       		{
 			"findInstructions": [
 						{
 							"returnValue": "*",
 							"instruction": "call",
 							"operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i32"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t3>","<t4>", "__INSTR_check_range"]
+					  },
+			"where": "before",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "*",
+							"instruction": "call",
+							"operands": ["<t3>","*", "<t4>", "memset"]
 						}
 					   ],
 			"newInstruction": {
