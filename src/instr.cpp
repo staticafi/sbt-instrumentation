@@ -388,7 +388,6 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 	if(rw.foundInstrs.size() == 1){
 		InstrumentInstruction allocaIns = rw.foundInstrs.front();
 		if(!allocaIns.getSizeTo.empty()){
-			logger.write_info(allocaIns.getSizeTo);
 			LLVMContext &Context = getGlobalContext();
 			variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(Context), getAllocatedSize(ins,&M));
 		}
@@ -432,7 +431,8 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
 	   // Do not instrument functions linked for instrumentation
 	   string functionName = (&*Fiterator)->getName().str();
 
-	   if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
+	   if(functionName.find("__INSTR_")!=string::npos ||
+		  functionName.find("__VERIFIER_")!=string::npos) { //TODO just starts with
 		   logger.write_info("Omitting function " + functionName + " from instrumentation.");
 		   continue;
 	   }
