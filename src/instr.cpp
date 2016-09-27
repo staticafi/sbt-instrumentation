@@ -195,7 +195,7 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 							args.push_back(variables[arg]);
 						}else{
 							CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
-							CastI->insertBefore(&I);
+							CastI->insertAfter(&I);
 							args.push_back(CastI);
 						}
 					}
