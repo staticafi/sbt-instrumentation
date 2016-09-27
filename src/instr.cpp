@@ -97,8 +97,8 @@ Instruction* GetPreviousInstruction(Instruction* ins) {
  * @param I first instruction to be removed
  * @param count number of instructions to be removed
  */
-void EraseInstructions(Instruction &I, int count) {
-	Instruction* currentInstr = &I;
+void EraseInstructions(Instruction* I, int count) {
+	Instruction* currentInstr = I;
 	for (int i = 0; i < count; i++) {
 		if (!currentInstr){
 			return;
@@ -118,19 +118,18 @@ void EraseInstructions(Instruction &I, int count) {
  * @param currentInstr current instruction
  * @param Iiterator pointer to instructions iterator
  */
-void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule rw_rule, Instruction &currentInstr, inst_iterator *Iiterator) {
+void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule rw_rule, Instruction *currentInstr, inst_iterator *Iiterator) {
 	// Create new call instruction
 	CallInst *newInstr = CallInst::Create(CalleeF, args);
-
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
-		newInstr->insertBefore(&currentInstr);
-		logger.log_insertion("before",CalleeF, &currentInstr);
+		newInstr->insertBefore(currentInstr);
+		logger.log_insertion("before",CalleeF, currentInstr);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
 		// Insert after
-		newInstr->insertAfter(&currentInstr);
-		logger.log_insertion("after", CalleeF, &currentInstr);
+		newInstr->insertAfter(currentInstr);
+		logger.log_insertion("after", CalleeF, currentInstr);
 	}
 	else if(rw_rule.where == InstrumentPlacement::REPLACE) {
 		// TODO: Make the functions use the iterator instead of
@@ -139,7 +138,7 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
 		// so we can safely remove the sequence of instructions being
 		// replaced
 
-		newInstr->insertAfter(&currentInstr);
+		newInstr->insertAfter(currentInstr);
 		inst_iterator helper(*Iiterator);
 		*Iiterator = ++helper;
 		EraseInstructions(currentInstr, rw_rule.foundInstrs.size());
@@ -155,9 +154,10 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
  * @param CalleeF function to be called
  * @param variables map of found parameters from config
  */
-vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* CalleeF, map <string, Value*> variables) {
+tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruction *I, Function* CalleeF, map <string, Value*> variables) {
 	std::vector<Value *> args;
 	unsigned i = 0;
+	Instruction* nI = I;
 	for (list<string>::iterator sit=rw_rule.newInstr.parameters.begin(); sit != rw_rule.newInstr.parameters.end(); ++sit) {
 
 		if(i == rw_rule.newInstr.parameters.size() - 1) {
@@ -167,7 +167,6 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 		string arg = *sit;
 
 		if(variables.find(arg) == variables.end()) {
-			logger.write_info(arg);
 			// NOTE: in future think also about other types than ConstantInt
 			int argInt;
 			try {
@@ -195,8 +194,9 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 							args.push_back(variables[arg]);
 						}else{
 							CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
-							CastI->insertAfter(&I);
+							CastI->insertAfter(I);
 							args.push_back(CastI);
+							nI = CastI;
 						}
 					}
 					else{
@@ -211,7 +211,7 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
 
 		i++;
 	}
-	return args;
+	return make_tuple(args,nI);
 }
 
 /**
@@ -223,7 +223,7 @@ vector<Value *> InsertArgument(RewriteRule rw_rule, Instruction &I, Function* Ca
  * @param Iiterator pointer to instructions iterator
  * @return 1 if error
  */
-int applyRule(Module &M, Instruction &currentInstr, RewriteRule rw_rule, map <string, Value*> variables, inst_iterator *Iiterator) {
+int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule, map <string, Value*> variables, inst_iterator *Iiterator) {
 
 	logger.write_info("Applying rule...");
 
@@ -246,170 +246,171 @@ int applyRule(Module &M, Instruction &currentInstr, RewriteRule rw_rule, map <st
 	}
 
 	// Insert arguments
-	args = InsertArgument(rw_rule, currentInstr, CalleeF, variables);
+	tuple<vector<Value*>, Instruction*> argsTuple = InsertArgument(rw_rule, currentInstr, CalleeF, variables);
+	args = get<0>(argsTuple);
 
 	// Insert new call instruction
-	InsertCallInstruction(CalleeF, args, rw_rule, currentInstr, Iiterator);
+	InsertCallInstruction(CalleeF, args, rw_rule, get<1>(argsTuple), Iiterator);
 
 	return 0;
 }
 
-/**
- * Checks if the operands of instruction match.
- * @param rwIns instruction from rewrite rule.
- * @param ins instruction to be checked.
- * @param variables map for remembering some parameters.
- * @return true if OK, false otherwise
- */
-bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
-	unsigned opIndex = 0;
-	for (list<string>::iterator sit=rwIns.parameters.begin(); sit != rwIns.parameters.end(); ++sit) {
-		string param = *sit;
-		if(rwIns.parameters.size() == 1 && param=="*"){
-			return true;
+	/**
+	 * Checks if the operands of instruction match.
+	 * @param rwIns instruction from rewrite rule.
+	 * @param ins instruction to be checked.
+	 * @param variables map for remembering some parameters.
+	 * @return true if OK, false otherwise
+	 */
+	bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
+		unsigned opIndex = 0;
+		for (list<string>::iterator sit=rwIns.parameters.begin(); sit != rwIns.parameters.end(); ++sit) {
+			string param = *sit;
+			if(rwIns.parameters.size() == 1 && param=="*"){
+				return true;
+			}
+
+			if(opIndex > ins->getNumOperands() - 1) {
+				return false;
+			}
+
+			llvm::Value *op = ins->getOperand(opIndex);
+			if(param[0] == '<' && param[param.size() - 1] == '>') {
+				variables[param] = op;
+			} else if(param != "*"
+					  && param != (op->stripPointerCasts()->getName()).str()) {
+					  // NOTE: we're comparing a name of the value, but the name
+					  // is set only sometimes. Since we're now matching just CallInst
+					  // it is OK, but it may not be OK in the future
+				return false;
+			}
+
+			opIndex++;
 		}
 
-		if(opIndex > ins->getNumOperands() - 1) {
-			return false;
-		}
-
-		llvm::Value *op = ins->getOperand(opIndex);
-		if(param[0] == '<' && param[param.size() - 1] == '>') {
-			variables[param] = op;
-		} else if(param != "*"
-				  && param != (op->stripPointerCasts()->getName()).str()) {
-				  // NOTE: we're comparing a name of the value, but the name
-				  // is set only sometimes. Since we're now matching just CallInst
-				  // it is OK, but it may not be OK in the future
-			return false;
-		}
-
-		opIndex++;
+		return true;
 	}
 
-	return true;
-}
-
-/**
- * Runs all plugins for static analyses and decides, whether to
- * instrument or not.
- * @param condition condition that must be satisfied to instrument
- * @param variables
- * @return true if condition is ok, false otherwise
- */
-bool checkAnalysis(list<string> condition, map<string, Value*> variables){
-	// condition: first element is operator, other one or two elements
-	// are variables, TODO do we need more than two variables?
-	string conditionOp = condition.front();
-	list<string>::iterator it = condition.begin();
-	it++;
-	string aName = *it;
-	string bName = "";
-
-	Value* aValue = (variables.find(aName))->second;
-	Value* bValue = NULL;
-	if(condition.size()>2){
+	/**
+	 * Runs all plugins for static analyses and decides, whether to
+	 * instrument or not.
+	 * @param condition condition that must be satisfied to instrument
+	 * @param variables
+	 * @return true if condition is ok, false otherwise
+	 */
+	bool checkAnalysis(list<string> condition, map<string, Value*> variables){
+		// condition: first element is operator, other one or two elements
+		// are variables, TODO do we need more than two variables?
+		string conditionOp = condition.front();
+		list<string>::iterator it = condition.begin();
 		it++;
-		bName = *it;
-		bValue = (variables.find(bName))->second;
-	}
+		string aName = *it;
+		string bName = "";
 
-	bool shouldInstrument = true;
-	for (list<unique_ptr<InstrPlugin>>::const_iterator ci = plugins.begin(); ci != plugins.end(); ++ci){
-		if(!Analyzer::shouldInstrument((*ci).get(), conditionOp, aValue, bValue)){
-			shouldInstrument = false;
-			break;
+		Value* aValue = (variables.find(aName))->second;
+		Value* bValue = NULL;
+		if(condition.size()>2){
+			it++;
+			bName = *it;
+			bValue = (variables.find(bName))->second;
 		}
+
+		bool shouldInstrument = true;
+		for (list<unique_ptr<InstrPlugin>>::const_iterator ci = plugins.begin(); ci != plugins.end(); ++ci){
+			if(!Analyzer::shouldInstrument((*ci).get(), conditionOp, aValue, bValue)){
+				shouldInstrument = false;
+				break;
+			}
+		}
+		return shouldInstrument;
 	}
-	return shouldInstrument;
-}
 
-/**
- * Checks if the given instruction should be instrumented.
- * @param ins instruction to be checked.
- * @param M module.
- * @param rw_config parsed rules to apply.
- * @param Iiterator pointer to instructions iterator
- * @return true if OK, false otherwise
- */
-bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator) {
-		// iterate through rewrite rules
-		for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
-			RewriteRule rw = *it;
+	/**
+	 * Checks if the given instruction should be instrumented.
+	 * @param ins instruction to be checked.
+	 * @param M module.
+	 * @param rw_config parsed rules to apply.
+	 * @param Iiterator pointer to instructions iterator
+	 * @return true if OK, false otherwise
+	 */
+	bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator) {
+			// iterate through rewrite rules
+			for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
+				RewriteRule rw = *it;
 
-			// check if this rule should be applied in this function
-			string functionName = F->getName().str();
+				// check if this rule should be applied in this function
+				string functionName = F->getName().str();
 
-			if(rw.inFunction != "*" && rw.inFunction!=functionName)
-				continue;
+				if(rw.inFunction != "*" && rw.inFunction!=functionName)
+					continue;
 
-			// check sequence of instructions
-			map <string, Value*> variables;
-			bool instrument = false;
-			Instruction* currentInstr = ins;
+				// check sequence of instructions
+				map <string, Value*> variables;
+				bool instrument = false;
+				Instruction* currentInstr = ins;
 
-			for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
-				if(currentInstr == NULL) {
-				    break;
-				}
-
-				InstrumentInstruction checkInstr = *iit;
-
-				// check the name
-				if(currentInstr->getOpcodeName() == checkInstr.instruction) {
-					// check operands
-					if(!CheckOperands(checkInstr, currentInstr, variables)) {
+				for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
+					if(currentInstr == NULL) {
 						break;
 					}
 
-					// check return value
-					if(checkInstr.returnValue != "*") {
-						if(checkInstr.returnValue[0] == '<'
-						&& checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
-							variables[checkInstr.returnValue] = currentInstr;
+					InstrumentInstruction checkInstr = *iit;
+
+					// check the name
+					if(currentInstr->getOpcodeName() == checkInstr.instruction) {
+						// check operands
+						if(!CheckOperands(checkInstr, currentInstr, variables)) {
+							break;
+						}
+
+						// check return value
+						if(checkInstr.returnValue != "*") {
+							if(checkInstr.returnValue[0] == '<'
+							&& checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
+								variables[checkInstr.returnValue] = currentInstr;
+							}
+						}
+
+						// load next instruction to be checked
+						list<InstrumentInstruction>::iterator final_iter = rw.foundInstrs.end();
+						--final_iter;
+						if (iit != final_iter) {
+							currentInstr = GetNextInstruction(ins);
+						}
+						else {
+							instrument = true;
 						}
 					}
-
-					// load next instruction to be checked
-					list<InstrumentInstruction>::iterator final_iter = rw.foundInstrs.end();
-					--final_iter;
-					if (iit != final_iter) {
-						currentInstr = GetNextInstruction(ins);
-					}
 					else {
-						instrument = true;
+						break;
 					}
-				}
-				else {
-					break;
-				}
-			 }
+				 }
 
-	if(rw.foundInstrs.size() == 1){
-		InstrumentInstruction allocaIns = rw.foundInstrs.front();
-		if(!allocaIns.getSizeTo.empty()){
-			LLVMContext &Context = getGlobalContext();
-			variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(Context), getAllocatedSize(ins,&M));
+		if(rw.foundInstrs.size() == 1){
+			InstrumentInstruction allocaIns = rw.foundInstrs.front();
+			if(!allocaIns.getSizeTo.empty()){
+				LLVMContext &Context = getGlobalContext();
+				variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(Context), getAllocatedSize(ins,&M));
+			}
+
 		}
 
-	}
 
+				 // if all instructions match, try to instrument the code
+				 if(instrument && checkAnalysis(rw.condition,variables)) {
+						// try to apply rule
+						Instruction *where;
+						if(rw.where == InstrumentPlacement::BEFORE){
+							where = ins;
+						}
+						else {
+							// It is important in the REPLACE case that
+							// we first place the new instruction after
+							// the sequence
+							where = currentInstr;
+						}
 
-			 // if all instructions match, try to instrument the code
-			 if(instrument && checkAnalysis(rw.condition,variables)) {
-				 	// try to apply rule
-					Instruction *where;
-				 	if(rw.where == InstrumentPlacement::BEFORE){
-						where = ins;
-					}
-					else {
-						// It is important in the REPLACE case that
-						// we first place the new instruction after
-						// the sequence
-						where = currentInstr;
-					}
-
-					if(applyRule(M, *where, rw, variables, Iiterator) == 1) {
+						if(applyRule(M, where, rw, variables, Iiterator) == 1) {
 						logger.write_error("Cannot apply rule.");
 						return false;
 					}
