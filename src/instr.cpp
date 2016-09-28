@@ -22,9 +22,9 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/LLVMContext.h>
 #if (LLVM_VERSION_MINOR >= 5)
-  #include "llvm/IR/InstIterator.h"
+#include "llvm/IR/InstIterator.h"
 #else
-  #include "llvm/Support/InstIterator.h"
+#include "llvm/Support/InstIterator.h"
 #endif
 #include <llvm/Support/SourceMgr.h>
 
@@ -75,9 +75,9 @@ uint64_t getAllocatedSize(Instruction *I, Module* M){
  */
 Instruction* GetNextInstruction(Instruction* ins) {
 	BasicBlock::iterator I(ins);
-    if (++I == ins->getParent()->end())
-      return NULL;
-    return &*I;
+	if (++I == ins->getParent()->end())
+		return NULL;
+	return &*I;
 }
 
 /**
@@ -87,9 +87,9 @@ Instruction* GetNextInstruction(Instruction* ins) {
  */
 Instruction* GetPreviousInstruction(Instruction* ins) {
 	BasicBlock::iterator I(ins);
-    if (--I == ins->getParent()->begin())
-      return NULL;
-    return &*I;
+	if (--I == ins->getParent()->begin())
+		return NULL;
+	return &*I;
 }
 
 /**
@@ -158,13 +158,11 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 	std::vector<Value *> args;
 	unsigned i = 0;
 	Instruction* nI = I;
-	for (list<string>::iterator sit=rw_rule.newInstr.parameters.begin(); sit != rw_rule.newInstr.parameters.end(); ++sit) {
+	for(const string& arg : rw_rule.newInstr.parameters){
 
 		if(i == rw_rule.newInstr.parameters.size() - 1) {
 			break;
 		}
-
-		string arg = *sit;
 
 		if(variables.find(arg) == variables.end()) {
 			// NOTE: in future think also about other types than ConstantInt
@@ -255,136 +253,133 @@ int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule, map <st
 	return 0;
 }
 
-	/**
-	 * Checks if the operands of instruction match.
-	 * @param rwIns instruction from rewrite rule.
-	 * @param ins instruction to be checked.
-	 * @param variables map for remembering some parameters.
-	 * @return true if OK, false otherwise
-	 */
-	bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
-		unsigned opIndex = 0;
-		for (list<string>::iterator sit=rwIns.parameters.begin(); sit != rwIns.parameters.end(); ++sit) {
-			string param = *sit;
-			if(rwIns.parameters.size() == 1 && param=="*"){
-				return true;
-			}
-
-			if(opIndex > ins->getNumOperands() - 1) {
-				return false;
-			}
-
-			llvm::Value *op = ins->getOperand(opIndex);
-			if(param[0] == '<' && param[param.size() - 1] == '>') {
-				variables[param] = op;
-			} else if(param != "*"
-					  && param != (op->stripPointerCasts()->getName()).str()) {
-					  // NOTE: we're comparing a name of the value, but the name
-					  // is set only sometimes. Since we're now matching just CallInst
-					  // it is OK, but it may not be OK in the future
-				return false;
-			}
-
-			opIndex++;
+/**
+ * Checks if the operands of instruction match.
+ * @param rwIns instruction from rewrite rule.
+ * @param ins instruction to be checked.
+ * @param variables map for remembering some parameters.
+ * @return true if OK, false otherwise
+ */
+bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
+	unsigned opIndex = 0;
+	for(const string& param : rwIns.parameters){
+		if(rwIns.parameters.size() == 1 && param=="*"){
+			return true;
 		}
 
-		return true;
+		if(opIndex > ins->getNumOperands() - 1) {
+			return false;
+		}
+
+		llvm::Value *op = ins->getOperand(opIndex);
+		if(param[0] == '<' && param[param.size() - 1] == '>') {
+			variables[param] = op;
+		} else if(param != "*"
+				  && param != (op->stripPointerCasts()->getName()).str()) {
+			// NOTE: we're comparing a name of the value, but the name
+			// is set only sometimes. Since we're now matching just CallInst
+			// it is OK, but it may not be OK in the future
+			return false;
+		}
+
+		opIndex++;
 	}
 
-	/**
-	 * Runs all plugins for static analyses and decides, whether to
-	 * instrument or not.
-	 * @param condition condition that must be satisfied to instrument
-	 * @param variables
-	 * @return true if condition is ok, false otherwise
-	 */
-	bool checkAnalysis(list<string> condition, map<string, Value*> variables){
-		// condition: first element is operator, other one or two elements
-		// are variables, TODO do we need more than two variables?
-		string conditionOp = condition.front();
-		list<string>::iterator it = condition.begin();
+	return true;
+}
+
+/**
+ * Runs all plugins for static analyses and decides, whether to
+ * instrument or not.
+ * @param condition condition that must be satisfied to instrument
+ * @param variables
+ * @return true if condition is ok, false otherwise
+ */
+bool checkAnalysis(list<string> condition, map<string, Value*> variables){
+	// condition: first element is operator, other one or two elements
+	// are variables, TODO do we need more than two variables?
+	string conditionOp = condition.front();
+	list<string>::iterator it = condition.begin();
+	it++;
+	string aName = *it;
+	string bName = "";
+
+	Value* aValue = (variables.find(aName))->second;
+	Value* bValue = NULL;
+	if(condition.size()>2){
 		it++;
-		string aName = *it;
-		string bName = "";
+		bName = *it;
+		bValue = (variables.find(bName))->second;
+	}
 
-		Value* aValue = (variables.find(aName))->second;
-		Value* bValue = NULL;
-		if(condition.size()>2){
-			it++;
-			bName = *it;
-			bValue = (variables.find(bName))->second;
+	bool shouldInstrument = true;
+	for(auto& plugin : plugins){
+		if(!Analyzer::shouldInstrument(plugin.get(), conditionOp, aValue, bValue)){
+			shouldInstrument = false;
+			break;
 		}
+	}
+	return shouldInstrument;
+}
 
-		bool shouldInstrument = true;
-		for (list<unique_ptr<InstrPlugin>>::const_iterator ci = plugins.begin(); ci != plugins.end(); ++ci){
-			if(!Analyzer::shouldInstrument((*ci).get(), conditionOp, aValue, bValue)){
-				shouldInstrument = false;
+/**
+ * Checks if the given instruction should be instrumented.
+ * @param ins instruction to be checked.
+ * @param M module.
+ * @param rw_config parsed rules to apply.
+ * @param Iiterator pointer to instructions iterator
+ * @return true if OK, false otherwise
+ */
+bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator) {
+	// iterate through rewrite rules
+	for (RewriteRule& rw : rw_config){
+		// check if this rule should be applied in this function
+		string functionName = F->getName().str();
+
+		if(rw.inFunction != "*" && rw.inFunction!=functionName)
+			continue;
+
+		// check sequence of instructions
+		map <string, Value*> variables;
+		bool instrument = false;
+		Instruction* currentInstr = ins;
+
+		for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
+			if(currentInstr == NULL) {
+				break;
+			}
+
+			InstrumentInstruction checkInstr = *iit;
+
+			// check the name
+			if(currentInstr->getOpcodeName() == checkInstr.instruction) {
+				// check operands
+				if(!CheckOperands(checkInstr, currentInstr, variables)) {
+					break;
+				}
+
+				// check return value
+				if(checkInstr.returnValue != "*") {
+					if(checkInstr.returnValue[0] == '<'
+					   && checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
+						variables[checkInstr.returnValue] = currentInstr;
+					}
+				}
+
+				// load next instruction to be checked
+				list<InstrumentInstruction>::iterator final_iter = rw.foundInstrs.end();
+				--final_iter;
+				if (iit != final_iter) {
+					currentInstr = GetNextInstruction(ins);
+				}
+				else {
+					instrument = true;
+				}
+			}
+			else {
 				break;
 			}
 		}
-		return shouldInstrument;
-	}
-
-	/**
-	 * Checks if the given instruction should be instrumented.
-	 * @param ins instruction to be checked.
-	 * @param M module.
-	 * @param rw_config parsed rules to apply.
-	 * @param Iiterator pointer to instructions iterator
-	 * @return true if OK, false otherwise
-	 */
-	bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator) {
-			// iterate through rewrite rules
-			for (list<RewriteRule>::iterator it=rw_config.begin(); it != rw_config.end(); ++it) {
-				RewriteRule rw = *it;
-
-				// check if this rule should be applied in this function
-				string functionName = F->getName().str();
-
-				if(rw.inFunction != "*" && rw.inFunction!=functionName)
-					continue;
-
-				// check sequence of instructions
-				map <string, Value*> variables;
-				bool instrument = false;
-				Instruction* currentInstr = ins;
-
-				for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
-					if(currentInstr == NULL) {
-						break;
-					}
-
-					InstrumentInstruction checkInstr = *iit;
-
-					// check the name
-					if(currentInstr->getOpcodeName() == checkInstr.instruction) {
-						// check operands
-						if(!CheckOperands(checkInstr, currentInstr, variables)) {
-							break;
-						}
-
-						// check return value
-						if(checkInstr.returnValue != "*") {
-							if(checkInstr.returnValue[0] == '<'
-							&& checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
-								variables[checkInstr.returnValue] = currentInstr;
-							}
-						}
-
-						// load next instruction to be checked
-						list<InstrumentInstruction>::iterator final_iter = rw.foundInstrs.end();
-						--final_iter;
-						if (iit != final_iter) {
-							currentInstr = GetNextInstruction(ins);
-						}
-						else {
-							instrument = true;
-						}
-					}
-					else {
-						break;
-					}
-				 }
 
 		if(rw.foundInstrs.size() == 1){
 			InstrumentInstruction allocaIns = rw.foundInstrs.front();
@@ -396,26 +391,26 @@ int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule, map <st
 		}
 
 
-				 // if all instructions match, try to instrument the code
-				 if(instrument && checkAnalysis(rw.condition,variables)) {
-						// try to apply rule
-						Instruction *where;
-						if(rw.where == InstrumentPlacement::BEFORE){
-							where = ins;
-						}
-						else {
-							// It is important in the REPLACE case that
-							// we first place the new instruction after
-							// the sequence
-							where = currentInstr;
-						}
+		// if all instructions match, try to instrument the code
+		if(instrument && checkAnalysis(rw.condition,variables)) {
+			// try to apply rule
+			Instruction *where;
+			if(rw.where == InstrumentPlacement::BEFORE){
+				where = ins;
+			}
+			else {
+				// It is important in the REPLACE case that
+				// we first place the new instruction after
+				// the sequence
+				where = currentInstr;
+			}
 
-						if(applyRule(M, where, rw, variables, Iiterator) == 1) {
-						logger.write_error("Cannot apply rule.");
-						return false;
-					}
-			 }
-		  }
+			if(applyRule(M, where, rw, variables, Iiterator) == 1) {
+				logger.write_error("Cannot apply rule.");
+				return false;
+			}
+		}
+	}
 
 	return true;
 }
@@ -427,39 +422,43 @@ int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule, map <st
  * @return true if OK, false otherwise
  */
 bool instrumentModule(Module &M, RewriterConfig rw_config) {
-   for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
+	for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
 
-	   // Do not instrument functions linked for instrumentation
-	   string functionName = (&*Fiterator)->getName().str();
+		// Do not instrument functions linked for instrumentation
+		string functionName = (&*Fiterator)->getName().str();
 
-	   if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
-		   logger.write_info("Omitting function " + functionName + " from instrumentation.");
-		   continue;
-	   }
-
-	   for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
-		// This iterator may be replaced (by an iterator to the following
-		// instruction) in the InsertCallInstruction function
-			// Check if the instruction is relevant
-		    if(!CheckInstruction(&*Iiterator, M, &*Fiterator, rw_config, &Iiterator)) return false;
+		if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
+			logger.write_info("Omitting function " + functionName + " from instrumentation.");
+			continue;
 		}
-	 }
 
-  // Write instrumented module into the output file
-  ofstream out_file;
-  out_file.open(outputName, ofstream::out | ofstream::trunc);
-  raw_os_ostream rstream(out_file);
+		for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
+			// This iterator may be replaced (by an iterator to the following
+			// instruction) in the InsertCallInstruction function
+			// Check if the instruction is relevant
+			if(!CheckInstruction(&*Iiterator, M, &*Fiterator, rw_config, &Iiterator)) return false;
+		}
+	}
 
-  WriteBitcodeToFile(&M, rstream);
+	// Write instrumented module into the output file
+	ofstream out_file;
+	out_file.open(outputName, ofstream::out | ofstream::trunc);
+	raw_os_ostream rstream(out_file);
 
-  return true;
+	WriteBitcodeToFile(&M, rstream);
+
+	return true;
 }
 
 
-
+/**
+ * Loads all plugins.
+ * @param rw Rules from config file.
+ * @param module Module to be instrumented.
+ */
 void loadPlugins(Rewriter rw, Module* module){
-	for(list<string>::iterator it=rw.analysisPaths.begin(); it != rw.analysisPaths.end(); ++it){
-		plugins.push_back(Analyzer::analyze(*it,module));
+	for(const string& path : rw.analysisPaths){
+		plugins.push_back(Analyzer::analyze(path,module));
 	}
 }
 
@@ -495,30 +494,30 @@ int main(int argc, char *argv[]) {
 
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
-    SMDiagnostic Err;
+	SMDiagnostic Err;
 #if (LLVM_VERSION_MINOR >= 6)
-    std::unique_ptr<Module> _m = parseIRFile(argv[2], Err, Context);
-    Module *m = _m.release();
+	std::unique_ptr<Module> _m = parseIRFile(argv[2], Err, Context);
+	Module *m = _m.release();
 #else
-    Module *m = ParseIRFile(argv[2], Err, Context);
+	Module *m = ParseIRFile(argv[2], Err, Context);
 #endif
-    if (!m) {
+	if (!m) {
 		logger.write_error("Error parsing .bc file.");
-        Err.print(argv[0], errs());
-        config_file.close();
+		Err.print(argv[0], errs());
+		config_file.close();
 		llvmir_file.close();
-        return 1;
-    }
+		return 1;
+	}
 
 	loadPlugins(rw,m);
 
-    // Instrument
-    bool resultOK = instrumentModule(*m, rw_config);
+	// Instrument
+	bool resultOK = instrumentModule(*m, rw_config);
 
-    config_file.close();
-    llvmir_file.close();
+	config_file.close();
+	llvmir_file.close();
 
-    if(resultOK) {
+	if(resultOK) {
 		logger.write_info("DONE.");
 		return 0;
 	}
