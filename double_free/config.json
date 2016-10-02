@@ -18,6 +18,38 @@
 			"where": "after",
 			"in": "*"
 		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t1>",
+						  "instruction": "call",
+						  "operands": ["*", "__VERIFIER_malloc"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "1","__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t1>",
+						  "instruction": "call",
+						  "operands": ["*", "__VERIFIER_malloc0"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "1","__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
 
 		{
 			"findInstructions": [

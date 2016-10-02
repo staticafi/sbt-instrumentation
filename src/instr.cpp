@@ -427,7 +427,8 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
 		// Do not instrument functions linked for instrumentation
 		string functionName = (&*Fiterator)->getName().str();
 
-		if(functionName.find("__INSTR_")!=string::npos) { //TODO just starts with
+		if(functionName.find("__INSTR_")!=string::npos ||
+		   functionName.find("__VERIFIER_")!=string::npos) { //TODO just starts with
 			logger.write_info("Omitting function " + functionName + " from instrumentation.");
 			continue;
 		}
