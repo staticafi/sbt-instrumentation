@@ -19,6 +19,22 @@
 			"where": "after",
 			"in": "*"
 		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "call",
+							"operands": ["<t2>","malloc"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_remember_malloc"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
        		{
 			"findInstructions": [
 						{

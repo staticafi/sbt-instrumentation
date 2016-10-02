@@ -49,6 +49,20 @@ rec* __INSTR_remember(rec_id id, a_size size) {
 	return new_rec;
 }
 
+rec* __INSTR_remember_malloc(rec_id id, int size) {
+	rec *new_rec = (rec *) malloc(sizeof(rec));
+	new_rec->id = id;
+	new_rec->size = size;
+
+	rec_list_node *node = (rec_list_node *) malloc(sizeof(rec_list_node));
+	node->next = NULL;
+	node->record = new_rec;
+
+	__INSTR_rec_list_append(node);
+
+	return new_rec;
+}
+
 rec* __INSTR_rec_list_search(rec_id id) {
   	rec_list_node *cur = rec_list;
 
