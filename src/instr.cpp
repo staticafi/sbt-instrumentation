@@ -273,7 +273,11 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 
 		llvm::Value *op = ins->getOperand(opIndex);
 		if(param[0] == '<' && param[param.size() - 1] == '>') {
-			variables[param] = op;
+			if(rwIns.stripInboundsOffsets != param){
+				variables[param] = op;
+			} else {
+				variables[param] = op->stripInBoundsOffsets();
+			}
 		} else if(param != "*"
 				  && param != (op->stripPointerCasts()->getName()).str()) {
 			// NOTE: we're comparing a name of the value, but the name
