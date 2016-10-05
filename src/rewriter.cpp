@@ -39,7 +39,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
 				instr.parameters.push_back(json_rules["rules"][i]["findInstructions"][k]["operands"][j].asString());
 			}
 			instr.getSizeTo = json_rules["rules"][i]["findInstructions"][k]["getSizeTo"].asString();
-			instr.stripInboundsOffsets = json_rules["rules"][i]["findInstructions"][k]["stripInboundsOffsets"].asString();
+		//	instr.stripInboundsOffsets = json_rules["rules"][i]["findInstructions"][k]["stripInboundsOffsets"].asString();
 			r.foundInstrs.push_back(instr);
 		}
 
