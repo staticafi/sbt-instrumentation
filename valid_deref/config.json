@@ -79,7 +79,8 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"]
+					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
 			"in": "*"
@@ -89,7 +90,8 @@
 						{
 							"returnValue": "*",
 							"instruction": "call",
-							"operands": ["<t3>","*", "<t4>", "memset"]
+							"operands": ["<t3>","*", "<t4>", "memset"],
+							"stripInboundsOffsets": "<t3>"
 						}
 					   ],
 			"newInstruction": {
