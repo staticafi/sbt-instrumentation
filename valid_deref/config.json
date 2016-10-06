@@ -101,6 +101,22 @@
 					  },
 			"where": "before",
 			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						"returnValue": "*",
+						"instruction": "ret",
+						"operands": ["*"]
+					      }
+					    ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["__INSTR_rec_list_destroy"]
+					  },
+			"where": "before",
+			"in": "main"
 		}
 
 	]
