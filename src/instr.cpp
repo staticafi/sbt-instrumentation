@@ -302,6 +302,9 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 bool checkAnalysis(list<string> condition, map<string, Value*> variables){
 	// condition: first element is operator, other one or two elements
 	// are variables, TODO do we need more than two variables?
+	if(condition.empty())
+		return true;
+
 	string conditionOp = condition.front();
 	list<string>::iterator it = condition.begin();
 	it++;
@@ -519,6 +522,7 @@ int main(int argc, char *argv[]) {
 	// Instrument
 	bool resultOK = instrumentModule(*m, rw_config);
 
+	delete m;
 	config_file.close();
 	llvmir_file.close();
 
