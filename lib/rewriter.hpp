@@ -20,7 +20,7 @@ class InstrumentInstruction {
 	std::string instruction;
 	std::list<std::string> parameters;
 	std::string getSizeTo;
-//	std::string stripInboundsOffsets;
+	std::string stripInboundsOffsets;
 };
 
 typedef std::list<InstrumentInstruction> InstrumentSequence;
