@@ -118,7 +118,9 @@ void EraseInstructions(Instruction* I, int count) {
  * @param currentInstr current instruction
  * @param Iiterator pointer to instructions iterator
  */
-void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule rw_rule, Instruction *currentInstr, inst_iterator *Iiterator) {
+void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
+                           RewriteRule rw_rule, Instruction *currentInstr,
+                           inst_iterator *Iiterator) {
 	// Create new call instruction
 	CallInst *newInstr = CallInst::Create(CalleeF, args);
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
@@ -153,6 +155,10 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args, RewriteRule 
  * @param I instruction
  * @param CalleeF function to be called
  * @param variables map of found parameters from config
+ * @return a vector of arguments for the call that is to be inserted
+ *         and a pointer to the instruction after/before the new call
+ *         is going to be inserted (it is either I or some newly added
+ *         argument)
  */
 tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruction *I, Function* CalleeF, map <string, Value*> variables) {
 	std::vector<Value *> args;
@@ -192,9 +198,29 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 							args.push_back(variables[arg]);
 						}else{
 							CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
-							CastI->insertAfter(I);
+	                        if(rw_rule.where == InstrumentPlacement::BEFORE) {
+                                // we want to insert before I, that is:
+                                // %c = cast ...
+                                // newInstr
+                                // I
+                                //
+                                // NOTE that we do not set nI in this case,
+                                // so that the new instruction that we will insert
+                                // is inserted before I (and after all arguments
+                                // we added here)
+                                CastI->insertBefore(I);
+                            } else {
+                                // we want to insert after I, that is:
+                                // I
+                                // %c = cast ...
+                                // newInstr
+                                //
+                                // --> we must update the nI, so that the new
+                                // instruction is inserted after the arguments
+                                CastI->insertAfter(I);
+							    nI = CastI;
+                            }
 							args.push_back(CastI);
-							nI = CastI;
 						}
 					}
 					else{
@@ -222,7 +248,6 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
  * @return 1 if error
  */
 int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule, map <string, Value*> variables, inst_iterator *Iiterator) {
-
 	logger.write_info("Applying rule...");
 
 	// Work just with call instructions for now...
