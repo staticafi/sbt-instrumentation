@@ -7,16 +7,19 @@
 class InstrPlugin
 {
 	public:
-	  InstrPlugin();
-
 	  /* use virtual otherwise linker will try to perform static linkage */
+	  virtual InstrPlugin* create_object(llvm::Module* module);
+	  virtual bool isNull(llvm::Value* a);
 	  virtual bool isEqual(llvm::Value* a, llvm::Value* b);
 	  virtual bool isNotEqual(llvm::Value* a, llvm::Value* b);
 	  virtual bool greaterThan(llvm::Value* a, llvm::Value* b);
 	  virtual bool lessThan(llvm::Value* a, llvm::Value* b);
 	  virtual bool lessOrEqual(llvm::Value* a, llvm::Value* b);
 	  virtual bool greaterOrEqual(llvm::Value* a, llvm::Value* b);
-	  virtual bool isConstant(llvm::Value* a);
+	  virtual bool isConstant(llvm::Value* a)
+	  {
+			return llvm::isa<llvm::Constant>(a);
+	  }
 };
 
 #endif
