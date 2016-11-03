@@ -38,6 +38,15 @@ message(STATUS "LLVM definitions: ${LLVM_DEFINITIONS}")
 
 add_subdirectory(src)
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/lib)
+
+
+if (DG_PATH)
+  add_definitions("-DHAVE_DG")
+  include_directories(${DG_PATH}/src/)
+  link_directories(${DG_PATH}/src/)
+  message(STATUS "Got DG: ${DG_PATH}")
+endif(DG_PATH)
 
 SET(JSON_FILES
     src/jsoncpp.cpp
@@ -66,6 +75,7 @@ endif()
 #ADD_LIBRARY(instr_model ${JSON_FILES} ${SOURCE_FILES})
 set(LLVM_LINK_COMPONENTS core engine support)
 add_executable(LLVMinstr src/instr.cpp ${JSON_FILES} ${SOURCE_FILES})
+add_library(points_to_plugin SHARED analyses/points_to_plugin.cpp)
 TARGET_LINK_LIBRARIES(LLVMinstr ${llvm_libs})
 INSTALL(TARGETS LLVMinstr RUNTIME DESTINATION bin)
 
