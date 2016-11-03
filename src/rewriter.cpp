@@ -23,7 +23,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
 
 	// load paths to analyses
 	for(uint i = 0; i < json_rules["analyses"].size(); ++i){
-		this->analysisPaths.push_back(json_rules["anlyses"][i].asString());
+		this->analysisPaths.push_back(json_rules["analyses"][i].asString());
 	}
 
 	// load rewrite rules
