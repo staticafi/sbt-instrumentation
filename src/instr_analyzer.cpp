@@ -1,4 +1,4 @@
-#include "../lib/instr_analyzer.hpp"
+#include "instr_analyzer.hpp"
 #include <fstream>
 #include <string>
 #include <dlfcn.h>
@@ -14,13 +14,10 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 
 	void* handle = dlopen(path.c_str(), RTLD_LAZY);
 
-	unique_ptr<InstrPlugin> (*create)(llvm::Module* module);
-	void (*destroy)(InstrPlugin*);
-
-	create = (unique_ptr<InstrPlugin> (*)(llvm::Module*))dlsym(handle, "create_object");
-	//destroy = (void (*)(InstrPlugin*))dlsym(handle, "destroy_object");
-
-	unique_ptr<InstrPlugin> plugin = (unique_ptr<InstrPlugin>)create(module);
+	InstrPlugin* (*create)(llvm::Module*);
+	create = reinterpret_cast<InstrPlugin *(*)(llvm::Module*)>(dlsym(handle, "create_object"));
+	unique_ptr<InstrPlugin> plugin(create(module));
+	dlclose(handle);
 
 	return plugin;
 }
@@ -30,6 +27,10 @@ bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, ll
 	if(condition.compare("!constant")){
 		return !(plugin->isConstant(a));
 	}
+	if(condition.compare("!null")){
+		return !(plugin->isNull(a));
+	}
+
 
 	if(condition.compare("!=")){
 		return !(plugin->isEqual(a,b));
