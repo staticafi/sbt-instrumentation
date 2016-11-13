@@ -7,16 +7,36 @@
 class InstrPlugin
 {
 	public:
-	  /* use virtual otherwise linker will try to perform static linkage */
-	  virtual bool isNull(llvm::Value* a);
-	  virtual bool isEqual(llvm::Value* a, llvm::Value* b);
-	  virtual bool isNotEqual(llvm::Value* a, llvm::Value* b);
-	  virtual bool greaterThan(llvm::Value* a, llvm::Value* b);
-	  virtual bool lessThan(llvm::Value* a, llvm::Value* b);
-	  virtual bool lessOrEqual(llvm::Value* a, llvm::Value* b);
-	  virtual bool greaterOrEqual(llvm::Value* a, llvm::Value* b);
-	  virtual bool isConstant(llvm::Value* a)
-	  {
+      // the default behaviour is returning true, since we have
+      // no information about the value, so it may be anything
+	  virtual bool isNull(llvm::Value*) {
+        return true;
+      }
+
+	  virtual bool isEqual(llvm::Value*, llvm::Value*) {
+        return true;
+      }
+
+	  virtual bool isNotEqual(llvm::Value*, llvm::Value*) {
+        return true;
+      }
+
+	  virtual bool greaterThan(llvm::Value*, llvm::Value*) {
+        return true;
+      }
+	  virtual bool lessThan(llvm::Value*, llvm::Value*) {
+        return true;
+      }
+
+	  virtual bool lessOrEqual(llvm::Value*, llvm::Value*) {
+        return true;
+      }
+
+	  virtual bool greaterOrEqual(llvm::Value*, llvm::Value*) {
+        return true;
+      }
+
+	  virtual bool isConstant(llvm::Value* a) {
 			return llvm::isa<llvm::Constant>(a);
 	  }
 };
