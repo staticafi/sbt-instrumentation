@@ -1,5 +1,6 @@
 {
 	"file": "null_deref.c",
+	"analyses": ["libPoints_to_plugin.so"],
 	"rules":
 	[
 		{
@@ -13,9 +14,10 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>", "__INSTR_check_pointer"]
+					      "operands": ["<t1>", "__INSTR_check_pointer"]					      
 					  },
 			"where": "before",
+			"condition": ["!null", "<t1>"],
 			"in": "*"
 		},
         {
@@ -32,6 +34,7 @@
 					      "operands": ["<t2>", "__INSTR_check_pointer"]
 					  },
 			"where": "before",
+			"condition": ["!null", "<t1>"],
 			"in": "*"
 		}
 

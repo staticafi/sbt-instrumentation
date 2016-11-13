@@ -39,7 +39,10 @@ message(STATUS "LLVM definitions: ${LLVM_DEFINITIONS}")
 add_subdirectory(src)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
+add_definitions(-DHAVE_LLVM)
 
+# This needs to be replaced
+set(DG_PATH /home/martina/Documents/symbiotic/dg)
 
 if (DG_PATH)
   add_definitions("-DHAVE_DG")
@@ -53,6 +56,9 @@ SET(JSON_FILES
     include/json/json.h
     include/json/json-forwards.h
 )
+
+# This needs to be solved
+SET(LIB_DG /home/martina/Documents/symbiotic/install/lib/libLLVMdg.so)
 
 SET(SOURCE_FILES
     lib/rewriter.hpp
@@ -74,8 +80,13 @@ endif()
 
 #ADD_LIBRARY(instr_model ${JSON_FILES} ${SOURCE_FILES})
 set(LLVM_LINK_COMPONENTS core engine support)
+#set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 add_executable(LLVMinstr src/instr.cpp ${JSON_FILES} ${SOURCE_FILES})
-add_library(points_to_plugin SHARED analyses/points_to_plugin.cpp)
 TARGET_LINK_LIBRARIES(LLVMinstr ${llvm_libs})
 INSTALL(TARGETS LLVMinstr RUNTIME DESTINATION bin)
+
+add_library(Points_to_plugin SHARED analyses/points_to_plugin.cpp lib/instr_plugin.hpp)
+TARGET_LINK_LIBRARIES(Points_to_plugin ${LIB_DG} ${llvm_libs})
+install(TARGETS Points_to_plugin
+	LIBRARY DESTINATION lib)
 

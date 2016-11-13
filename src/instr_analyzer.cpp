@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include <dlfcn.h>
-
+#include <iostream>
 
 using namespace std;
 
@@ -11,11 +11,24 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	if(path.empty()){
 		return NULL;
 	}
-
 	void* handle = dlopen(path.c_str(), RTLD_LAZY);
 
+	if (!handle) {
+        cerr << "Cannot open library: " << dlerror() << endl;
+        return NULL;
+    }
+
 	InstrPlugin* (*create)(llvm::Module*);
+	dlerror();
 	create = reinterpret_cast<InstrPlugin *(*)(llvm::Module*)>(dlsym(handle, "create_object"));
+
+    const char *dlsym_error = dlerror();
+    if (dlsym_error) {
+        cerr << "Cannot load symbol 'create_object': " << dlsym_error << endl;
+        dlclose(handle);
+        return NULL;
+    }
+
 	unique_ptr<InstrPlugin> plugin(create(module));
 	dlclose(handle);
 

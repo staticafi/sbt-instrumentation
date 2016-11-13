@@ -8,7 +8,6 @@ class InstrPlugin
 {
 	public:
 	  /* use virtual otherwise linker will try to perform static linkage */
-	  virtual InstrPlugin* create_object(llvm::Module* module);
 	  virtual bool isNull(llvm::Value* a);
 	  virtual bool isEqual(llvm::Value* a, llvm::Value* b);
 	  virtual bool isNotEqual(llvm::Value* a, llvm::Value* b);

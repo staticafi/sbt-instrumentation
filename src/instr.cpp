@@ -1,6 +1,6 @@
-#include "../lib/rewriter.hpp"
-#include "../lib/instr_log.hpp"
-#include "../lib/instr_analyzer.hpp"
+#include "rewriter.hpp"
+#include "instr_log.hpp"
+#include "instr_analyzer.hpp"
 #include <iostream>
 #include <fstream>
 #include <exception>
@@ -491,7 +491,13 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
  */
 void loadPlugins(Rewriter rw, Module* module){
 	for(const string& path : rw.analysisPaths){
-		plugins.push_back(Analyzer::analyze(path,module));
+		auto plugin = Analyzer::analyze(path,module);
+		if(plugin != NULL){
+			plugins.push_back(Analyzer::analyze(path,module));
+		}
+		else{
+			cout<<"is null"<<endl; //TODO remove, for test purpose only
+		}
 	}
 }
 
