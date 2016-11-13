@@ -5,6 +5,7 @@
 #include "llvm/analysis/PointsTo/PointsTo.h"
 #include "analysis/PointsTo/PointsToFlowInsensitive.h"
 
+using dg::analysis::pta::PSNode;
 class PointsToPlugin : public InstrPlugin
 {
  private:
@@ -19,7 +20,7 @@ class PointsToPlugin : public InstrPlugin
 
   bool isEqual(llvm::Value* a, llvm::Value* b){
 	  if(PTA){
-		  dg::analysis::pta::PSNode *psnode = PTA->getPointsTo(a);
+		  PSNode *psnode = PTA->getPointsTo(a);
 		  for (auto& ptr : psnode->pointsTo) {
 			  llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
 			  if(llvmVal == b) return true;
@@ -34,7 +35,7 @@ class PointsToPlugin : public InstrPlugin
 
   bool isNotEqual(llvm::Value* a, llvm::Value* b){
 	  if(PTA){
-		  dg::analysis::pta::PSNode *psnode = PTA->getPointsTo(a);
+		  PSNode *psnode = PTA->getPointsTo(a);
 		  for (auto& ptr : psnode->pointsTo) {
 			  llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
 			  if(llvmVal == b) return false;
