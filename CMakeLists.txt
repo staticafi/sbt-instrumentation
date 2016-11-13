@@ -41,13 +41,13 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 add_definitions(-DHAVE_LLVM)
 
-# This needs to be replaced
-set(DG_PATH /home/martina/Documents/symbiotic/dg)
-
 if (DG_PATH)
   add_definitions("-DHAVE_DG")
   include_directories(${DG_PATH}/src/)
   link_directories(${DG_PATH}/src/)
+  # those libraries we'll use. We need to use whole LLVMdg,
+  # since we'll use the LLVM points-to analysis
+  set(dg_libs "LLVMdg")
   message(STATUS "Got DG: ${DG_PATH}")
 endif(DG_PATH)
 
@@ -56,9 +56,6 @@ SET(JSON_FILES
     include/json/json.h
     include/json/json-forwards.h
 )
-
-# This needs to be solved
-SET(LIB_DG /home/martina/Documents/symbiotic/install/lib/libLLVMdg.so)
 
 SET(SOURCE_FILES
     lib/rewriter.hpp
@@ -86,7 +83,7 @@ TARGET_LINK_LIBRARIES(LLVMinstr ${llvm_libs})
 INSTALL(TARGETS LLVMinstr RUNTIME DESTINATION bin)
 
 add_library(Points_to_plugin SHARED analyses/points_to_plugin.cpp lib/instr_plugin.hpp)
-TARGET_LINK_LIBRARIES(Points_to_plugin ${LIB_DG} ${llvm_libs})
+target_link_libraries(Points_to_plugin ${dg_libs})
 install(TARGETS Points_to_plugin
 	LIBRARY DESTINATION lib)
 
