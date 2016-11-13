@@ -13,7 +13,24 @@ class PointsToPlugin : public InstrPlugin
 
  public:
   bool isNull(llvm::Value* a){
-	  //TODO
+      if (!a->getType()->isPointerTy())
+          // null must be a pointer
+          return false;
+
+      // need to have the PTA
+      assert(PTA);
+	  PSNode *psnode = PTA->getPointsTo(a);
+      if (!psnode) {
+          llvm::errs() << "No points-to for " << *a << "\n";
+          // we know nothing, it may be null
+          return true;
+      }
+
+	  for (const auto& ptr : psnode->pointsTo) {
+          // unknown pointer can be null too
+          if (ptr.isNull() || ptr.isUnknown())
+              return true;
+      }
 
 	  return false;
   }
