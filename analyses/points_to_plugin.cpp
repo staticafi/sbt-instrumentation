@@ -8,7 +8,7 @@
 class PointsToPlugin : public InstrPlugin
 {
  private:
-  dg::LLVMPointerAnalysis *PTA;
+  std::unique_ptr<dg::LLVMPointerAnalysis> PTA;
 
  public:
   bool isNull(llvm::Value* a){
@@ -75,15 +75,11 @@ class PointsToPlugin : public InstrPlugin
 	  return true;
   }
 
-  PointsToPlugin(llvm::Module* module){
-	  PTA = new dg::LLVMPointerAnalysis(module);
+  PointsToPlugin(llvm::Module* module) {
+      llvm::errs() << "Running points-to analysis...\n";
+	  PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(module));
 	  PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
   }
-
-  ~PointsToPlugin() {
-	  delete PTA;
-  }
-
 };
 
 extern "C" InstrPlugin* create_object(llvm::Module* module){
