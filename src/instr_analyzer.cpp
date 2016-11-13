@@ -1,36 +1,33 @@
 #include "instr_analyzer.hpp"
 #include <fstream>
 #include <string>
-#include <dlfcn.h>
 #include <iostream>
+
+#include <llvm/Support/DynamicLibrary.h>
 
 using namespace std;
 
 unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module){
 
-	if(path.empty()){
-		return NULL;
-	}
-	void* handle = dlopen(path.c_str(), RTLD_LAZY);
+	if(path.empty())
+		return nullptr;
 
-	if (!handle) {
-        cerr << "Cannot open library: " << dlerror() << endl;
-        return NULL;
+    auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str());
+
+	if (!DL.isValid()) {
+        cerr << "Cannot open library: " << path << endl;
+        return nullptr;
     }
 
 	InstrPlugin* (*create)(llvm::Module*);
-	dlerror();
-	create = reinterpret_cast<InstrPlugin *(*)(llvm::Module*)>(dlsym(handle, "create_object"));
-
-    const char *dlsym_error = dlerror();
-    if (dlsym_error) {
-        cerr << "Cannot load symbol 'create_object': " << dlsym_error << endl;
-        dlclose(handle);
-        return NULL;
+    void *symbol = DL.getAddressOfSymbol("create_object");
+    if (!symbol) {
+        cerr << "Cannot load symbol 'create_object' from " << path << endl;
+        return nullptr;
     }
 
+	create = reinterpret_cast<InstrPlugin *(*)(llvm::Module*)>(symbol);
 	unique_ptr<InstrPlugin> plugin(create(module));
-	dlclose(handle);
 
 	return plugin;
 }
