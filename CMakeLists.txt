@@ -47,7 +47,7 @@ if (DG_PATH)
   link_directories(${DG_PATH}/src/)
   # those libraries we'll use. We need to use whole LLVMdg,
   # since we'll use the LLVM points-to analysis
-  set(dg_libs "LLVMdg")
+  set(dg_libs "LLVMpta")
   message(STATUS "Got DG: ${DG_PATH}")
 endif(DG_PATH)
 
