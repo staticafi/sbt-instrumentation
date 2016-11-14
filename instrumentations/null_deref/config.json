@@ -34,7 +34,7 @@
 					      "operands": ["<t2>", "__INSTR_check_pointer"]
 					  },
 			"where": "before",
-			"condition": ["null", "<t1>"],
+			"condition": ["null", "<t2>"],
 			"in": "*"
 		}
 
