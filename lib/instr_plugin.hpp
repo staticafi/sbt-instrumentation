@@ -39,6 +39,10 @@ class InstrPlugin
 	  virtual bool isConstant(llvm::Value* a) {
 			return llvm::isa<llvm::Constant>(a);
 	  }
+
+      // add virtual destructor, so that child classes will
+      // call their destructor
+      virtual ~InstrPlugin() {}
 };
 
 #endif
