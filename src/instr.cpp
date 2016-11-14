@@ -489,15 +489,13 @@ bool instrumentModule(Module &M, RewriterConfig rw_config) {
  * @param rw Rules from config file.
  * @param module Module to be instrumented.
  */
-void loadPlugins(Rewriter rw, Module* module){
-	for(const string& path : rw.analysisPaths){
-		auto plugin = Analyzer::analyze(path,module);
-		if(plugin != NULL){
-			plugins.push_back(Analyzer::analyze(path,module));
-		}
-		else{
-			cout<<"is null"<<endl; //TODO remove, for test purpose only
-		}
+void loadPlugins(Rewriter rw, Module* module) {
+	for(const string& path : rw.analysisPaths) {
+		auto plugin = Analyzer::analyze(path, module);
+		if (plugin)
+			plugins.push_back(std::move(plugin));
+		else
+			cout <<"Failed loading plugin: " << path << endl;
 	}
 }
 
