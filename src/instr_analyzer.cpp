@@ -32,16 +32,19 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	return plugin;
 }
 
+// we should instrument only if the condition may not hold
 bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, llvm::Value* a, llvm::Value* b){
 
-	if(condition.compare("!constant")){
-		return !(plugin->isConstant(a));
-	}
-	if(condition.compare("!null")){
-		return !(plugin->isNull(a));
+    // we are told to instrument only when
+    // the value is null, so check if the value
+    // can be null.
+	if(condition == "null") {
+		return plugin->isNull(a);
+    } else if (condition == "constant") {
+		return plugin->isConstant(a);
 	}
 
-
+    /* TODO
 	if(condition.compare("!=")){
 		return !(plugin->isEqual(a,b));
 	} else if(condition.compare("==")){
@@ -55,9 +58,8 @@ bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, ll
 	} else if(condition.compare(">=")){
 		return !(plugin->lessThan(a,b));
 	}
+    */
 
 	return true;
 }
-
-
 

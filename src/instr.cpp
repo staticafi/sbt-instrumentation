@@ -346,14 +346,15 @@ bool checkAnalysis(list<string> condition, const map<string, Value*>& variables)
 		bValue = (variables.find(bName))->second;
 	}
 
-	bool shouldInstrument = true;
 	for(auto& plugin : plugins){
 		if(!Analyzer::shouldInstrument(plugin.get(), conditionOp, aValue, bValue)){
-			shouldInstrument = false;
-			break;
+            // some plugin told us that we should not instrument
+			return false;
 		}
 	}
-	return shouldInstrument;
+
+    // all analyses told that we should instrument
+	return true;
 }
 
 /**

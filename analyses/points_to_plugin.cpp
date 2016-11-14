@@ -12,7 +12,7 @@ class PointsToPlugin : public InstrPlugin
   std::unique_ptr<dg::LLVMPointerAnalysis> PTA;
 
  public:
-  bool isNull(llvm::Value* a){
+  bool isNull(llvm::Value* a) {
       if (!a->getType()->isPointerTy())
           // null must be a pointer
           return false;
@@ -20,7 +20,7 @@ class PointsToPlugin : public InstrPlugin
       // need to have the PTA
       assert(PTA);
 	  PSNode *psnode = PTA->getPointsTo(a);
-      if (!psnode) {
+      if (!psnode || psnode->pointsTo.empty()) {
           llvm::errs() << "No points-to for " << *a << "\n";
           // we know nothing, it may be null
           return true;
@@ -32,6 +32,7 @@ class PointsToPlugin : public InstrPlugin
               return true;
       }
 
+      // a can not be null
 	  return false;
   }
 
