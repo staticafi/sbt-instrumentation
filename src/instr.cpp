@@ -148,7 +148,6 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
 	}
 }
 
-
 /**
  * Inserts an argument.
  * @param Irw_rule rewrite rule
@@ -160,7 +159,8 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
  *         is going to be inserted (it is either I or some newly added
  *         argument)
  */
-tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruction *I, Function* CalleeF, map <string, Value*> variables) {
+tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruction *I,
+                                                    Function* CalleeF, const map <string, Value*>& variables) {
 	std::vector<Value *> args;
 	unsigned i = 0;
 	Instruction* nI = I;
@@ -170,7 +170,8 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 			break;
 		}
 
-		if(variables.find(arg) == variables.end()) {
+        auto var = variables.find(arg);
+		if(var == variables.end()) {
 			// NOTE: in future think also about other types than ConstantInt
 			int argInt;
 			try {
@@ -192,12 +193,12 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 				Value *argV = &*sit;
 
 				if(i == argIndex) {
-					if(argV->getType() != variables[arg]->getType()) {
+					if(argV->getType() != var->second->getType()) {
 						//TODO other types?
-						if(!variables[arg]->getType()->isPtrOrPtrVectorTy()){
-							args.push_back(variables[arg]);
+						if(!var->second->getType()->isPtrOrPtrVectorTy()){
+							args.push_back(var->second);
 						}else{
-							CastInst *CastI = CastInst::CreatePointerCast(variables[arg], argV->getType());
+							CastInst *CastI = CastInst::CreatePointerCast(var->second, argV->getType());
 	                        if(rw_rule.where == InstrumentPlacement::BEFORE) {
                                 // we want to insert before I, that is:
                                 // %c = cast ...
@@ -224,7 +225,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 						}
 					}
 					else{
-						args.push_back(variables[arg]);
+						args.push_back(var->second);
 					}
 					break;
 				}
@@ -247,7 +248,8 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
  * @param Iiterator pointer to instructions iterator
  * @return 1 if error
  */
-int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule, map <string, Value*> variables, inst_iterator *Iiterator) {
+int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
+              const map <string, Value*>& variables, inst_iterator *Iiterator) {
 	logger.write_info("Applying rule...");
 
 	// Work just with call instructions for now...
@@ -324,7 +326,7 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
  * @param variables
  * @return true if condition is ok, false otherwise
  */
-bool checkAnalysis(list<string> condition, map<string, Value*> variables){
+bool checkAnalysis(list<string> condition, const map<string, Value*>& variables){
 	// condition: first element is operator, other one or two elements
 	// are variables, TODO do we need more than two variables?
 	if(condition.empty())
