@@ -21,6 +21,8 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/DebugInfoMetadata.h>
+
 #if (LLVM_VERSION_MINOR >= 5)
 #include "llvm/IR/InstIterator.h"
 #else
@@ -145,7 +147,14 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
     // instrument the code, some passes (e.g. inliner) can
     // break the code when there's an instruction without metadata
     // when all other instructions have metadata
-    CloneMetadata(currentInstr, newInstr);
+    if (currentInstr->hasMetadata()) {
+        CloneMetadata(currentInstr, newInstr);
+    } else if (const DISubprogram *DS = currentInstr->getParent()->getParent()->getSubprogram()) {
+        // no metadata? then it is going to be the instrumentation
+        // of alloca or such at the beggining of function,
+        // so just add debug loc of the beginning of the function
+        newInstr->setDebugLoc(DebugLoc::get(DS->getLine(), 0, DS));
+    }
 
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
