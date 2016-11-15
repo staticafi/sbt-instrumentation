@@ -13,6 +13,10 @@ class InstrPlugin
         return true;
       }
 
+	  virtual bool isValidPointer(llvm::Value*) {
+        return true;
+      }
+
 	  virtual bool isEqual(llvm::Value*, llvm::Value*) {
         return true;
       }

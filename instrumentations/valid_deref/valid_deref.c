@@ -67,25 +67,46 @@ rec* __INSTR_rec_list_search(rec_id id) {
   	rec_list_node *cur = rec_list;
 
   	while(cur) {
-  	if ((*cur->record).id == id) {
+		/* check wether 'id' is a pointer to
+		 * some memory that we registred, that is if it points
+		 * to some memory region in range [cur.id, cur.id + size] */
+		if ((*cur->record).id <= id
+		     && id < (*cur->record).id + (*cur->record).size) {
 			return cur->record;
-	}
+		}
 	  cur = cur->next;
 	}
 
 	return NULL;
 }
 
-void __INSTR_check_range(rec_id id, int range){
+void __INSTR_check_range(rec_id id, int range) {
 	rec *r = __INSTR_rec_list_search(id);
 
-	if(r != NULL){
-		if(range > r->size){
+	if (r != NULL) {
+		/* (rec->id - id) is the offset into allocated memory */
+		if (r->id - id + range >= r->size) {
 			assert(0 && "memset out of range");
 			__VERIFIER_error();
 		}
-	}else{
-		//TODO
+	} else {
+		/* we register all memory allocations, so if we
+		 * haven't found the allocation, then this is
+		 * invalid pointer */
+		assert(0 && "memset on invalid pointer");
+		__VERIFIER_error();
+	}
+}
+
+void __INSTR_check_pointer(rec_id id) {
+	rec *r = __INSTR_rec_list_search(id);
+
+	if (r == NULL) {
+		/* we register all memory allocations, so if we
+		 * haven't found the allocation, then this is
+		 * invalid pointer */
+		assert(0 && "dereference of invalid pointer");
+		__VERIFIER_error();
 	}
 }
 

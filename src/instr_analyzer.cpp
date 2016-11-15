@@ -42,7 +42,11 @@ bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, ll
 		return plugin->isNull(a);
     } else if (condition == "constant") {
 		return plugin->isConstant(a);
-	}
+	} else if (condition == "isValidPointer") {
+		return plugin->isValidPointer(a);
+	} else if (condition == "!isValidPointer") {
+		return !plugin->isValidPointer(a);
+    }
 
     /* TODO
 	if(condition.compare("!=")){

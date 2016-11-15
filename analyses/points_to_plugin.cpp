@@ -36,6 +36,37 @@ class PointsToPlugin : public InstrPlugin
 	  return false;
   }
 
+  bool isValidPointer(llvm::Value* a) {
+      if (!a->getType()->isPointerTy())
+          // null must be a pointer
+          return false;
+
+      // need to have the PTA
+      assert(PTA);
+	  PSNode *psnode = PTA->getPointsTo(a);
+      if (!psnode || psnode->pointsTo.empty()) {
+          llvm::errs() << "No points-to for " << *a << "\n";
+          // we know nothing, it may be invalid
+          return false;
+      }
+
+	  for (const auto& ptr : psnode->pointsTo) {
+          // unknown pointer and null are not invalid
+          if (ptr.isNull() || ptr.isUnknown())
+              return false;
+
+            // if the offset is unknown, that the pointer
+            // may point after the end of allocated memory
+            if (ptr.offset.isUnknown())
+                return false;
+      }
+
+      // this pointer is valid
+	  return true;
+  }
+
+
+
   bool isEqual(llvm::Value* a, llvm::Value* b){
 	  if(PTA){
 		  PSNode *psnode = PTA->getPointsTo(a);
