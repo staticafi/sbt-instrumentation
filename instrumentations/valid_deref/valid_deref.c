@@ -84,8 +84,9 @@ void __INSTR_check_range(rec_id id, int range) {
 	rec *r = __INSTR_rec_list_search(id);
 
 	if (r != NULL) {
-		/* (rec->id - id) is the offset into allocated memory */
-		if (r->id - id + range >= r->size) {
+		/* (id - rec->id) is the offset into allocated memory
+		 * it must be possitive, since id >= rec->id */
+		if ((a_size)(id - r->id + range) > r->size) {
 			assert(0 && "memset out of range");
 			__VERIFIER_error();
 		}
