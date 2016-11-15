@@ -68,6 +68,24 @@ uint64_t getAllocatedSize(Instruction *I, Module* M){
 	return size;
 }
 
+/** Clone metadata from one instruction to another
+ * @param i1 the first instruction
+ * @param i2 the second instruction without any metadata
+*/
+void CloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2)
+{
+    if (!i1->hasMetadata())
+        return;
+
+    assert(!i2->hasMetadata());
+    llvm::SmallVector< std::pair< unsigned, llvm::MDNode * >, 2> mds;
+    i1->getAllMetadata(mds);
+
+    for (const auto& it : mds) {
+        i2->setMetadata(it.first, it.second->clone().release());
+    }
+}
+
 /**
  * Returns the next instruction after the one specified.
  * @param ins specified instruction
@@ -123,6 +141,12 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
                            inst_iterator *Iiterator) {
 	// Create new call instruction
 	CallInst *newInstr = CallInst::Create(CalleeF, args);
+    // duplicate the metadata of the instruction for which we
+    // instrument the code, some passes (e.g. inliner) can
+    // break the code when there's an instruction without metadata
+    // when all other instructions have metadata
+    CloneMetadata(currentInstr, newInstr);
+
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
 		newInstr->insertBefore(currentInstr);
@@ -199,6 +223,8 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 							args.push_back(var->second);
 						}else{
 							CastInst *CastI = CastInst::CreatePointerCast(var->second, argV->getType());
+                            if (Instruction *Inst = dyn_cast<Instruction>(var->second))
+                                CloneMetadata(Inst, CastI);
 	                        if(rw_rule.where == InstrumentPlacement::BEFORE) {
                                 // we want to insert before I, that is:
                                 // %c = cast ...
