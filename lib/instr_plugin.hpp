@@ -3,6 +3,7 @@
 
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
+#include <llvm/IR/Operator.h>
 
 class InstrPlugin
 {
@@ -41,8 +42,17 @@ class InstrPlugin
       }
 
 	  virtual bool isConstant(llvm::Value* a) {
-			return llvm::isa<llvm::Constant>(a);
+        return llvm::isa<llvm::Constant>(a);
 	  }
+
+      virtual bool canOverflow(llvm::Value *a) {
+        if (llvm::OverflowingBinaryOperator *O
+            = llvm::dyn_cast<llvm::OverflowingBinaryOperator>(a)) {
+          return !O->hasNoSignedWrap();
+        }
+
+        return false;
+      }
 
       // add virtual destructor, so that child classes will
       // call their destructor
