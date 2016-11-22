@@ -35,7 +35,7 @@ void __INSTR_rec_list_append(rec_list_node *node) {
 	}
 }
 
-rec* __INSTR_remember(rec_id id, a_size size, a_size num) {
+rec* __INSTR_remember(rec_id id, a_size size, int num) {
 	rec *new_rec = (rec *) malloc(sizeof(rec));
 	new_rec->id = id;
 	new_rec->size = size * num;
