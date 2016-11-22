@@ -12,10 +12,12 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	if(path.empty())
 		return nullptr;
 
-    auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str());
+    std::string err;
+    auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str(), &err);
 
 	if (!DL.isValid()) {
-        cerr << "Cannot open library: " << path << endl;
+        cerr << "Cannot open library: " << path << "\n";
+        cerr << err << endl;
         return nullptr;
     }
 
