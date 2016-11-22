@@ -53,12 +53,20 @@ void usage(char *name) {
 uint64_t getAllocatedSize(Instruction *I, Module* M){
 	DataLayout* DL = new DataLayout(M);
 
-	const AllocaInst *AI = dyn_cast<AllocaInst>(I);
-
-	if(!AI)
-		return 0;
-
-	Type* Ty = AI->getAllocatedType();
+	Type* Ty;
+	  
+	if(const AllocaInst *AI = dyn_cast<AllocaInst>(I)){
+	  Ty = AI->getAllocatedType();
+	}
+	else if(const StoreInst *SI = dyn_cast<StoreInst>(I)){
+	  Ty = SI->getOperand(0)->getType();
+	}
+	else if(const LoadInst *LI = dyn_cast<LoadInst>(I)){
+	  Ty = LI->getType();
+	}
+	else{
+	  return 0;
+	}
 
 	if(!Ty->isSized())
 		return 0;

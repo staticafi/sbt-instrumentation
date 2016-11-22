@@ -128,13 +128,14 @@
 						   {
 							  "returnValue": "*",
 							  "instruction": "load",
-							  "operands": ["<t1>"]
+							  "operands": ["<t1>"],
+							  "getSizeTo": "<t2>"
 						   }
 					   ],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>", "__INSTR_check_pointer"]
+					      "operands": ["<t1>","<t2>", "__INSTR_check_range"]
 					  },
 			"where": "before",
 			"condition": ["!isValid", "<t1>"],
@@ -145,13 +146,14 @@
 							{
 							  "returnValue": "*",
 							  "instruction": "store",
-							  "operands": ["<t1>", "<t2>"]
+							  "operands": ["<t1>", "<t2>"],
+							  "getSizeTo": "<t3>"
 						    }
 					   ],
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t2>", "__INSTR_check_pointer"]
+					      "operands": ["<t1>","<t3>", "__INSTR_check_range"]
 					  },
 			"where": "before",
 			"condition": ["!isValid", "<t2>"],
