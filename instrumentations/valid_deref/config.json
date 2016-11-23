@@ -135,7 +135,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t2>", "__INSTR_check_range"]
+					      "operands": ["<t1>","<t2>", "__INSTR_check_load_store"]
 					  },
 			"where": "before",
 			"condition": ["!isValid", "<t1>"],
@@ -153,7 +153,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t3>", "__INSTR_check_range"]
+					      "operands": ["<t2>","<t3>", "__INSTR_check_load_store"]
 					  },
 			"where": "before",
 			"condition": ["!isValid", "<t2>"],
