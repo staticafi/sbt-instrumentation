@@ -151,6 +151,7 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
                            inst_iterator *Iiterator) {
 	// Create new call instruction
 	CallInst *newInstr = CallInst::Create(CalleeF, args);
+
     // duplicate the metadata of the instruction for which we
     // instrument the code, some passes (e.g. inliner) can
     // break the code when there's an instruction without metadata

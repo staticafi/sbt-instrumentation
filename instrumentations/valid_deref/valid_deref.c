@@ -99,6 +99,25 @@ void __INSTR_check_range(rec_id id, int range) {
 	}
 }
 
+void __INSTR_check_load_store(rec_id id, a_size range) {
+	rec *r = __INSTR_rec_list_search(id);
+
+	if (r != NULL) {
+		/* (id - rec->id) is the offset into allocated memory
+		 * it must be possitive, since id >= rec->id */
+		if ((a_size)(id - r->id + range) > r->size) {
+			assert(0 && "load or store out of range");
+			__VERIFIER_error();
+		}
+	} else {
+		/* we register all memory allocations, so if we
+		 * haven't found the allocation, then this is
+		 * invalid pointer */
+		assert(0 && "load or store on invalid pointer");
+		__VERIFIER_error();
+	}
+}
+
 void __INSTR_check_pointer(rec_id id) {
 	rec *r = __INSTR_rec_list_search(id);
 
