@@ -23,11 +23,18 @@ class InstrumentInstruction {
 	std::string stripInboundsOffsets;
 };
 
+class InstrumentGlobalVar {
+ public:
+	std::string globalVariable;
+	std::string getSizeTo;
+};
+
 typedef std::list<InstrumentInstruction> InstrumentSequence;
 
 class RewriteRule {
  public:
 	InstrumentSequence foundInstrs;
+	InstrumentGlobalVar globalVar;
 	InstrumentInstruction newInstr;
 	InstrumentPlacement where;
 	std::string inFunction;
