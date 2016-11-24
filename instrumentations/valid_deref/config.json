@@ -1,21 +1,21 @@
 {
 	"file": "valid_deref.c",
 	"analyses": ["libPoints_to_plugin.so"],
-	"rules":
+	"globalVariablesRule": 	{
+				    "findGlobals": {
+							  "globalVariable": "<t1>",
+							  "getSizeTo": "<t2>"
+						    }
+						      ,
+				    "newInstruction": {
+							  "returnValue": "*",
+							  "instruction": "call",
+							  "operands": ["<t1>","<t2>", "1", "__INSTR_remember"]
+						      },
+				    "in": "main"
+				},
+	"instructionRules":
 	[
-		{
-			"findGlobals": {
-					      "globalVariable": "<t1>",
-					      "getSizeTo": "<t2>"
-					}
-					   ,
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t1>","<t2>", "1", "__INSTR_remember"]
-					  },
-			"in": "main"
-		},
 		{
 			"findInstructions": [
 						{

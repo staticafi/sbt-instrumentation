@@ -18,63 +18,78 @@ void Rewriter::parseConfig(ifstream &config_file) {
 	}
 
 	// TODO catch exceptions here
-
-	RewriterConfig rw_config;
-
+	
 	// load paths to analyses
 	for(uint i = 0; i < json_rules["analyses"].size(); ++i){
 		this->analysisPaths.push_back(json_rules["analyses"][i].asString());
 	}
 
-	// load rewrite rules
-	for (uint i = 0; i < json_rules["rules"].size(); ++i) {
+	RewriterConfig rw_config;
+
+	// load rewrite rules for instructions
+	for (uint i = 0; i < json_rules["instructionRules"].size(); ++i) {
 		RewriteRule r;
 
 		// TODO make function from this
 		// Get findInstructions
-		for (uint k = 0; k < json_rules["rules"][i]["findInstructions"].size(); ++k) {
+		for (uint k = 0; k < json_rules["instructionRules"][i]["findInstructions"].size(); ++k) {
 			InstrumentInstruction instr;
-			instr.returnValue = json_rules["rules"][i]["findInstructions"][k]["returnValue"].asString();
-			instr.instruction = json_rules["rules"][i]["findInstructions"][k]["instruction"].asString();
-			for (uint j = 0; j < json_rules["rules"][i]["findInstructions"][k]["operands"].size(); ++j) {
-				instr.parameters.push_back(json_rules["rules"][i]["findInstructions"][k]["operands"][j].asString());
+			instr.returnValue = json_rules["instructionRules"][i]["findInstructions"][k]["returnValue"].asString();
+			instr.instruction = json_rules["instructionRules"][i]["findInstructions"][k]["instruction"].asString();
+			for (uint j = 0; j < json_rules["instructionRules"][i]["findInstructions"][k]["operands"].size(); ++j) {
+				instr.parameters.push_back(json_rules["instructionRules"][i]["findInstructions"][k]["operands"][j].asString());
 			}
-			instr.getSizeTo = json_rules["rules"][i]["findInstructions"][k]["getSizeTo"].asString();
-			instr.stripInboundsOffsets = json_rules["rules"][i]["findInstructions"][k]["stripInboundsOffsets"].asString();
+			instr.getSizeTo = json_rules["instructionRules"][i]["findInstructions"][k]["getSizeTo"].asString();
+			instr.stripInboundsOffsets = json_rules["instructionRules"][i]["findInstructions"][k]["stripInboundsOffsets"].asString();
 			r.foundInstrs.push_back(instr);
 		}
-		
-		// Get findGlobals
-		r.globalVar.globalVariable = json_rules["rules"][i]["findGlobals"]["globalVariable"].asString();
-		r.globalVar.getSizeTo = json_rules["rules"][i]["findGlobals"]["getSizeTo"].asString();
 
 		// Get newInstruction
-		r.newInstr.returnValue = json_rules["rules"][i]["newInstruction"]["returnValue"].asString();
-		r.newInstr.instruction = json_rules["rules"][i]["newInstruction"]["instruction"].asString();
-		for (uint j = 0; j < json_rules["rules"][i]["newInstruction"]["operands"].size(); ++j) {
-			r.newInstr.parameters.push_back(json_rules["rules"][i]["newInstruction"]["operands"][j].asString());
+		r.newInstr.returnValue = json_rules["instructionRules"][i]["newInstruction"]["returnValue"].asString();
+		r.newInstr.instruction = json_rules["instructionRules"][i]["newInstruction"]["instruction"].asString();
+		for (uint j = 0; j < json_rules["instructionRules"][i]["newInstruction"]["operands"].size(); ++j) {
+			r.newInstr.parameters.push_back(json_rules["instructionRules"][i]["newInstruction"]["operands"][j].asString());
 		}
 
-		if (json_rules["rules"][i]["where"] == "before") {
+		if (json_rules["instructionRules"][i]["where"] == "before") {
 			r.where = InstrumentPlacement::BEFORE;
 		}
-		else if (json_rules["rules"][i]["where"] == "after") {
+		else if (json_rules["instructionRules"][i]["where"] == "after") {
 			r.where = InstrumentPlacement::AFTER;
 		}
-		else if (json_rules["rules"][i]["where"] == "replace") {
+		else if (json_rules["instructionRules"][i]["where"] == "replace") {
 			r.where = InstrumentPlacement::REPLACE;
 		}
 
-		r.inFunction = json_rules["rules"][i]["in"].asString();
+		r.inFunction = json_rules["instructionRules"][i]["in"].asString();
 
-		for(uint j = 0; j < json_rules["rules"][i]["condition"].size(); ++j){
-			r.condition.push_back(json_rules["rules"][i]["condition"][j].asString());
+		for(uint j = 0; j < json_rules["instructionRules"][i]["condition"].size(); ++j){
+			r.condition.push_back(json_rules["instructionRules"][i]["condition"][j].asString());
 		}
 
 		rw_config.push_back(r);
 	}
 
 	this->config = rw_config;
+	
+	GlobalVarsRule rw_globals_rule;
+	
+	// Get rule for global variables
+	rw_globals_rule.globalVar.globalVariable = json_rules["globalVariablesRule"]["findGlobals"]["globalVariable"].asString();
+	rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getSizeTo"].asString();
+	
+	for(uint j = 0; j < json_rules["globalVariablesRule"]["condition"].size(); ++j){
+		rw_globals_rule.condition.push_back(json_rules["globalVariablesRule"]["condition"][j].asString());
+	}
+	
+	rw_globals_rule.newInstr.returnValue = json_rules["globalVariablesRule"]["newInstruction"]["returnValue"].asString();
+	rw_globals_rule.newInstr.instruction = json_rules["globalVariablesRule"]["newInstruction"]["instruction"].asString();
+	
+	for (uint j = 0; j < json_rules["globalVariablesRule"]["newInstruction"]["operands"].size(); ++j) {
+		rw_globals_rule.newInstr.parameters.push_back(json_rules["globalVariablesRule"]["newInstruction"]["operands"][j].asString());
+	}
+	
+	rw_globals_rule.inFunction = json_rules["newInstruction"]["in"].asString();
 }
 
 RewriterConfig Rewriter::getConfig() {

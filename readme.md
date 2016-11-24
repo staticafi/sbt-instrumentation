@@ -18,7 +18,7 @@ Json config files should look like this:
 ```
     {
 		"file": string,
-		"rules":
+		"instructionRules":
 		[
 			{
 				"findInstructions": sequence of instructions we are looking for, e.g.
@@ -57,7 +57,7 @@ Example:
 
     {
 		"file": "example.c",
-		"rules":
+		"instructionRules":
 		[
 			{
 				"findInstructions": [
