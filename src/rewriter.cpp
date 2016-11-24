@@ -89,11 +89,17 @@ void Rewriter::parseConfig(ifstream &config_file) {
 		rw_globals_rule.newInstr.parameters.push_back(json_rules["globalVariablesRule"]["newInstruction"]["operands"][j].asString());
 	}
 	
-	rw_globals_rule.inFunction = json_rules["newInstruction"]["in"].asString();
+	rw_globals_rule.inFunction = json_rules["globalVariablesRule"]["in"].asString();
+	
+	this->globalVarsRule = rw_globals_rule;
 }
 
 RewriterConfig Rewriter::getConfig() {
 	return this->config;
+}
+
+GlobalVarsRule Rewriter::getGlobalsConfig() {
+	return this->globalVarsRule;
 }
 
 

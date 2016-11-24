@@ -50,6 +50,12 @@ void usage(char *name) {
 	cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName>" << endl;
 }
 
+/**
+ * Get size of allocated type.
+ * @param I instruction.
+ * @param M module.
+ * @return size of allocated type.
+ */
 uint64_t getAllocatedSize(Instruction *I, Module* M){
 	DataLayout* DL = new DataLayout(M);
 
@@ -181,7 +187,6 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
 		// In the end we move the iterator to the newInst position
 		// so we can safely remove the sequence of instructions being
 		// replaced
-
 		newInstr->insertAfter(currentInstr);
 		inst_iterator helper(*Iiterator);
 		*Iiterator = ++helper;
@@ -191,24 +196,54 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
 }
 
 /**
+ * Inserts new call instruction for globals.
+ * @param CalleeF function to be called
+ * @param args arguments of the function to be called
+ * @param currentInstr current instruction
+ */
+void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
+                           Instruction *currentInstr) {
+	// Create new call instruction
+	CallInst *newInstr = CallInst::Create(CalleeF, args);
+
+    // duplicate the metadata of the instruction for which we
+    // instrument the code, some passes (e.g. inliner) can
+    // break the code when there's an instruction without metadata
+    // when all other instructions have metadata
+    if (currentInstr->hasMetadata()) {
+        CloneMetadata(currentInstr, newInstr);
+    } else if (const DISubprogram *DS = currentInstr->getParent()->getParent()->getSubprogram()) {
+        // no metadata? then it is going to be the instrumentation
+        // of alloca or such at the beggining of function,
+        // so just add debug loc of the beginning of the function
+        newInstr->setDebugLoc(DebugLoc::get(DS->getLine(), 0, DS));
+    }
+
+    // Insert before
+    newInstr->insertBefore(currentInstr);
+    logger.log_insertion("before", CalleeF, currentInstr);
+}
+
+/**
  * Inserts an argument.
- * @param Irw_rule rewrite rule
+ * @param rw_newInstr rewrite rule - new instruction
  * @param I instruction
  * @param CalleeF function to be called
  * @param variables map of found parameters from config
+ * @param where position of the placement of the new instruction
  * @return a vector of arguments for the call that is to be inserted
  *         and a pointer to the instruction after/before the new call
  *         is going to be inserted (it is either I or some newly added
  *         argument)
  */
-tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruction *I,
-                                                    Function* CalleeF, const map <string, Value*>& variables) {
+tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_newInstr, Instruction *I,
+                                                    Function* CalleeF, const map <string, Value*>& variables, InstrumentPlacement where) {
 	std::vector<Value *> args;
 	unsigned i = 0;
 	Instruction* nI = I;
-	for(const string& arg : rw_rule.newInstr.parameters){
+	for(const string& arg : rw_newInstr.parameters){
 
-		if(i == rw_rule.newInstr.parameters.size() - 1) {
+		if(i == rw_newInstr.parameters.size() - 1) {
 			break;
 		}
 
@@ -243,7 +278,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 							CastInst *CastI = CastInst::CreatePointerCast(var->second, argV->getType());
                             if (Instruction *Inst = dyn_cast<Instruction>(var->second))
                                 CloneMetadata(Inst, CastI);
-	                        if(rw_rule.where == InstrumentPlacement::BEFORE) {
+	                        if(where == InstrumentPlacement::BEFORE) {
                                 // we want to insert before I, that is:
                                 // %c = cast ...
                                 // newInstr
@@ -286,14 +321,14 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 /**
  * Applies a rule.
  * @param M module
- * @param I current instruction
+ * @param currentInstr current instruction
  * @param rw_rule rule to apply
  * @param variables map of found parameters form config
  * @param Iiterator pointer to instructions iterator
  * @return 1 if error
  */
 int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
-              const map <string, Value*>& variables, inst_iterator *Iiterator) {
+	      const map <string, Value*>& variables, inst_iterator *Iiterator) {
 	logger.write_info("Applying rule...");
 
 	// Work just with call instructions for now...
@@ -315,11 +350,52 @@ int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
 	}
 
 	// Insert arguments
-	tuple<vector<Value*>, Instruction*> argsTuple = InsertArgument(rw_rule, currentInstr, CalleeF, variables);
+	tuple<vector<Value*>, Instruction*> argsTuple = InsertArgument(rw_rule.newInstr, currentInstr, CalleeF, variables, rw_rule.where);
 	args = get<0>(argsTuple);
 
 	// Insert new call instruction
 	InsertCallInstruction(CalleeF, args, rw_rule, get<1>(argsTuple), Iiterator);
+
+	return 0;
+}
+
+/**
+ * Applies a rule for global variables.
+ * @param M module
+ * @param I current instruction
+ * @param rw_newInstr rule to apply - new instruction
+ * @param variables map of found parameters form config
+ * @return 1 if error
+ */
+int applyRule(Module &M, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
+	      const map <string, Value*>& variables) {
+	logger.write_info("Applying rule for global variable...");
+
+	// Work just with call instructions for now...
+	if(rw_newInstr.instruction != "call") {
+		logger.write_error("Not working with this instruction: " + rw_newInstr.instruction);
+		return 1;
+	}
+
+	// Get operands
+	std::vector<Value *> args;
+	Function *CalleeF = NULL;
+
+	// Get name of function
+	string param = *(--rw_newInstr.parameters.end());
+	CalleeF = M.getFunction(param);
+	if (!CalleeF) {
+		logger.write_error("Unknown function: " + param);
+		return 1;
+	}
+
+	// Insert arguments
+	tuple<vector<Value*>, Instruction*> argsTuple = InsertArgument(rw_newInstr, currentInstr, CalleeF, variables, InstrumentPlacement::BEFORE);
+	args = get<0>(argsTuple);
+
+	// Insert new call instruction
+	InsertCallInstruction(CalleeF, args, get<1>(argsTuple));
+
 
 	return 0;
 }
@@ -495,14 +571,92 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 }
 
 /**
+ * Get size of global variable.
+ * @param GV global variable.
+ * @param M module.
+ * @return size of global variable.
+ */
+uint64_t getGlobalVarSize(GlobalVariable* GV, Module* M){
+
+	DataLayout* DL = new DataLayout(M);
+
+	Type* Ty = GV->getType()->getElementType();
+
+
+	if(!Ty->isSized())
+		return 0;
+
+	uint64_t size = DL->getTypeAllocSize(Ty);
+
+	delete DL;
+
+	return size;
+}
+
+
+/**
+ * Instruments global variable if they should be instrumented.
+ * @param M module.
+ * @param rw_config parsed rules to apply.
+ * @return true if instrumentation of global variables was done without problems, false otherwise
+ */
+bool InstrumentGlobals(Module& M, Rewriter rw) {
+	GlobalVarsRule rw_globals = rw.getGlobalsConfig();
+	
+	// If there is no rule for global variables, do not try to instrument
+	if(rw_globals.inFunction.empty() || rw_globals.globalVar.globalVariable.empty()) // TODO this is not very nice
+	  return true; 
+	
+	// Iterate through global variables
+	Module::global_iterator GI = M.global_begin(), GE = M.global_end();
+	for ( ; GI != GE; ++GI) {
+	    GlobalVariable *GV = dyn_cast<GlobalVariable>(GI);
+	    if (!GV) continue;
+	    
+	    if(rw_globals.inFunction == "*"){
+	      //TODO
+	      return false;
+	      logger.write_error("Rule for global variables for instrumenting to all function not supported yet.");
+	    }
+	    else{
+	      Function* F = M.getFunction(rw_globals.inFunction);
+	      // Get operands of new instruction
+	      map <string, Value*> variables;
+	      
+	      if(rw_globals.globalVar.globalVariable != "*")
+		variables[rw_globals.globalVar.globalVariable] = GV;
+	      if(rw_globals.globalVar.globalVariable != "*"){
+		LLVMContext &Context = getGlobalContext();
+		variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(Context), getGlobalVarSize(GV, &M));
+	      }
+	      
+	      // Try to instrument the code
+	      if(checkAnalysis(rw_globals.condition,variables)) {
+		// Try to apply rule
+		inst_iterator IIterator = inst_begin(F);
+		Instruction *firstI = &*IIterator; //TODO
+		if(applyRule(M, firstI, rw_globals.newInstr, variables) == 1) {
+		  logger.write_error("Cannot apply rule.");
+		  return false;
+		}
+	      }
+	    }
+	}
+
+	return true;
+}
+
+/**
  * Instruments given module with rules from json file.
  * @param M module to be instrumented.
- * @param rw_config parsed rules to apply.
+ * @param rw parsed rules to apply.
  * @return true if instrumentation was done without problems, false otherwise
  */
-bool instrumentModule(Module &M, RewriterConfig rw_config) {
+bool instrumentModule(Module &M, Rewriter rw) {
 	// Instrument global variables
-	//if(!InstrumentGlobals(M, rw_config)) return false;
+	if(!InstrumentGlobals(M, rw)) return false;
+	
+	RewriterConfig rw_config = rw.getConfig();
   
 	// Instrument instructions in functions
 	for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
@@ -578,8 +732,6 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	RewriterConfig rw_config = rw.getConfig();
-
 	// Get module from LLVM file
 	LLVMContext &Context = getGlobalContext();
 	SMDiagnostic Err;
@@ -600,7 +752,7 @@ int main(int argc, char *argv[]) {
 	loadPlugins(rw,m);
 
 	// Instrument
-	bool resultOK = instrumentModule(*m, rw_config);
+	bool resultOK = instrumentModule(*m, rw);
 
 	delete m;
 	config_file.close();
