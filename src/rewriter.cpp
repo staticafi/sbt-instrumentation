@@ -31,6 +31,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
 		RewriteRule r;
 
 		// TODO make function from this
+		// Get findInstructions
 		for (uint k = 0; k < json_rules["rules"][i]["findInstructions"].size(); ++k) {
 			InstrumentInstruction instr;
 			instr.returnValue = json_rules["rules"][i]["findInstructions"][k]["returnValue"].asString();
@@ -42,7 +43,12 @@ void Rewriter::parseConfig(ifstream &config_file) {
 			instr.stripInboundsOffsets = json_rules["rules"][i]["findInstructions"][k]["stripInboundsOffsets"].asString();
 			r.foundInstrs.push_back(instr);
 		}
+		
+		// Get findGlobals
+		r.globalVar.globalVariable = json_rules["rules"][i]["findGlobals"]["globalVariable"].asString();
+		r.globalVar.getSizeTo = json_rules["rules"][i]["findGlobals"]["getSizeTo"].asString();
 
+		// Get newInstruction
 		r.newInstr.returnValue = json_rules["rules"][i]["newInstruction"]["returnValue"].asString();
 		r.newInstr.instruction = json_rules["rules"][i]["newInstruction"]["instruction"].asString();
 		for (uint j = 0; j < json_rules["rules"][i]["newInstruction"]["operands"].size(); ++j) {
