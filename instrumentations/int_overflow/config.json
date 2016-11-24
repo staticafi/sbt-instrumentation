@@ -1,6 +1,6 @@
 {
 	"file": "int_overflow.c",
-	"rules":
+	"instructionRules":
 	[
 		{
 			"findInstructions":

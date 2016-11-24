@@ -29,12 +29,19 @@ class InstrumentGlobalVar {
 	std::string getSizeTo;
 };
 
+class GlobalVarsRule {
+ public:
+	InstrumentGlobalVar globalVar;
+	InstrumentInstruction newInstr;
+	std::string inFunction;
+	std::list<std::string> condition;
+};
+
 typedef std::list<InstrumentInstruction> InstrumentSequence;
 
 class RewriteRule {
  public:
 	InstrumentSequence foundInstrs;
-	InstrumentGlobalVar globalVar;
 	InstrumentInstruction newInstr;
 	InstrumentPlacement where;
 	std::string inFunction;
@@ -46,8 +53,10 @@ typedef std::list<RewriteRule> RewriterConfig;
 // Rewriter
 class Rewriter {
 	RewriterConfig config;
+	GlobalVarsRule globalVarsRule;
 	public:
 		RewriterConfig getConfig();
+		GlobalVarsRule getGlobalsConfig();
 		void parseConfig(std::ifstream &config_file);
 		std::list<std::string> analysisPaths;
 };

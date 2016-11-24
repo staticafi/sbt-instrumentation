@@ -498,9 +498,13 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
  * Instruments given module with rules from json file.
  * @param M module to be instrumented.
  * @param rw_config parsed rules to apply.
- * @return true if OK, false otherwise
+ * @return true if instrumentation was done without problems, false otherwise
  */
 bool instrumentModule(Module &M, RewriterConfig rw_config) {
+	// Instrument global variables
+	//if(!InstrumentGlobals(M, rw_config)) return false;
+  
+	// Instrument instructions in functions
 	for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
 
 		// Do not instrument functions linked for instrumentation

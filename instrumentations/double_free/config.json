@@ -1,6 +1,6 @@
 {
 	"file": "double_free.c",
-	"rules":
+	"instructionRules":
 	[
 		{
 			"findInstructions": [
