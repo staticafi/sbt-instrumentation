@@ -1,0 +1,344 @@
+{
+	"file": "memsafety.c",
+	"analyses": ["libPoints_to_plugin.so"],
+	"globalVariablesRule": 	{
+				    "findGlobals": {
+							  "globalVariable": "<t1>",
+							  "getSizeTo": "<t2>"
+						    }
+						      ,
+				    "newInstruction": {
+							  "returnValue": "*",
+							  "instruction": "call",
+							  "operands": ["<t1>","<t2>", "1", "__INSTR_remember"]
+						      },
+				    "in": "main"
+				},
+	"instructionRules":
+	[
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "alloca",
+							"operands": ["<t0>"],
+                            // get only size of _one_ element,
+                            // maybe rename to "getAllocatedTypeSize"
+							"getSizeTo": "<t2>"
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+                          // __INSTR_remember takes the pointer, size of one element
+                          // and number of elements and computes total size as <t2>*<t0>
+					      "operands": ["<t1>","<t2>", "<t0>", "__INSTR_remember"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t1>",
+						  "instruction": "call",
+						  "operands": ["*", "malloc"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "1", "__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t1>",
+						  "instruction": "call",
+						  "operands": ["*", "__VERIFIER_malloc"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "1", "__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t1>",
+						  "instruction": "call",
+						  "operands": ["*", "__VERIFIER_malloc0"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "1", "__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "*",
+						  "instruction": "call",
+						  "operands": ["<t1>", "free"]
+					      }
+					    ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>", "0", "__INSTR_fsm_change_state"]
+					  },
+			"where": "before",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t2>",
+						  "instruction": "call",
+						  "operands": ["*","*", "calloc"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t2>", "1","__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t3>",
+						  "instruction": "call",
+						  "operands": ["*","*", "__VERIFIER_calloc"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t3>", "1","__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						  "returnValue": "<t4>",
+						  "instruction": "call",
+						  "operands": ["*","*", "__VERIFIER_calloc0"]
+					      }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t4>", "1","__INSTR_fsm_change_state"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "call",
+							"operands": ["<t2>","malloc"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_remember_malloc_size"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "call",
+							"operands": ["<t2>","__VERIFIER_malloc"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_remember_malloc_size"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "call",
+							"operands": ["<t2>","__VERIFIER_malloc0"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_remember_malloc_size"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "call",
+							"operands": ["<t2>","<t3>","calloc"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_calloc_size"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "call",
+							"operands": ["<t2>","<t3>","__VERIFIER_calloc"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_calloc_size"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "call",
+							"operands": ["<t2>","<t3>","__VERIFIER_calloc0"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_calloc_size"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "*",
+							"instruction": "call",
+							"operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i32"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "stripInboundsOffsets": "<t3>"
+					  },
+			"where": "before",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "*",
+							"instruction": "call",
+							"operands": ["<t3>","*", "<t4>", "memset"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "stripInboundsOffsets": "<t3>"
+					  },
+			"where": "before",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+					      {
+						"returnValue": "*",
+						"instruction": "ret",
+						"operands": ["*"]
+					      }
+					    ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["__INSTR_fsm_list_destroy"]
+					  },
+			"where": "before",
+			"in": "main"
+		},
+		{
+			"findInstructions": [
+						   {
+							  "returnValue": "*",
+							  "instruction": "load",
+							  "operands": ["<t1>"],
+							  "getSizeTo": "<t2>"
+						   }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_check_load_store"]
+					  },
+			"where": "before",
+			"condition": ["!isValid", "<t1>"],
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+							{
+							  "returnValue": "*",
+							  "instruction": "store",
+							  "operands": ["<t1>", "<t2>"],
+							  "getSizeTo": "<t3>"
+						    }
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t2>","<t3>", "__INSTR_check_load_store"]
+					  },
+			"where": "before",
+			"condition": ["!isValid", "<t2>"],
+			"in": "*"
+		}
+
+	]
+}
+
+
+
+
+
+
+
