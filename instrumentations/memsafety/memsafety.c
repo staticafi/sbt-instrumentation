@@ -81,9 +81,10 @@ fsm* __INSTR_fsm_list_search(fsm_id id) {
 
 // FSM manipulation
 
-fsm_state fsm_transition_table[3][2] = {{ FSM_STATE_FREED, FSM_STATE_ALLOCATED},
-                                        { FSM_STATE_ERROR, FSM_STATE_ALLOCATED},
-                                        { FSM_STATE_ERROR, FSM_STATE_ERROR }};
+fsm_state fsm_transition_table[4][2] = {{ FSM_STATE_FREED, FSM_STATE_ALLOCATED }, // allocated
+                                        { FSM_STATE_ERROR, FSM_STATE_ALLOCATED }, // freed
+                                        { FSM_STATE_ERROR, FSM_STATE_ERROR }, // error
+					{ FSM_STATE_NONE, FSM_STATE_NONE}};
 
 void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 
