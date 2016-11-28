@@ -6,7 +6,7 @@ typedef int8_t* fsm_id;
 typedef uint64_t a_size;
 
 typedef enum {
-	FSM_STATE_ALLOCATED,
+	FSM_STATE_ALLOCATED = 0,
 	FSM_STATE_FREED,
 	FSM_STATE_ERROR,
 	FSM_STATE_NONE
@@ -103,7 +103,7 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED);
 	}
 
-	if (m->state == FSM_STATE_ERROR) {
+	if (m != NULL && m->state == FSM_STATE_ERROR) {
 	        assert(0 && "double free");
 		__VERIFIER_error();
 	}
