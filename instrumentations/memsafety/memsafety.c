@@ -172,6 +172,12 @@ void __INSTR_check_load_store(fsm_id id, a_size range) {
 			assert(0 && "load or store out of range");
 			__VERIFIER_error();
 		}
+		
+		// this memory was already freed
+		if(r->state == FSM_STATE_FREED) {
+			assert(0 && "load or store on invalid pointer");
+			__VERIFIER_error();
+		}
 	} else {
 		/* we register all memory allocations, so if we
 		 * haven't found the allocation, then this is
