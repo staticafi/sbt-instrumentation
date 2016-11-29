@@ -93,7 +93,7 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 		return;
 	}
 
-	fsm *m = __INSTR_fsm_list_search(id);
+	fsm *m = __INSTR_fsm_list_search(id);	
 	if (m != NULL) {
 		if(action == FSM_ALPHABET_FREE && m->id != id){
 			assert(0 && "free on non-allocated memory");
@@ -139,7 +139,7 @@ void __INSTR_remember_malloc_size(fsm_id id, int size) {
 void __INSTR_remember_calloc_size(fsm_id id, int size, int num) {
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
-		m->size = size * num;
+		m->size = size * num; 
 	}
 }
 
@@ -150,7 +150,7 @@ void __INSTR_check_range(fsm_id id, int range) {
 		/* (id - rec->id) is the offset into allocated memory
 		 * it must be possitive, since id >= rec->id */
 		if ((a_size)(id - r->id + range) > r->size) {
-			assert(0 && "memset out of range");
+			assert(0 && "memset/memcpy out of range");
 			__VERIFIER_error();
 		}
 	} else {
