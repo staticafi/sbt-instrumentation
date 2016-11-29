@@ -331,6 +331,23 @@
 			"where": "before",
 			"condition": ["!isValid", "<t2>"],
 			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "*",
+							"instruction": "call",
+							"operands": ["<t3>","*", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i32"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "stripInboundsOffsets": "<t3>"
+					  },
+			"where": "before",
+			"in": "*"
 		}
 
 	]
