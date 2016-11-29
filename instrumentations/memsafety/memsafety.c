@@ -93,10 +93,10 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 		return;
 	}
 
-	fsm *m = __INSTR_fsm_list_search(id);	
+	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
 		if(action == FSM_ALPHABET_FREE && m->id != id){
-			assert(0 && "double free");
+			assert(0 && "free on non-allocated memory");
 			__VERIFIER_error();
 		}
 		m->state = fsm_transition_table[m->state][action];
@@ -139,7 +139,7 @@ void __INSTR_remember_malloc_size(fsm_id id, int size) {
 void __INSTR_remember_calloc_size(fsm_id id, int size, int num) {
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
-		m->size = size * num; 
+		m->size = size * num;
 	}
 }
 
