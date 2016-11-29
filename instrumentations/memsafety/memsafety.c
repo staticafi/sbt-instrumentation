@@ -93,8 +93,12 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 		return;
 	}
 
-	fsm *m = __INSTR_fsm_list_search(id);
+	fsm *m = __INSTR_fsm_list_search(id);	
 	if (m != NULL) {
+		if(action == FSM_ALPHABET_FREE && m->id != id){
+			assert(0 && "double free");
+			__VERIFIER_error();
+		}
 		m->state = fsm_transition_table[m->state][action];
 	} else {
 		if (action == FSM_ALPHABET_FREE) {
