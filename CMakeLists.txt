@@ -51,6 +51,9 @@ if (DG_PATH)
   message(STATUS "Got DG: ${DG_PATH}")
 endif(DG_PATH)
 
+include(GNUInstallDirs)
+message(STATUS "CMAKE_INSTALL_LIBDIR: \"${CMAKE_INSTALL_LIBDIR}\"")
+
 SET(JSON_FILES
     src/jsoncpp.cpp
     include/json/json.h
@@ -85,5 +88,5 @@ INSTALL(TARGETS LLVMinstr RUNTIME DESTINATION bin)
 add_library(Points_to_plugin SHARED analyses/points_to_plugin.cpp lib/instr_plugin.hpp)
 target_link_libraries(Points_to_plugin ${dg_libs})
 install(TARGETS Points_to_plugin
-	LIBRARY DESTINATION lib)
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
