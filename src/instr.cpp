@@ -272,10 +272,15 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 				if(i == argIndex) {
 					if(argV->getType() != var->second->getType()) {
 						//TODO other types?
-						if(!var->second->getType()->isPtrOrPtrVectorTy()){
+						if(!var->second->getType()->isPtrOrPtrVectorTy() && !var->second->getType()->isIntegerTy()){
 							args.push_back(var->second);
 						}else{
-							CastInst *CastI = CastInst::CreatePointerCast(var->second, argV->getType());
+							CastInst *CastI;
+							if(var->second->getType()->isPtrOrPtrVectorTy()){
+								CastI = CastInst::CreatePointerCast(var->second, argV->getType());
+							}else{
+								CastI = CastInst::CreateIntegerCast(var->second, argV->getType(), true); //TODO do something about signed argument
+							}
                             if (Instruction *Inst = dyn_cast<Instruction>(var->second))
                                 CloneMetadata(Inst, CastI);
 

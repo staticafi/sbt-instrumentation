@@ -129,14 +129,14 @@ fsm* __INSTR_remember(fsm_id id, a_size size, int num) {
 	return new_rec;
 }
 
-void __INSTR_remember_malloc_size(fsm_id id, int size) {
+void __INSTR_remember_malloc_size(fsm_id id, size_t size) {
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
 		m->size = size;
 	}
 }
 
-void __INSTR_remember_calloc_size(fsm_id id, int size, int num) {
+void __INSTR_remember_calloc_size(fsm_id id, size_t size, int num) {
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
 		m->size = size * num;
