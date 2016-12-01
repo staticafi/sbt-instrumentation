@@ -6,40 +6,22 @@
 using namespace std;
 using namespace llvm;
 
-Logger::Logger (string path) {
-  file = path;
-  ofstream ofs;
-  ofs.open(path, std::ofstream::out | std::ofstream::trunc);
-  ofs.close();
-}
-
-void Logger::write_error(const string &text) {
-    std::ofstream log_file(
-        file, ios_base::out | ios_base::app );
-    log_file << "Error: " << text << endl;
-}
-
-void Logger::write_info(const string &text) {
-    std::ofstream log_file(
-        file, ios_base::out | ios_base::app );
-    log_file << "Info: " << text << endl;
-}
-
-
 /**
  * Writes log about inserting new call instruction.
  * @param where before/after
  * @param calledFunction function from inserted call
  * @param foundInstr found instruction for instrumentation
  */
-void Logger::log_insertion(string where, Function* calledFunction, Instruction* foundInstr) {
+void Logger::log_insertion(const string& where,
+                           const Function* calledFunction,
+                           const Instruction* foundInstr) {
 	string newCall = calledFunction->getName().str();
 	string foundInstrOpName = foundInstr->getOpcodeName();
 
 	if(foundInstrOpName == "call") {
-		if (CallInst *ci = dyn_cast<CallInst>(foundInstr)) { //TODO what if this fails
+		if (const CallInst *ci = dyn_cast<CallInst>(foundInstr)) { //TODO what if this fails
 			// get called value and strip away any bitcasts
-			llvm::Value *calledVal = ci->getCalledValue()->stripPointerCasts();
+			const llvm::Value *calledVal = ci->getCalledValue()->stripPointerCasts();
 			string name;
 			if (calledVal->hasName())
 				name = calledVal->getName().str();

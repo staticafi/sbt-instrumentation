@@ -1,7 +1,7 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <fstream>
+#include <ostream>
 #include <string>
 
 #include <llvm/IR/Function.h>
@@ -10,11 +10,24 @@
 #include "rewriter.hpp"
 
 class Logger {
-    std::string file;
+    std::ofstream stream;
   public:
-    Logger (std::string path);
-    void write_error (const std::string &text);
-    void write_info (const std::string &text);
+    Logger(const std::string& path) {
+        stream.open(path, std::ios::out | std::ios::trunc);
+    }
+
+    ~Logger() {
+        stream.flush();
+        stream.close();
+    }
+
+    void write_error(const std::string &text) {
+        stream << "Error: " << text << "\n";
+    }
+
+    void write_info(const std::string &text) {
+        stream << "Info: " << text << "\n";
+    }
     		
 	/**
 	 * Writes log about inserting new call instruction.
@@ -22,7 +35,9 @@ class Logger {
 	 * @param calledFunction function from inserted call
 	 * @param foundInstr found instruction for instrumentation
 	 */
-	void log_insertion(std::string where, llvm::Function* calledFunction, llvm::Instruction* foundInstr);
+	void log_insertion(const std::string& where,
+                       const llvm::Function* calledFunction,
+                       const llvm::Instruction* foundInstr);
 
 	/**
 	 * Writes log about replacing instruction.
