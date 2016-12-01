@@ -278,6 +278,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 							CastInst *CastI = CastInst::CreatePointerCast(var->second, argV->getType());
                             if (Instruction *Inst = dyn_cast<Instruction>(var->second))
                                 CloneMetadata(Inst, CastI);
+
 	                        if(where == InstrumentPlacement::BEFORE) {
                                 // we want to insert before I, that is:
                                 // %c = cast ...
