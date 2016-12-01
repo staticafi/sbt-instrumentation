@@ -42,14 +42,22 @@ include_directories(${CMAKE_SOURCE_DIR}/lib)
 add_definitions(-DHAVE_LLVM)
 
 if (DG_PATH)
-  add_definitions("-DHAVE_DG")
-  include_directories(${DG_PATH}/src/)
-  link_directories(${DG_PATH}/src/)
-  # those libraries we'll use. We need to use whole LLVMdg,
-  # since we'll use the LLVM points-to analysis
-  set(dg_libs "LLVMpta")
-  message(STATUS "Got DG: ${DG_PATH}")
-endif(DG_PATH)
+	include_directories(${DG_PATH}/src/)
+else()
+	include_directories(/usr/include/llvm-dg)
+endif()
+
+find_library(LIBLP LLVMpta PATHS ${DG_PATH}/src/)
+find_library(LIBP PTA PATHS ${DG_PATH}/src/)
+
+if (LIBLP AND LIBP)
+	message(STATUS "Dg libraries found: ${LIBLP}, ${LIBP}")
+	# those libraries we'll use. We need to use whole LLVMdg,
+	# since we'll use the LLVM points-to analysis
+	set(dg_libs ${LIBLP} ${LIBP})
+else()
+	message(FATAL_ERROR "Dg not found! Try specifying -DDG_PATH=<path>.")
+endif()
 
 include(GNUInstallDirs)
 message(STATUS "CMAKE_INSTALL_LIBDIR: \"${CMAKE_INSTALL_LIBDIR}\"")
