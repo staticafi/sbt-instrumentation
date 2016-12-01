@@ -15,6 +15,8 @@ add_definitions(${LLVM_DEFINITIONS})
 include_directories(${LLVM_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 
+include_directories(include)
+
 find_path(LLVM_SRC_PATH include/llvm/Module.h)
 find_path(LLVM_BUILD_PATH include/llvm/Intrinsics.gen)
 
@@ -67,22 +69,8 @@ if (jsoncpp_FOUND)
 	set(JSON_LIBS jsoncpp_lib)
 	message(STATUS "Using system jsoncpp library")
 else()
-	set(JSON_FILES
-		src/jsoncpp.cpp
-		include/json/json.h
-		include/json/json-forwards.h
-	)
+	set(JSON_FILES jsoncpp.cpp)
 endif()
-
-SET(SOURCE_FILES
-    lib/rewriter.hpp
-    src/rewriter.cpp
-    lib/instr_log.hpp
-    src/instr_log.cpp
-    lib/instr_plugin.hpp
-    lib/instr_analyzer.hpp
-    src/instr_analyzer.cpp
-)
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
@@ -92,17 +80,6 @@ else()
   llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter)
 endif()
 
-#ADD_LIBRARY(instr_model ${JSON_FILES} ${SOURCE_FILES})
-set(LLVM_LINK_COMPONENTS core engine support)
-#set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
-add_executable(LLVMinstr src/instr.cpp ${JSON_FILES} ${SOURCE_FILES})
-TARGET_LINK_LIBRARIES(LLVMinstr ${llvm_libs} ${JSON_LIBS})
-INSTALL(TARGETS LLVMinstr RUNTIME DESTINATION bin)
-
-add_library(Points_to_plugin MODULE analyses/points_to_plugin.cpp lib/instr_plugin.hpp)
-target_link_libraries(Points_to_plugin PRIVATE ${dg_libs} ${llvm_libs})
-install(TARGETS Points_to_plugin
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-add_subdirectory(src)
+add_subdirectory(analyses)
 add_subdirectory(instrumentations)
+add_subdirectory(src)

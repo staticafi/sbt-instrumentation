@@ -1,6 +1,7 @@
-#include "../lib/instr_log.hpp"
 #include <fstream>
 #include <string>
+
+#include "instr_log.hpp"
 
 using namespace std;
 using namespace llvm;

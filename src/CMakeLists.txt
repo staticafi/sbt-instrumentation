@@ -1,16 +1,11 @@
-# install(FILES rewriter.hpp
-# 	DESTINATION ${INSTALL_INC_DIR})
-# 	
-# install(FILES jsoncpp.cpp
-# 	DESTINATION ${INSTALL_INC_DIR})
-# 
+add_executable(LLVMinstr
+	rewriter.cpp
+	instr_log.cpp
+	instr_analyzer.cpp
+	instr.cpp
+	${JSON_FILES}
+)
+target_link_libraries(LLVMinstr ${llvm_libs} ${JSON_LIBS})
 
-#set(LLVM_LINK_COMPONENTS core engine)
-#add_llvm_loadable_module(Instr instr.cpp)
-
-
-
-
-
-
+install(TARGETS LLVMinstr RUNTIME DESTINATION bin)
 
