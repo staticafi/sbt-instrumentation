@@ -36,7 +36,6 @@ message(STATUS "LLVM include dir: ${LLVM_INCLUDE_DIRS}")
 message(STATUS "LLVM libraries dir: ${LLVM_LIBRARY_DIRS}")
 message(STATUS "LLVM definitions: ${LLVM_DEFINITIONS}")
 
-add_subdirectory(src)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 add_definitions(-DHAVE_LLVM)
@@ -61,6 +60,7 @@ endif()
 
 include(GNUInstallDirs)
 message(STATUS "CMAKE_INSTALL_LIBDIR: \"${CMAKE_INSTALL_LIBDIR}\"")
+message(STATUS "CMAKE_INSTALL_DATADIR: \"${CMAKE_INSTALL_FULL_DATADIR}\"")
 
 find_package(jsoncpp CONFIG)
 if (jsoncpp_FOUND)
@@ -104,3 +104,5 @@ target_link_libraries(Points_to_plugin PRIVATE ${dg_libs} ${llvm_libs})
 install(TARGETS Points_to_plugin
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+add_subdirectory(src)
+add_subdirectory(instrumentations)
