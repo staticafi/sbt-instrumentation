@@ -86,7 +86,7 @@ TARGET_LINK_LIBRARIES(LLVMinstr ${llvm_libs})
 INSTALL(TARGETS LLVMinstr RUNTIME DESTINATION bin)
 
 add_library(Points_to_plugin SHARED analyses/points_to_plugin.cpp lib/instr_plugin.hpp)
-target_link_libraries(Points_to_plugin ${dg_libs})
+target_link_libraries(Points_to_plugin ${dg_libs} ${llvm_libs})
 install(TARGETS Points_to_plugin
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
