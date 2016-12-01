@@ -54,11 +54,17 @@ endif(DG_PATH)
 include(GNUInstallDirs)
 message(STATUS "CMAKE_INSTALL_LIBDIR: \"${CMAKE_INSTALL_LIBDIR}\"")
 
-SET(JSON_FILES
-    src/jsoncpp.cpp
-    include/json/json.h
-    include/json/json-forwards.h
-)
+find_package(jsoncpp CONFIG)
+if (jsoncpp_FOUND)
+	set(JSON_LIBS jsoncpp_lib)
+	message(STATUS "Using system jsoncpp library")
+else()
+	set(JSON_FILES
+		src/jsoncpp.cpp
+		include/json/json.h
+		include/json/json-forwards.h
+	)
+endif()
 
 SET(SOURCE_FILES
     lib/rewriter.hpp
@@ -82,7 +88,7 @@ endif()
 set(LLVM_LINK_COMPONENTS core engine support)
 #set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 add_executable(LLVMinstr src/instr.cpp ${JSON_FILES} ${SOURCE_FILES})
-TARGET_LINK_LIBRARIES(LLVMinstr ${llvm_libs})
+TARGET_LINK_LIBRARIES(LLVMinstr ${llvm_libs} ${JSON_LIBS})
 INSTALL(TARGETS LLVMinstr RUNTIME DESTINATION bin)
 
 add_library(Points_to_plugin SHARED analyses/points_to_plugin.cpp lib/instr_plugin.hpp)
