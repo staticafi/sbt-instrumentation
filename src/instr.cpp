@@ -234,7 +234,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(RewriteRule rw_rule, Instruc
 							CastInst *CastI = CastInst::CreatePointerCast(var->second, argV->getType());
                             if (Instruction *Inst = dyn_cast<Instruction>(var->second))
                                 CloneMetadata(Inst, CastI);
-	                        if(rw_rule.where == InstrumentPlacement::BEFORE) {
+                            if(rw_rule.where == InstrumentPlacement::BEFORE) {
                                 // we want to insert before I, that is:
                                 // %c = cast ...
                                 // newInstr
