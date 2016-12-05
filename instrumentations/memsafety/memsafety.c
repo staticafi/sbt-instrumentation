@@ -81,9 +81,10 @@ fsm* __INSTR_fsm_list_search(fsm_id id) {
 
 // FSM manipulation
 
-fsm_state fsm_transition_table[3][2] = {{ FSM_STATE_FREED, FSM_STATE_ALLOCATED},
-                                        { FSM_STATE_ERROR, FSM_STATE_ALLOCATED},
-                                        { FSM_STATE_ERROR, FSM_STATE_ERROR }};
+fsm_state fsm_transition_table[4][2] = {{ FSM_STATE_FREED, FSM_STATE_ALLOCATED }, // allocated
+                                        { FSM_STATE_ERROR, FSM_STATE_ALLOCATED }, // freed
+                                        { FSM_STATE_ERROR, FSM_STATE_ERROR }, // error
+					{ FSM_STATE_NONE, FSM_STATE_NONE}};
 
 void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 
@@ -94,6 +95,10 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
+		if(action == FSM_ALPHABET_FREE && m->id != id){
+			assert(0 && "free on non-allocated memory");
+			__VERIFIER_error();
+		}
 		m->state = fsm_transition_table[m->state][action];
 	} else {
 		if (action == FSM_ALPHABET_FREE) {
@@ -103,7 +108,7 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED);
 	}
 
-	if (m->state == FSM_STATE_ERROR) {
+	if (m != NULL && m->state == FSM_STATE_ERROR) {
 	        assert(0 && "double free");
 		__VERIFIER_error();
 	}
@@ -134,7 +139,7 @@ void __INSTR_remember_malloc_size(fsm_id id, int size) {
 void __INSTR_remember_calloc_size(fsm_id id, int size, int num) {
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
-		m->size = size * num; 
+		m->size = size * num;
 	}
 }
 
@@ -145,14 +150,20 @@ void __INSTR_check_range(fsm_id id, int range) {
 		/* (id - rec->id) is the offset into allocated memory
 		 * it must be possitive, since id >= rec->id */
 		if ((a_size)(id - r->id + range) > r->size) {
-			assert(0 && "memset out of range");
+			assert(0 && "memset/memcpy out of range");
+			__VERIFIER_error();
+		}
+
+		// this memory was already freed
+		if(r->state == FSM_STATE_FREED) {
+			assert(0 && "memset/memcpy on invalid pointer");
 			__VERIFIER_error();
 		}
 	} else {
 		/* we register all memory allocations, so if we
 		 * haven't found the allocation, then this is
 		 * invalid pointer */
-		assert(0 && "memset on invalid pointer");
+		assert(0 && "memset/memcpy on invalid pointer");
 		__VERIFIER_error();
 	}
 }
@@ -165,6 +176,12 @@ void __INSTR_check_load_store(fsm_id id, a_size range) {
 		 * it must be possitive, since id >= rec->id */
 		if ((a_size)(id - r->id + range) > r->size) {
 			assert(0 && "load or store out of range");
+			__VERIFIER_error();
+		}
+
+		// this memory was already freed
+		if(r->state == FSM_STATE_FREED) {
+			assert(0 && "load or store on invalid pointer");
 			__VERIFIER_error();
 		}
 	} else {

@@ -18,7 +18,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
 	}
 
 	// TODO catch exceptions here
-	
+
 	// load paths to analyses
 	for(uint i = 0; i < json_rules["analyses"].size(); ++i){
 		this->analysisPaths.push_back(json_rules["analyses"][i].asString());
@@ -71,33 +71,33 @@ void Rewriter::parseConfig(ifstream &config_file) {
 	}
 
 	this->config = rw_config;
-	
+
 	GlobalVarsRule rw_globals_rule;
-	
+
 	// Get rule for global variables
 	rw_globals_rule.globalVar.globalVariable = json_rules["globalVariablesRule"]["findGlobals"]["globalVariable"].asString();
 	rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getSizeTo"].asString();
-	
+
 	for(uint j = 0; j < json_rules["globalVariablesRule"]["condition"].size(); ++j){
 		rw_globals_rule.condition.push_back(json_rules["globalVariablesRule"]["condition"][j].asString());
 	}
-	
+
 	rw_globals_rule.newInstr.returnValue = json_rules["globalVariablesRule"]["newInstruction"]["returnValue"].asString();
 	rw_globals_rule.newInstr.instruction = json_rules["globalVariablesRule"]["newInstruction"]["instruction"].asString();
-	
+
 	for (uint j = 0; j < json_rules["globalVariablesRule"]["newInstruction"]["operands"].size(); ++j) {
 		rw_globals_rule.newInstr.parameters.push_back(json_rules["globalVariablesRule"]["newInstruction"]["operands"][j].asString());
 	}
-	
-	rw_globals_rule.inFunction = json_rules["newInstruction"]["in"].asString();
+
+	rw_globals_rule.inFunction = json_rules["globalVariablesRule"]["in"].asString();
+
+	this->globalVarsRule = rw_globals_rule;
 }
 
 RewriterConfig Rewriter::getConfig() {
 	return this->config;
 }
 
-
-
-
-
-
+GlobalVarsRule Rewriter::getGlobalsConfig() {
+	return this->globalVarsRule;
+}
