@@ -328,7 +328,7 @@
 					      "operands": ["<t1>","<t2>", "__INSTR_check_load_store"]
 					  },
 			"where": "before",
-			"condition": ["!isValid", "<t1>"],
+			"condition": ["!isValidPointer", "<t1>"],
 			"in": "*"
 		},
 		{
@@ -346,7 +346,7 @@
 					      "operands": ["<t2>","<t3>", "__INSTR_check_load_store"]
 					  },
 			"where": "before",
-			"condition": ["!isValid", "<t2>"],
+			"condition": ["!isValidPointer", "<t2>"],
 			"in": "*"
 		},
 		{
