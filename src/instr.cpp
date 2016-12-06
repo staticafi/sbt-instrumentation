@@ -174,7 +174,7 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
 		newInstr->insertBefore(currentInstr);
-	    logger.log_insertion("before", CalleeF, currentInstr);
+		logger.log_insertion("before", CalleeF, currentInstr);
 	}
 	else if(rw_rule.where == InstrumentPlacement::AFTER) {
 		// Insert after
@@ -679,7 +679,7 @@ bool instrumentModule(Module &M, Rewriter rw) {
 	}
 	// Write instrumented module into the output file
 	ofstream out_file;
-    out_file.open(outputName, ios::out | ios::binary);
+	out_file.open(outputName, ios::out | ios::binary);
 	raw_os_ostream rstream(out_file);
 
 	WriteBitcodeToFile(&M, rstream);
