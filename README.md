@@ -27,7 +27,7 @@ Json config files should look like this:
 							      "returnValue": string,
 							      "instruction": string(call,alloca,...),
 							      "operands": list of strings
-							      "getSizeTo": string (can only be used when looking for one alloca instruction!)
+							      "getSizeTo": string (optional for alloca, load or store)
 							   },
 							   {
 							      "returnValue": string,
@@ -50,7 +50,7 @@ Json config files should look like this:
 
 `<x>` is variable, `*` matches any string. The new instruction can only be a `call` for now. 
 
-`getSizeTo` can be used to get allocated size when instrumenting `alloca` instruction. It cannot be used when looking for a sequence of instructions.
+`getSizeTo` can be used to get allocated type size when instrumenting `alloca`, `load` or `store`  instruction. It cannot be used when looking for a sequence of instructions.
 
 Example:
 ```json
