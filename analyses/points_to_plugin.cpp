@@ -36,10 +36,25 @@ class PointsToPlugin : public InstrPlugin
 	  return false;
   }
 
-  bool isValidPointer(llvm::Value* a) {
+  bool isValidPointer(llvm::Value* a, llvm::Value *len) {
       if (!a->getType()->isPointerTy())
           // null must be a pointer
           return false;
+
+      uint64_t size = 0;
+      if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(len)) {
+            size = C->getLimitedValue();
+            // if the size cannot be expressed as an uint64_t,
+            // say we do not know
+            if (size == ~((uint64_t) 0))
+                return false;
+
+      } else {
+        // we do not know anything with variable length
+        return false;
+      }
+
+      assert(size > 0 && size < ~((uint64_t) 0));
 
       // need to have the PTA
       assert(PTA);
@@ -58,6 +73,14 @@ class PointsToPlugin : public InstrPlugin
             // if the offset is unknown, that the pointer
             // may point after the end of allocated memory
             if (ptr.offset.isUnknown())
+                return false;
+
+            // if the offset + size > the size of allocated memory,
+            // then this can be invalid operation. Check it so that
+            // we won't overflow, that is, first ensure that psnode->size <= size
+            // and than use this fact and equality with ptr.offset + size > psnode->size)
+            if (size > psnode->getSize()
+                || *ptr.offset > psnode->getSize() - size)
                 return false;
       }
 

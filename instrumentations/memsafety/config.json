@@ -22,17 +22,17 @@
 							"returnValue": "<t1>",
 							"instruction": "alloca",
 							"operands": ["<t0>"],
-                            // get only size of _one_ element,
-                            // maybe rename to "getAllocatedTypeSize"
+							// get only size of _one_ element,
+							// maybe rename to "getAllocatedTypeSize"
 							"getSizeTo": "<t2>"
 						}
 					   ],
 			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-                          // __INSTR_remember takes the pointer, size of one element
-                          // and number of elements and computes total size as <t2>*<t0>
-					      "operands": ["<t1>","<t2>", "<t0>", "__INSTR_remember"]
+						"returnValue": "*",
+						"instruction": "call",
+						// __INSTR_remember takes the pointer, size of one element
+						// and number of elements and computes total size as <t2>*<t0>
+						"operands": ["<t1>","<t2>", "<t0>", "__INSTR_remember"]
 					  },
 			"where": "after",
 			"in": "*"
@@ -328,7 +328,7 @@
 					      "operands": ["<t1>","<t2>", "__INSTR_check_load_store"]
 					  },
 			"where": "before",
-			"condition": ["!isValidPointer", "<t1>"],
+			"condition": ["!isValidPointer", "<t1>", "<t2>"],
 			"in": "*"
 		},
 		{
@@ -346,7 +346,7 @@
 					      "operands": ["<t2>","<t3>", "__INSTR_check_load_store"]
 					  },
 			"where": "before",
-			"condition": ["!isValidPointer", "<t2>"],
+			"condition": ["!isValidPointer", "<t2>", "<t3>"],
 			"in": "*"
 		},
 		{

@@ -14,7 +14,8 @@ class InstrPlugin
         return true;
       }
 
-	  virtual bool isValidPointer(llvm::Value*) {
+      // XXX: we should probably rename it to isValidPointerRange
+	  virtual bool isValidPointer(llvm::Value*, llvm::Value *) {
         return true;
       }
 
