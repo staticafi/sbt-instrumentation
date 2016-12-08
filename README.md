@@ -18,6 +18,19 @@ Json config files should look like this:
 ```
     {
 		"file": string,
+		"globalVariablesRule": 	optional, a rule to instrument global variables
+		{
+			"findGlobals": {
+					 	"globalVariable": string,
+						"getSizeTo": string
+					},
+			"newInstruction": {
+						"returnValue": string,
+						"instruction": string(call, alloca),
+						"operands": list of strings
+					},
+			"in": string (name of function, where new instruction should be inserted to)
+		},
 		"instructionRules":
 		[
 			{
@@ -27,7 +40,7 @@ Json config files should look like this:
 							      "returnValue": string,
 							      "instruction": string(call,alloca,...),
 							      "operands": list of strings
-							      "getSizeTo": string (optional for alloca, load or store)
+							      "getSizeTo": string (optional, for alloca, load or store)
 							   },
 							   {
 							      "returnValue": string,
@@ -57,6 +70,19 @@ Example:
 
     {
 		"file": "example.c",
+		"globalVariablesRule": 	
+		{
+			"findGlobals": {
+						"globalVariable": "<t1>",
+						"getSizeTo": "<t2>"
+					},
+			"newInstruction": {
+						"returnValue": "*",
+						"instruction": "call",
+						"operands": ["<t1>","<t2>", "nameOfFunction"]
+					  },
+			"in": "main"
+		},
 		"instructionRules":
 		[
 			{
