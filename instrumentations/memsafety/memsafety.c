@@ -69,11 +69,12 @@ fsm* __INSTR_fsm_list_search(fsm_id id) {
 		/* check wether 'id' is a pointer to
 		 * some memory that we registred, that is if it points
 		 * to some memory region in range [cur.id, cur.id + size] */
-		if ((*cur->fsm).id <= id
-		     && id < (*cur->fsm).id + (*cur->fsm).size) {
+		if (cur->fsm->id <= id
+		     && (id - cur->fsm->id < cur->fsm->size)) {
 			return cur->fsm;
 		}
-	  cur = cur->next;
+
+		cur = cur->next;
 	}
 
 	return NULL;
@@ -147,16 +148,18 @@ void __INSTR_check_range(fsm_id id, int range) {
 	fsm *r = __INSTR_fsm_list_search(id);
 
 	if (r != NULL) {
-		/* (id - rec->id) is the offset into allocated memory
-		 * it must be possitive, since id >= rec->id */
-		if ((a_size)(id - r->id + range) > r->size) {
+		if (range > r->size ||
+		    /* id - r->id is the offset into memory.
+		     * Reorder the numbers so that there won't be
+		     * an overflow */
+		    ((a_size)(id - r->id)) > r->size - range) {
 			assert(0 && "memset/memcpy out of range");
 			__VERIFIER_error();
 		}
 
 		// this memory was already freed
 		if(r->state == FSM_STATE_FREED) {
-			assert(0 && "memset/memcpy on invalid pointer");
+			assert(0 && "memset/memcpy on freed memory");
 			__VERIFIER_error();
 		}
 	} else {
