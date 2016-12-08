@@ -130,17 +130,21 @@ fsm* __INSTR_remember(fsm_id id, a_size size, int num) {
 	return new_rec;
 }
 
-void __INSTR_remember_malloc_size(fsm_id id, size_t size) {
-	fsm *m = __INSTR_fsm_list_search(id);
-	if (m != NULL) {
-		m->size = size;
+void __INSTR_remember_malloc_calloc(fsm_id id, size_t size, int num ) {
+	// there is no FSM for NULL
+	if (id == 0) {
+		return;
 	}
-}
 
-void __INSTR_remember_calloc_size(fsm_id id, size_t size, int num) {
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
-		m->size = size * num;
+		m->state = fsm_transition_table[m->state][FSM_ALPHABET_MALLOC];
+	} else {
+		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED);
+	}
+
+	if (m != NULL) {
+	        m->size = size * num;
 	}
 }
 
