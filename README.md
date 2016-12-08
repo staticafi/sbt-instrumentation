@@ -67,6 +67,10 @@ Json config files should look like this:
 
 `getSizeTo` can be used to get allocated type size when instrumenting `alloca`, `load` or `store`  instruction. It cannot be used when looking for a sequence of instructions.
 
+In the .c file given in `config.json` all function names should start with `__INSTR_` or else they will be instrumented too. For now, if a function from this file has an argument that will not be passed from the program that is being instrumented, it has to be an integer.
+
+Instrumentation can be used together with static analyses to make the instrumentation conditional. You can plug them in by adding the paths to .so files to `analyses` list. Plugins must be derived from `InstrPlugin` class. You can specify the conditions by adding `condition` to elements of `instructionRules`. Currently, conditions `isNull`, `isConstant`, `isValidPointer` or `!isValidPointer` are supported.
+
 Example:
 ```json
 
@@ -110,5 +114,4 @@ Example:
     }
 ```
 
-In `.c` file given in `.json` file all function names should start with `__INSTR_` or else they will be instrumented too. For now, if a function from this file has an argument that will not be passed from the program that is being instrumented, it has to be an integer.
 
