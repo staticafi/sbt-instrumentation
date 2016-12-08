@@ -18,6 +18,7 @@ Json config files should look like this:
 ```
     {
 		"file": string,
+		"analyses": list of strings,
 		"globalVariablesRule": 	optional, a rule to instrument global variables
 		{
 			"findGlobals": {
@@ -55,6 +56,7 @@ Json config files should look like this:
 						      "operands": list of strings
 						  },
 				"where": "before"/"after",
+				"condition": list of strings (optional, can be used only together with analyses)
 				"in": string (name of function, can be "*" for any function)
 			}
 		]
@@ -70,6 +72,7 @@ Example:
 
     {
 		"file": "example.c",
+		"analyses": ["libPoints_to_plugin.so"],
 		"globalVariablesRule": 	
 		{
 			"findGlobals": {
@@ -79,7 +82,7 @@ Example:
 			"newInstruction": {
 						"returnValue": "*",
 						"instruction": "call",
-						"operands": ["<t1>","<t2>", "nameOfFunction"]
+						"operands": ["<t1>","<t2>", "__INSTR_remember"]
 					  },
 			"in": "main"
 		},
@@ -87,19 +90,21 @@ Example:
 		[
 			{
 				"findInstructions": [
-							{
-							      "returnValue": "<t1>",
-							      "instruction": "call",
-							      "operands": ["*", "malloc"]
-						   	}
-						    ],
+							   {
+								  "returnValue": "*",
+								  "instruction": "load",
+								  "operands": ["<t1>"],
+								  "getSizeTo": "<t2>"
+							   }
+						   ],
 				"newInstruction": {
 						      "returnValue": "*",
 						      "instruction": "call",
-						      "operands": ["<t1>","nameOfFunction"],
+						      "operands": ["<t1>","<t2>", "__INSTR_check_load_store"]
 						  },
 				"where": "before",
-				"in": "main"
+				"condition": ["!isValidPointer", "<t1>", "<t2>"],
+				"in": "*"
 			}
 		]
     }
