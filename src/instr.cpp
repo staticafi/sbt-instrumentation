@@ -241,14 +241,14 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 	std::vector<Value *> args;
 	unsigned i = 0;
 	Instruction* nI = I;
-	for(const string& arg : rw_newInstr.parameters){
+	for (const string& arg : rw_newInstr.parameters) {
 
-		if(i == rw_newInstr.parameters.size() - 1) {
+		if (i == rw_newInstr.parameters.size() - 1) {
 			break;
 		}
 
-        auto var = variables.find(arg);
-		if(var == variables.end()) {
+		auto var = variables.find(arg);
+		if (var == variables.end()) {
 			// NOTE: in future think also about other types than ConstantInt
 			int argInt;
 			try {
@@ -256,60 +256,57 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 				LLVMContext &Context = getGlobalContext();
 				Value *intValue = ConstantInt::get(Type::getInt32Ty(Context), argInt);
 				args.push_back(intValue);
-			}
-			catch (invalid_argument) {
+			} catch (invalid_argument) {
 				logger.write_error("Problem with instruction arguments: invalid argument.");
-			}
-			catch (out_of_range) {
+			} catch (out_of_range) {
 				logger.write_error("Problem with instruction arguments: out of range.");
 			}
-		}
-		else {
+		} else {
 			unsigned argIndex = 0;
 			for (Function::ArgumentListType::iterator sit=CalleeF->getArgumentList().begin(); sit != CalleeF->getArgumentList().end(); ++sit) {
 				Value *argV = &*sit;
 
-				if(i == argIndex) {
-					if(argV->getType() != var->second->getType()) {
+				if (i == argIndex) {
+					if (argV->getType() != var->second->getType()) {
 						//TODO other types?
-						if(!var->second->getType()->isPtrOrPtrVectorTy() && !var->second->getType()->isIntegerTy()){
+						if (!var->second->getType()->isPtrOrPtrVectorTy() && !var->second->getType()->isIntegerTy()) {
 							args.push_back(var->second);
-						}else{
+						} else {
 							CastInst *CastI;
-							if(var->second->getType()->isPtrOrPtrVectorTy()){
+							if (var->second->getType()->isPtrOrPtrVectorTy()) {
 								CastI = CastInst::CreatePointerCast(var->second, argV->getType());
-							}else{
+							} else {
 								CastI = CastInst::CreateIntegerCast(var->second, argV->getType(), true); //TODO do something about signed argument
 							}
-                            if (Instruction *Inst = dyn_cast<Instruction>(var->second))
-                                CloneMetadata(Inst, CastI);
 
-	                        if(where == InstrumentPlacement::BEFORE) {
-                                // we want to insert before I, that is:
-                                // %c = cast ...
-                                // newInstr
-                                // I
-                                //
-                                // NOTE that we do not set nI in this case,
-                                // so that the new instruction that we will insert
-                                // is inserted before I (and after all arguments
-                                // we added here)
-                                CastI->insertBefore(I);
-                            } else {
-                                // we want to insert after I, that is:
-                                // I
-                                // %c = cast ...
-                                // newInstr
-                                //
-                                // --> we must update the nI, so that the new
-                                // instruction is inserted after the arguments
-                                CastI->insertAfter(I);
-							    nI = CastI;
-                            }
+							if (Instruction *Inst = dyn_cast<Instruction>(var->second))
+								CloneMetadata(Inst, CastI);
+
+							if (where == InstrumentPlacement::BEFORE) {
+								// we want to insert before I, that is:
+								// %c = cast ...
+								// newInstr
+								// I
+								//
+								// NOTE that we do not set nI in this case,
+								// so that the new instruction that we will insert
+								// is inserted before I (and after all arguments
+								// we added here)
+								CastI->insertBefore(I);
+							} else {
+								// we want to insert after I, that is:
+								// I
+								// %c = cast ...
+								// newInstr
+								//
+								// --> we must update the nI, so that the new
+								// instruction is inserted after the arguments
+								CastI->insertAfter(I);
+								nI = CastI;
+							}
 							args.push_back(CastI);
 						}
-					}
-					else{
+					} else{
 						args.push_back(var->second);
 					}
 					break;
