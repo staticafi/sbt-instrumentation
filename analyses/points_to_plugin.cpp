@@ -122,6 +122,8 @@ class PointsToPlugin : public InstrPlugin
 
   bool greaterThan(llvm::Value* a, llvm::Value* b){
 	  if(PTA){
+		  (void)a;
+		  (void)b;
 		  //TODO
 	  }
 	  return true;
@@ -129,6 +131,8 @@ class PointsToPlugin : public InstrPlugin
 
   bool lessThan(llvm::Value* a, llvm::Value* b){
 	  if(PTA){
+		  (void)a;
+		  (void)b;
 		  //TODO
 	  }
 	  return true;
@@ -136,6 +140,8 @@ class PointsToPlugin : public InstrPlugin
 
   bool lessOrEqual(llvm::Value* a, llvm::Value* b){
 	  if(PTA){
+		  (void)a;
+		  (void)b;
 		  //TODO
 	  }
 	  return true;
@@ -143,6 +149,8 @@ class PointsToPlugin : public InstrPlugin
 
   bool greaterOrEqual(llvm::Value* a, llvm::Value* b){
 	  if(PTA){
+		  (void)a;
+		  (void)b;
 		  //TODO
 	  }
 	  return true;
