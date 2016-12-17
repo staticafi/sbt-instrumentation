@@ -58,6 +58,22 @@
 						{
 							"returnValue": "<t1>",
 							"instruction": "call",
+							"operands": ["<t2>","<t3>","realloc"]
+						}
+					   ],
+			"newInstruction": {
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t2>","<t1>","<t3>", "__INSTR_realloc"]
+					  },
+			"where": "after",
+			"in": "*"
+		},
+		{
+			"findInstructions": [
+						{
+							"returnValue": "<t1>",
+							"instruction": "call",
 							"operands": ["<t2>","__VERIFIER_malloc"]
 						}
 					   ],

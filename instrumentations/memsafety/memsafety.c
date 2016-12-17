@@ -247,3 +247,32 @@ void __INSTR_fsm_list_destroy() {
         cur = tmp;
     }
 }
+
+void __INSTR_realloc(fsm_id old_id, fsm_id new_id, size_t size) {
+	if(new_id == 0){
+	  return; //if realloc returns null, nothing happens
+	}
+	fsm *m = __INSTR_fsm_list_search(old_id);
+	if (m != NULL) {
+		if(m->state == FSM_STATE_FREED){
+		    assert(0 && "realloc on memory that has already been freed");
+		    __VERIFIER_error();
+		}
+		
+		fsm *new_rec = (fsm *) malloc(sizeof(fsm));
+		new_rec->id = new_id;
+		new_rec->size = size;
+		new_rec->state = FSM_STATE_ALLOCATED;
+
+		fsm_list_node *node = (fsm_list_node *) malloc(sizeof(fsm_list_node));
+		node->next = NULL;
+		node->fsm = new_rec;
+
+		__INSTR_fsm_list_append(node);
+		__INSTR_fsm_destroy(old_id);		
+	}
+	else{
+		assert(0 && "realloc on not allocated memory");
+		__VERIFIER_error();
+	}
+}
