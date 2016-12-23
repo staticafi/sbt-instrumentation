@@ -115,7 +115,8 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 	}
 }
 
-fsm* __INSTR_remember(fsm_id id, a_size size, int num) {
+void __INSTR_remember(fsm_id id, a_size size, int num) {
+ 
 	fsm *new_rec = (fsm *) malloc(sizeof(fsm));
 	new_rec->id = id;
 	new_rec->size = size * num;
@@ -126,8 +127,6 @@ fsm* __INSTR_remember(fsm_id id, a_size size, int num) {
 	node->fsm = new_rec;
 
 	__INSTR_fsm_list_append(node);
-
-	return new_rec;
 }
 
 void __INSTR_remember_malloc_size(fsm_id id, size_t size) {
@@ -153,20 +152,20 @@ void __INSTR_check_range(fsm_id id, int range) {
 		     * Reorder the numbers so that there won't be
 		     * an overflow */
 		    ((a_size)(id - r->id)) > r->size - range) {
-			assert(0 && "memset/memcpy out of range");
+			assert(0 && "memset/memcpy/memmove out of range");
 			__VERIFIER_error();
 		}
 
 		// this memory was already freed
 		if(r->state == FSM_STATE_FREED) {
-			assert(0 && "memset/memcpy on freed memory");
+			assert(0 && "memset/memcpy/memmove on freed memory");
 			__VERIFIER_error();
 		}
 	} else {
 		/* we register all memory allocations, so if we
 		 * haven't found the allocation, then this is
 		 * invalid pointer */
-		assert(0 && "memset/memcpy on invalid pointer");
+		assert(0 && "memset/memcpy/memmove on invalid pointer");
 		__VERIFIER_error();
 	}
 }
@@ -249,7 +248,8 @@ void __INSTR_fsm_list_destroy() {
 }
 
 void __INSTR_realloc(fsm_id old_id, fsm_id new_id, size_t size) {
-	if(new_id == 0){
+  assert(0 && "realloc on not allocated memory");
+	/*if(new_id == 0){
 	  return; //if realloc returns null, nothing happens
 	}
 	fsm *m = __INSTR_fsm_list_search(old_id);
@@ -274,5 +274,5 @@ void __INSTR_realloc(fsm_id old_id, fsm_id new_id, size_t size) {
 	else{
 		assert(0 && "realloc on not allocated memory");
 		__VERIFIER_error();
-	}
+	}*/
 }
