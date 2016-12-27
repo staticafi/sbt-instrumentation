@@ -143,6 +143,30 @@ void __INSTR_remember_calloc_size(fsm_id id, size_t size, int num) {
 	}
 }
 
+void __INSTR_check_str_length(fsm_id dest, fsm_id source) {
+	fsm *rd = __INSTR_fsm_list_search(dest);
+	fsm *rs = __INSTR_fsm_list_search(source);
+
+	if (rd != NULL && rs != NULL) {
+		if (rd->size < rs->size) {
+			assert(0 && "strcpy out of range");
+			__VERIFIER_error();
+		}
+
+		// this memory was already freed
+		if(rs->state == FSM_STATE_FREED || rd->state == FSM_STATE_FREED) {
+			assert(0 && "strcpy on freed memory");
+			__VERIFIER_error();
+		}
+	} else {
+		/* we register all memory allocations, so if we
+		 * haven't found the allocation, then this is
+		 * invalid pointer */
+		assert(0 && "strcpy on invalid pointer");
+		__VERIFIER_error();
+	}
+}
+
 void __INSTR_check_range(fsm_id id, int range) {
 	fsm *r = __INSTR_fsm_list_search(id);
 
