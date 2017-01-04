@@ -272,11 +272,20 @@ void __INSTR_fsm_list_destroy() {
 }
 
 void __INSTR_realloc(fsm_id old_id, fsm_id new_id, size_t size) {
-  assert(0 && "realloc on not allocated memory");
-	/*if(new_id == 0){
+	if(new_id == 0){
 	  return; //if realloc returns null, nothing happens
 	}
-	fsm *m = __INSTR_fsm_list_search(old_id);
+	
+	fsm *m = NULL;
+	
+	if(old_id == 0){
+	  m = __INSTR_fsm_create(new_id, FSM_STATE_ALLOCATED);
+	  m->size = size;
+	  return;
+	}
+
+	m = __INSTR_fsm_list_search(old_id);
+	
 	if (m != NULL) {
 		if(m->state == FSM_STATE_FREED){
 		    assert(0 && "realloc on memory that has already been freed");
@@ -298,5 +307,5 @@ void __INSTR_realloc(fsm_id old_id, fsm_id new_id, size_t size) {
 	else{
 		assert(0 && "realloc on not allocated memory");
 		__VERIFIER_error();
-	}*/
+	}
 }
