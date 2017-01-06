@@ -568,46 +568,39 @@
 					  },
 			"where": "before",
 			"in": "*"
-		},
-		{
-			"findInstructions": [
-						{
-							"returnValue": "*",
-							"instruction": "call",
-							"operands": ["<t3>","*", "<t4>", "strncpy"]
-						}
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
-					      "stripInboundsOffsets": "<t3>"
-					  },
-			"where": "before",
-			"in": "*"
-		},
-		{
-			"findInstructions": [
-						{
-							"returnValue": "*",
-							"instruction": "call",
-							"operands": ["<t3>","<t4>", "strcpy"]
-						}
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_str_length"]
-					  },
-			"where": "before",
-			"in": "*"
 		}
+		//{
+		//	"findInstructions": [
+		//				{
+		//					"returnValue": "*",
+		//					"instruction": "call",
+		//					"operands": ["<t3>","*", "<t4>", "strncpy"]
+		//				}
+		//			   ],
+		//	"newInstruction": {
+		//			      "returnValue": "*",
+		//			      "instruction": "call",
+		//			      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+		//			      "stripInboundsOffsets": "<t3>"
+		//			  },
+		//	"where": "before",
+		//	"in": "*"
+		//},
+		//{
+		//	"findInstructions": [
+		//				{
+		//					"returnValue": "*",
+		//					"instruction": "call",
+		//					"operands": ["<t3>","<t4>", "strcpy"]
+		//				}
+		//			   ],
+		//	"newInstruction": {
+		//			      "returnValue": "*",
+		//			      "instruction": "call",
+		//			      "operands": ["<t3>","<t4>", "__INSTR_check_str_length"]
+		//			  },
+		//	"where": "before",
+		//	"in": "*"
+		//}
 	]
 }
-
-
-
-
-
-
-
