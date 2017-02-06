@@ -47,7 +47,7 @@ list<unique_ptr<InstrPlugin>> plugins;
 string outputName;
 
 void usage(char *name) {
-	cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName>" << endl;
+	cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName> <options>" << endl;
 }
 
 /**
@@ -708,7 +708,7 @@ void loadPlugins(Rewriter rw, Module* module) {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc < 3) {
+	if (argc < 4) {
 		usage(argv[0]);
 		exit(1);
 	}
@@ -752,7 +752,13 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	loadPlugins(rw,m);
+	if(argc <= 4 || std::string(argv[4]).compare("--disable-plugins") != 0){
+		logger.write_info("Loading plugins...");
+		loadPlugins(rw,m);
+	}
+	else{
+		logger.write_info("Plugins disabled.");
+	}
 
 	// Instrument
 	bool resultOK = instrumentModule(*m, rw);
