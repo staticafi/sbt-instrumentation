@@ -49,6 +49,7 @@ class PointsToPlugin : public InstrPlugin
             if (size == ~((uint64_t) 0))
                 return false;
 
+            // the offset is concrete number, fall-through
       } else {
         // we do not know anything with variable length
         return false;
@@ -79,9 +80,10 @@ class PointsToPlugin : public InstrPlugin
             // then this can be invalid operation. Check it so that
             // we won't overflow, that is, first ensure that psnode->size <= size
             // and than use this fact and equality with ptr.offset + size > psnode->size)
-            if (size > psnode->getSize()
-                || *ptr.offset > psnode->getSize() - size)
+            if (size > ptr.target->getSize()
+                || *ptr.offset > ptr.target->getSize() - size) {
                 return false;
+            }
       }
 
       // this pointer is valid
