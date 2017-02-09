@@ -72,7 +72,9 @@ fsm* __INSTR_fsm_list_search(fsm_id id) {
 		 * some memory that we registred, that is if it points
 		 * to some memory region in range [cur.id, cur.id + size] */
 		if (cur->fsm->id <= id
-		     && (id - cur->fsm->id < cur->fsm->size)) {
+		     && (cur->fsm->id == id || // remove this part of condition
+		                               // once we know that fsm->size != 0
+		         (id - cur->fsm->id < cur->fsm->size))) {
 			return cur->fsm;
 		}
 
