@@ -48,7 +48,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t2>", "__INSTR_remember_malloc_size"]
+					      "operands": ["<t1>","<t2>","1", "__INSTR_remember_malloc_calloc"]
 					  },
 			"where": "after",
 			"in": "*"
@@ -80,7 +80,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t2>", "__INSTR_remember_malloc_size"]
+					      "operands": ["<t1>","<t2>","1", "__INSTR_remember_malloc_calloc"]
 					  },
 			"where": "after",
 			"in": "*"
@@ -96,7 +96,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t2>", "__INSTR_remember_malloc_size"]
+					      "operands": ["<t1>","<t2>","1", "__INSTR_remember_malloc_calloc"]
 					  },
 			"where": "after",
 			"in": "*"
@@ -112,7 +112,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_calloc_size"]
+					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_malloc_calloc"]
 					  },
 			"where": "after",
 			"in": "*"
@@ -128,7 +128,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_calloc_size"]
+					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_malloc_calloc"]
 					  },
 			"where": "after",
 			"in": "*"
@@ -144,55 +144,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_calloc_size"]
-					  },
-			"where": "after",
-			"in": "*"
-		},
-		{
-			"findInstructions": [
-					      {
-						  "returnValue": "<t1>",
-						  "instruction": "call",
-						  "operands": ["*", "malloc"]
-					      }
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t1>", "1", "__INSTR_fsm_change_state"]
-					  },
-			"where": "after",
-			"in": "*"
-		},
-		{
-			"findInstructions": [
-					      {
-						  "returnValue": "<t1>",
-						  "instruction": "call",
-						  "operands": ["*", "__VERIFIER_malloc"]
-					      }
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t1>", "1", "__INSTR_fsm_change_state"]
-					  },
-			"where": "after",
-			"in": "*"
-		},
-		{
-			"findInstructions": [
-					      {
-						  "returnValue": "<t1>",
-						  "instruction": "call",
-						  "operands": ["*", "__VERIFIER_malloc0"]
-					      }
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t1>", "1", "__INSTR_fsm_change_state"]
+					      "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_malloc_calloc"]
 					  },
 			"where": "after",
 			"in": "*"
@@ -212,54 +164,6 @@
 					      "operands": ["<t1>", "0", "__INSTR_fsm_change_state"]
 					  },
 			"where": "before",
-			"in": "*"
-		},
-		{
-			"findInstructions": [
-					      {
-						  "returnValue": "<t2>",
-						  "instruction": "call",
-						  "operands": ["*","*", "calloc"]
-					      }
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t2>", "1","__INSTR_fsm_change_state"]
-					  },
-			"where": "after",
-			"in": "*"
-		},
-		{
-			"findInstructions": [
-					      {
-						  "returnValue": "<t3>",
-						  "instruction": "call",
-						  "operands": ["*","*", "__VERIFIER_calloc"]
-					      }
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t3>", "1","__INSTR_fsm_change_state"]
-					  },
-			"where": "after",
-			"in": "*"
-		},
-		{
-			"findInstructions": [
-					      {
-						  "returnValue": "<t4>",
-						  "instruction": "call",
-						  "operands": ["*","*", "__VERIFIER_calloc0"]
-					      }
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t4>", "1","__INSTR_fsm_change_state"]
-					  },
-			"where": "after",
 			"in": "*"
 		},
 		{
