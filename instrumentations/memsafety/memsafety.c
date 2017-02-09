@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-typedef int8_t* fsm_id;
+typedef void* fsm_id;
 typedef uint64_t a_size;
 
 typedef enum {
