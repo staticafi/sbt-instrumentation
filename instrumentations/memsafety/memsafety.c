@@ -5,6 +5,8 @@
 typedef void* fsm_id;
 typedef uint64_t a_size;
 
+extern void __VERIFIER_error() __attribute__((noreturn));
+
 typedef enum {
 	FSM_STATE_ALLOCATED,
 	FSM_STATE_FREED,
