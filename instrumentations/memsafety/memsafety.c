@@ -120,6 +120,18 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 }
 
 void __INSTR_remember(fsm_id id, a_size size, int num) {
+	
+	fsm *m = __INSTR_fsm_list_search(id);
+
+	if(m != NULL){
+		// If fsm already exists, change the size. This happens because
+		// automatons created by alloca instructions are not destroyed at
+		// return of the function as they shoud be. This is just a temporary
+		// solution. 
+		m->state = FSM_STATE_NONE;
+		m->size = size*num;
+		return;
+	}
  
 	fsm *new_rec = (fsm *) malloc(sizeof(fsm));
 	new_rec->id = id;
