@@ -35,19 +35,9 @@ typedef struct fsm_list_node{
 
 fsm_list_node *fsm_list = NULL;
 
-void __INSTR_fsm_list_append(fsm_list_node *node) {
-	fsm_list_node *cur = fsm_list;
-
-	while((cur) && (cur->next)) {
-	  cur = cur->next;
-	}
-
-	if (cur == NULL) {
-		cur = node;
-		fsm_list = node;
-	} else {
-		cur->next = node;
-	}
+static void __INSTR_fsm_list_prepend(fsm_list_node *node) {
+	node->next = fsm_list;
+	fsm_list = node;
 }
 
 fsm* __INSTR_fsm_create(fsm_id id, fsm_state state) {
@@ -59,7 +49,7 @@ fsm* __INSTR_fsm_create(fsm_id id, fsm_state state) {
 	node->next = NULL;
 	node->fsm = new_fsm;
 
-	__INSTR_fsm_list_append(node);
+	__INSTR_fsm_list_prepend(node);
 
 	return new_fsm;
 }
@@ -142,7 +132,7 @@ void __INSTR_remember(fsm_id id, a_size size, int num) {
 	node->next = NULL;
 	node->fsm = new_rec;
 
-	__INSTR_fsm_list_append(node);
+	__INSTR_fsm_list_prepend(node);
 }
 
 void __INSTR_remember_malloc_calloc(fsm_id id, size_t size, int num ) {
@@ -321,7 +311,7 @@ void __INSTR_realloc(fsm_id old_id, fsm_id new_id, size_t size) {
 		node->next = NULL;
 		node->fsm = new_rec;
 
-		__INSTR_fsm_list_append(node);
+		__INSTR_fsm_list_prepend(node);
 		__INSTR_fsm_destroy(old_id);		
 	}
 	else{
