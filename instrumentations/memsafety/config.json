@@ -177,7 +177,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -194,7 +194,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -211,7 +211,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -245,7 +245,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>","<t2>", "__INSTR_check_load_store"]
+					      "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
 					  },
 			"where": "before",
 			"condition": ["!isValidPointer", "<t1>", "<t2>"],
@@ -263,7 +263,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t2>","<t3>", "__INSTR_check_load_store"]
+					      "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
 					  },
 			"where": "before",
 			"condition": ["!isValidPointer", "<t2>", "<t3>"],
@@ -280,7 +280,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -297,7 +297,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -314,7 +314,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -331,7 +331,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -348,7 +348,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -365,7 +365,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -382,7 +382,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -399,7 +399,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -416,7 +416,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -433,7 +433,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -450,7 +450,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -467,7 +467,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+					      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 					      "stripInboundsOffsets": "<t3>"
 					  },
 			"where": "before",
@@ -484,7 +484,7 @@
 		//	"newInstruction": {
 		//			      "returnValue": "*",
 		//			      "instruction": "call",
-		//			      "operands": ["<t3>","<t4>", "__INSTR_check_range"],
+		//			      "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
 		//			      "stripInboundsOffsets": "<t3>"
 		//			  },
 		//	"where": "before",

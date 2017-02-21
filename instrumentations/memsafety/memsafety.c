@@ -10,7 +10,6 @@ extern void __VERIFIER_error() __attribute__((noreturn));
 typedef enum {
 	FSM_STATE_ALLOCATED,
 	FSM_STATE_FREED,
-	FSM_STATE_ERROR,
 	FSM_STATE_NONE
 } fsm_state;
 
@@ -163,7 +162,7 @@ void __INSTR_check_str_length(fsm_id dest, fsm_id source) {
 	}
 }
 
-void __INSTR_check_range(fsm_id id, int range) {
+void __INSTR_check_pointer(fsm_id id, a_size range) {
 	fsm *r = __INSTR_fsm_list_search(id);
 
 	if (r != NULL) {
@@ -172,57 +171,20 @@ void __INSTR_check_range(fsm_id id, int range) {
 		     * Reorder the numbers so that there won't be
 		     * an overflow */
 		    ((a_size)(id - r->id)) > r->size - range) {
-			assert(0 && "memset/memcpy/memmove out of range");
+			assert(0 && "dereference out of range");
 			__VERIFIER_error();
 		}
 
 		// this memory was already freed
 		if(r->state == FSM_STATE_FREED) {
-			assert(0 && "memset/memcpy/memmove on freed memory");
+			assert(0 && "dereference on freed memory");
 			__VERIFIER_error();
 		}
 	} else {
 		/* we register all memory allocations, so if we
 		 * haven't found the allocation, then this is
 		 * invalid pointer */
-		assert(0 && "memset/memcpy/memmove on invalid pointer");
-		__VERIFIER_error();
-	}
-}
-
-void __INSTR_check_load_store(fsm_id id, a_size range) {
-	fsm *r = __INSTR_fsm_list_search(id);
-
-	if (r != NULL) {
-		/* (id - rec->id) is the offset into allocated memory
-		 * it must be possitive, since id >= rec->id */
-		if ((a_size)(id - r->id + range) > r->size) {
-			assert(0 && "load or store out of range");
-			__VERIFIER_error();
-		}
-
-		// this memory was already freed
-		if(r->state == FSM_STATE_FREED) {
-			assert(0 && "load or store on invalid pointer");
-			__VERIFIER_error();
-		}
-	} else {
-		/* we register all memory allocations, so if we
-		 * haven't found the allocation, then this is
-		 * invalid pointer */
-		assert(0 && "load or store on invalid pointer");
-		__VERIFIER_error();
-	}
-}
-
-void __INSTR_check_pointer(fsm_id id) {
-	fsm *r = __INSTR_fsm_list_search(id);
-
-	if (r == NULL) {
-		/* we register all memory allocations, so if we
-		 * haven't found the allocation, then this is
-		 * invalid pointer */
-		assert(0 && "dereference of invalid pointer");
+		assert(0 && "invalid pointer dereference");
 		__VERIFIER_error();
 	}
 }
