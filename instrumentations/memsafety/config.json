@@ -161,7 +161,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["<t1>", "0", "__INSTR_fsm_change_state"]
+					      "operands": ["<t1>", "0", "__INSTR_free"]
 					  },
 			"where": "before",
 			"in": "*"

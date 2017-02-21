@@ -14,11 +14,6 @@ typedef enum {
 	FSM_STATE_NONE
 } fsm_state;
 
-typedef enum {
-	FSM_ALPHABET_FREE,
-	FSM_ALPHABET_MALLOC,
-} fsm_alphabet;
-
 // finite state machine
 typedef struct {
 	fsm_id id;
@@ -75,13 +70,7 @@ fsm* __INSTR_fsm_list_search(fsm_id id) {
 }
 
 // FSM manipulation
-
-fsm_state fsm_transition_table[4][2] = {{ FSM_STATE_FREED, FSM_STATE_ALLOCATED }, // allocated
-                                        { FSM_STATE_ERROR, FSM_STATE_ALLOCATED }, // freed
-                                        { FSM_STATE_ERROR, FSM_STATE_ERROR }, // error
-					{ FSM_STATE_NONE, FSM_STATE_NONE}};
-
-void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
+void __INSTR_free(fsm_id id) {
 
 	// there is no FSM for NULL
 	if (id == 0) {
@@ -89,24 +78,21 @@ void __INSTR_fsm_change_state(fsm_id id, fsm_alphabet action) {
 	}
 
 	fsm *m = __INSTR_fsm_list_search(id);
-	if (m != NULL) {
-		if(action == FSM_ALPHABET_FREE && m->id != id){
-			assert(0 && "free on non-allocated memory");
-			__VERIFIER_error();
-		}
-		m->state = fsm_transition_table[m->state][action];
-	} else {
-		if (action == FSM_ALPHABET_FREE) {
-			assert(0 && "free on non-allocated memory");
-			__VERIFIER_error();
-		}
-		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED);
-	}
-
-	if (m != NULL && m->state == FSM_STATE_ERROR) {
-	        assert(0 && "double free");
+	
+	// Memory was already freed - double free error
+	if (m != NULL && m->state == FSM_STATE_FREED) {
+	    assert(0 && "double free");
 		__VERIFIER_error();
 	}
+	
+	if (m == NULL || (m != NULL && m->id != id)) {
+		assert(0 && "free on non-allocated memory");
+		__VERIFIER_error();
+	} else {
+		m->state = FSM_STATE_FREED;
+	}
+
+	
 }
 
 void __INSTR_remember(fsm_id id, a_size size, int num) {
@@ -143,7 +129,7 @@ void __INSTR_remember_malloc_calloc(fsm_id id, size_t size, int num ) {
 
 	fsm *m = __INSTR_fsm_list_search(id);
 	if (m != NULL) {
-		m->state = fsm_transition_table[m->state][FSM_ALPHABET_MALLOC];
+		m->state = FSM_STATE_ALLOCATED;
 	} else {
 		m = __INSTR_fsm_create(id, FSM_STATE_ALLOCATED);
 	}
