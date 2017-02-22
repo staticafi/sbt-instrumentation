@@ -28,28 +28,51 @@ typedef struct rec_list_node{
 } rec_list_node;
 
 rec_list_node *rec_list = NULL;
+rec_list_node *allocas_list = NULL;
 
-static void __INSTR_rec_list_prepend(rec_list_node *node) {
-	node->next = rec_list;
-	rec_list = node;
+static void __INSTR_list_prepend(rec_list_node *new_node, rec_list_node **head) {
+	new_node->next = *head;
+	*head = new_node;
 }
 
-rec* __INSTR_rec_create(rec_id id, rec_state state) {
+static void __INSTR_rec_list_prepend(rec_list_node *node) {
+	__INSTR_list_prepend(node, &rec_list);
+}
+
+static void __INSTR_allocas_list_prepend(rec_list_node *node) {
+	__INSTR_list_prepend(node, &allocas_list);
+}
+
+rec_list_node* __INSTR_node_create(rec_id id, rec_state state, a_size size) {
 	rec *new_rec = (rec *) malloc(sizeof(rec));
 	new_rec->id = id;
 	new_rec->state = state;
+	new_rec->size = size;
 
 	rec_list_node *node = (rec_list_node *) malloc(sizeof(rec_list_node));
 	node->next = NULL;
 	node->rec = new_rec;
 
-	__INSTR_rec_list_prepend(node);
-
-	return new_rec;
+	return node;
 }
 
-rec* __INSTR_rec_list_search(rec_id id) {
-  	rec_list_node *cur = rec_list;
+rec* __INSTR_rec_create_stack(rec_id id, rec_state state, a_size size) {
+	rec_list_node *node = __INSTR_node_create(id, state, size);
+
+	__INSTR_allocas_list_prepend(node);
+
+	return node->rec;
+}
+
+rec* __INSTR_rec_create_heap(rec_id id, rec_state state, a_size size) {
+	rec_list_node *node = __INSTR_node_create(id, state, size);
+
+	__INSTR_rec_list_prepend(node);
+
+	return node->rec;
+}
+rec* __INSTR_list_search(rec_list_node *head, rec_id id) {
+  	rec_list_node *cur = head;
 
 	while(cur) {
 		/* check wether 'id' is a pointer to
@@ -66,6 +89,14 @@ rec* __INSTR_rec_list_search(rec_id id) {
 	}
 
 	return NULL;
+}
+
+rec* __INSTR_rec_list_search(rec_id id) {
+	return __INSTR_list_search(rec_list, id);
+}
+
+rec* __INSTR_allocas_list_search(rec_id id) {
+	return __INSTR_list_search(allocas_list, id);
 }
 
 void __INSTR_free(rec_id id) {
@@ -89,13 +120,11 @@ void __INSTR_free(rec_id id) {
 	} else {
 		m->state = REC_STATE_FREED;
 	}
-
-	
 }
 
 void __INSTR_remember(rec_id id, a_size size, int num) {
 	
-	rec *m = __INSTR_rec_list_search(id);
+	rec *m = __INSTR_allocas_list_search(id);
 
 	if(m != NULL){
 		// If rec already exists, change the size. This happens because
@@ -107,16 +136,13 @@ void __INSTR_remember(rec_id id, a_size size, int num) {
 		return;
 	}
  
-	rec *new_rec = (rec *) malloc(sizeof(rec));
-	new_rec->id = id;
-	new_rec->size = size * num;
-        new_rec->state = REC_STATE_NONE;
+	rec *new_rec = __INSTR_rec_create_stack(id, REC_STATE_NONE, size * num);
 
 	rec_list_node *node = (rec_list_node *) malloc(sizeof(rec_list_node));
 	node->next = NULL;
 	node->rec = new_rec;
 
-	__INSTR_rec_list_prepend(node);
+	__INSTR_allocas_list_prepend(node);
 }
 
 void __INSTR_remember_malloc_calloc(rec_id id, size_t size, int num ) {
@@ -129,15 +155,11 @@ void __INSTR_remember_malloc_calloc(rec_id id, size_t size, int num ) {
 	if (m != NULL) {
 		m->state = REC_STATE_ALLOCATED;
 	} else {
-		m = __INSTR_rec_create(id, REC_STATE_ALLOCATED);
-	}
-
-	if (m != NULL) {
-	        m->size = size * num;
+		m = __INSTR_rec_create_heap(id, REC_STATE_ALLOCATED, size * num);
 	}
 }
 
-void __INSTR_check_str_length(rec_id dest, rec_id source) {
+/* void __INSTR_check_str_length(rec_id dest, rec_id source) {
 	rec *rd = __INSTR_rec_list_search(dest);
 	rec *rs = __INSTR_rec_list_search(source);
 
@@ -153,32 +175,39 @@ void __INSTR_check_str_length(rec_id dest, rec_id source) {
 			__VERIFIER_error();
 		}
 	} else {
-		/* we register all memory allocations, so if we
-		 * haven't found the allocation, then this is
-		 * invalid pointer */
+		// we register all memory allocations, so if we
+		// haven't found the allocation, then this is
+		// invalid pointer 
 		assert(0 && "strcpy on invalid pointer");
 		__VERIFIER_error();
 	}
+}*/
+
+void __INSTR_check(rec_id id, a_size range, rec *r) {
+	if (range > r->size ||
+	    /* id - r->id is the offset into memory.
+	     * Reorder the numbers so that there won't be
+	     * an overflow */
+	    ((a_size)(id - r->id)) > r->size - range) {
+		assert(0 && "dereference out of range");
+		__VERIFIER_error();
+	}
+
+	// this memory was already freed
+	if(r->state == REC_STATE_FREED) {
+		assert(0 && "dereference on freed memory");
+		__VERIFIER_error();
+	} 
 }
 
 void __INSTR_check_pointer(rec_id id, a_size range) {
-	rec *r = __INSTR_rec_list_search(id);
+	rec *r = NULL;
 
-	if (r != NULL) {
-		if (range > r->size ||
-		    /* id - r->id is the offset into memory.
-		     * Reorder the numbers so that there won't be
-		     * an overflow */
-		    ((a_size)(id - r->id)) > r->size - range) {
-			assert(0 && "dereference out of range");
-			__VERIFIER_error();
-		}
-
-		// this memory was already freed
-		if(r->state == REC_STATE_FREED) {
-			assert(0 && "dereference on freed memory");
-			__VERIFIER_error();
-		}
+	if ((r = __INSTR_rec_list_search(id))) {
+		__INSTR_check(id, range, r);
+	}
+	else if ((r = __INSTR_allocas_list_search(id))) {
+		__INSTR_check(id, range, r);
 	} else {
 		/* we register all memory allocations, so if we
 		 * haven't found the allocation, then this is
@@ -186,10 +215,11 @@ void __INSTR_check_pointer(rec_id id, a_size range) {
 		assert(0 && "invalid pointer dereference");
 		__VERIFIER_error();
 	}
+
 }
 
-void __INSTR_rec_destroy(rec_id id) {
-    rec_list_node *cur = rec_list;
+void __INSTR_rec_destroy(rec_id id, rec_list_node *head) {
+    rec_list_node *cur = head;
 
     if(cur && cur->rec->id == id) {
         rec_list_node *new_head = cur->next;
@@ -209,7 +239,14 @@ void __INSTR_rec_destroy(rec_id id) {
 	  }
 	  cur = cur->next;
 	}
+}
 
+void __INSTR_rec_destroy_heap(rec_id id){
+	__INSTR_rec_destroy(id, rec_list);
+}
+
+void __INSTR_rec_destroy_stack(rec_id id){
+	__INSTR_rec_destroy(id, allocas_list);
 }
 
 void __INSTR_check_leaks() {
@@ -217,15 +254,28 @@ void __INSTR_check_leaks() {
 
     while(cur) {
         rec_list_node *tmp = cur->next;
-	if (cur->rec->state == REC_STATE_ALLOCATED){
-		assert(0 && "memory leak detected");
-		__VERIFIER_error();
-	}
+		if (cur->rec->state == REC_STATE_ALLOCATED){
+			assert(0 && "memory leak detected");
+			__VERIFIER_error();
+		}
+        cur = tmp;
+    }
+}
 
+void __INSTR_destroy_list(rec_list_node *head) {
+    rec_list_node *cur = head;
+
+    while(cur) {
+        rec_list_node *tmp = cur->next;
         free(cur->rec);
         free(cur);
         cur = tmp;
     }
+}
+
+void __INSTR_destroy_lists() {
+	__INSTR_destroy_list(rec_list);
+	__INSTR_destroy_list(allocas_list);
 }
 
 void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
@@ -236,8 +286,7 @@ void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
 	rec *m = NULL;
 	
 	if(old_id == 0){
-	  m = __INSTR_rec_create(new_id, REC_STATE_ALLOCATED);
-	  m->size = size;
+	  m = __INSTR_rec_create_heap(new_id, REC_STATE_ALLOCATED, size);
 	  return;
 	}
 
@@ -249,17 +298,14 @@ void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
 		    __VERIFIER_error();
 		}
 		
-		rec *new_rec = (rec *) malloc(sizeof(rec));
-		new_rec->id = new_id;
-		new_rec->size = size;
-		new_rec->state = REC_STATE_ALLOCATED;
+		rec *new_rec = __INSTR_rec_create_heap(new_id, REC_STATE_ALLOCATED, size);
 
 		rec_list_node *node = (rec_list_node *) malloc(sizeof(rec_list_node));
 		node->next = NULL;
 		node->rec = new_rec;
 
 		__INSTR_rec_list_prepend(node);
-		__INSTR_rec_destroy(old_id);		
+		__INSTR_rec_destroy_heap(old_id);		
 	}
 	else{
 		assert(0 && "realloc on not allocated memory");
