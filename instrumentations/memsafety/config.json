@@ -228,7 +228,7 @@
 			"newInstruction": {
 					      "returnValue": "*",
 					      "instruction": "call",
-					      "operands": ["__INSTR_fsm_list_destroy"]
+					      "operands": ["__INSTR_check_leaks"]
 					  },
 			"where": "before",
 			"in": "main"

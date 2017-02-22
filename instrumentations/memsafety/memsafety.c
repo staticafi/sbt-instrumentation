@@ -213,7 +213,7 @@ void __INSTR_fsm_destroy(fsm_id id) {
 
 }
 
-void __INSTR_fsm_list_destroy() {
+void __INSTR_check_leaks() {
     fsm_list_node *cur = fsm_list;
 
     while(cur) {
