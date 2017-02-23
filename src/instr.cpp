@@ -145,6 +145,20 @@ void EraseInstructions(Instruction* I, int count) {
 }
 
 /**
+ * Instruments new instruction before all return instructions in a given
+ * function.
+ * @param F function to be instrumented
+ * @param newInstr instruction to be inserted
+ */
+void InstrumentReturns(Function* F, Instruction* newInstr){
+	for (auto& block : *F) {
+		if (isa<ReturnInst>(block.getTerminator())) {
+			newInstr->insertBefore(block.getTerminator());
+		}
+	}
+}
+
+/**
  * Inserts new call instruction.
  * @param CalleeF function to be called
  * @param args arguments of the function to be called
@@ -155,8 +169,8 @@ void EraseInstructions(Instruction* I, int count) {
 void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
                            RewriteRule rw_rule, Instruction *currentInstr,
                            inst_iterator *Iiterator) {
-	// Create new call instruction
-	CallInst *newInstr = CallInst::Create(CalleeF, args);
+    // Create new call instruction
+    CallInst *newInstr = CallInst::Create(CalleeF, args);
 
     // duplicate the metadata of the instruction for which we
     // instrument the code, some passes (e.g. inliner) can
@@ -192,6 +206,9 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
 		*Iiterator = ++helper;
 		EraseInstructions(currentInstr, rw_rule.foundInstrs.size());
 		logger.log_insertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
+	}
+	else if(rw_rule.where == InstrumentPlacement::RETURN) {
+		InstrumentReturns(currentInstr->getFunction(), newInstr);
 	}
 }
 
@@ -650,6 +667,37 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
 }
 
 /**
+ * Instruments new insruction at the entry of the given function.
+ * @param F function to be instrumented
+ * @param newInstr instruction to be inserted
+ */
+bool InstrumentEntryPoint(Module &M, Function* F, RewriterConfig rw_config){
+	for (RewriteRule& rw : rw_config) {
+		
+		if(rw.where != InstrumentPlacement::ENTRY) continue;
+
+		// Get name of function
+		string param = *(--rw.newInstr.parameters.end());
+		Function *CalleeF = M.getFunction(param);
+		if (!CalleeF) {
+			logger.write_error("Unknown function: " + param);
+			return false;
+		}
+	
+		// Create new call instruction
+		std::vector<Value *> args;
+		CallInst *newInstr = CallInst::Create(CalleeF, args);
+
+		//Insert at the beginning of function
+		Instruction* firstInstr = &*inst_begin(F);
+		newInstr->insertBefore(firstInstr);
+		
+	}
+
+	return true;
+}
+
+/**
  * Instruments given module with rules from json file.
  * @param M module to be instrumented.
  * @param rw parsed rules to apply.
@@ -663,6 +711,8 @@ bool instrumentModule(Module &M, Rewriter rw) {
 
 	// Instrument instructions in functions
 	for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
+
+		if(!InstrumentEntryPoint(M, &*Fiterator, rw_config)) return false;
 
 		// Do not instrument functions linked for instrumentation
 		string functionName = (&*Fiterator)->getName().str();
@@ -690,7 +740,6 @@ bool instrumentModule(Module &M, Rewriter rw) {
     out_file.close();
 	return true;
 }
-
 
 /**
  * Loads all plugins.
