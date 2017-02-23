@@ -253,8 +253,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 			int argInt;
 			try {
 				argInt = stoi(arg);
-				LLVMContext &Context = getGlobalContext();
-				Value *intValue = ConstantInt::get(Type::getInt32Ty(Context), argInt);
+				Value *intValue = ConstantInt::get(Type::getInt32Ty(I->getContext()), argInt);
 				args.push_back(intValue);
 			} catch (invalid_argument) {
 				logger.write_error("Problem with instruction arguments: invalid argument.");
@@ -542,8 +541,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
 		if(rw.foundInstrs.size() == 1){
 			InstrumentInstruction allocaIns = rw.foundInstrs.front();
 			if(!allocaIns.getSizeTo.empty()){
-				LLVMContext &Context = getGlobalContext();
-				variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(Context), getAllocatedSize(ins,&M));
+				variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getAllocatedSize(ins,&M));
 			}
 
 		}
@@ -629,8 +627,7 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
 	      if(rw_globals.globalVar.globalVariable != "*")
 		variables[rw_globals.globalVar.globalVariable] = GV;
 	      if(rw_globals.globalVar.globalVariable != "*"){
-		LLVMContext &Context = getGlobalContext();
-		variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(Context), getGlobalVarSize(GV, &M));
+		variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getGlobalVarSize(GV, &M));
 	      }
 
 	      // Try to instrument the code
@@ -736,7 +733,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Get module from LLVM file
-	LLVMContext &Context = getGlobalContext();
+	LLVMContext Context;
 	SMDiagnostic Err;
 #if (LLVM_VERSION_MINOR >= 6)
 	std::unique_ptr<Module> _m = parseIRFile(argv[2], Err, Context);
