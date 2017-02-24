@@ -17,6 +17,24 @@
 	"instructionRules":
 	[
 		{
+			"newInstruction": {
+						"returnValue": "*",
+						"instruction": "call",
+						"operands": ["__INSTR_set_flag"]
+					  },
+			"where": "entry",
+			"in": "*"
+		},
+		{
+			"newInstruction": {
+						"returnValue": "*",
+						"instruction": "call",
+						"operands": ["__INSTR_destroy_allocas"]
+					  },
+			"where": "return",
+			"in": "*"
+		},
+		{
 			"findInstructions": [
 						{
 							"returnValue": "<t1>",

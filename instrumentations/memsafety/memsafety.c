@@ -23,6 +23,7 @@ typedef struct {
 
 // list of records type
 typedef struct rec_list_node{
+	int flag;
 	rec *rec;
 	struct rec_list_node *next;
 } rec_list_node;
@@ -52,6 +53,7 @@ rec_list_node* __INSTR_node_create(rec_id id, rec_state state, a_size size) {
 	rec_list_node *node = (rec_list_node *) malloc(sizeof(rec_list_node));
 	node->next = NULL;
 	node->rec = new_rec;
+	node->flag = 0;
 
 	return node;
 }
@@ -137,12 +139,6 @@ void __INSTR_remember(rec_id id, a_size size, int num) {
 	}
  
 	rec *new_rec = __INSTR_rec_create_stack(id, REC_STATE_NONE, size * num);
-
-	rec_list_node *node = (rec_list_node *) malloc(sizeof(rec_list_node));
-	node->next = NULL;
-	node->rec = new_rec;
-
-	__INSTR_allocas_list_prepend(node);
 }
 
 void __INSTR_remember_malloc_calloc(rec_id id, size_t size, int num ) {
@@ -303,6 +299,7 @@ void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
 		rec_list_node *node = (rec_list_node *) malloc(sizeof(rec_list_node));
 		node->next = NULL;
 		node->rec = new_rec;
+		node->flag = 0;
 
 		__INSTR_rec_list_prepend(node);
 		__INSTR_rec_destroy_heap(old_id);		
@@ -311,4 +308,26 @@ void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
 		assert(0 && "realloc on not allocated memory");
 		__VERIFIER_error();
 	}
+}
+
+void __INSTR_set_flag() {
+	if(allocas_list)
+		allocas_list->flag = 1;
+}
+
+void __INSTR_destroy_allocas() {
+	rec_list_node *cur = allocas_list;
+
+    while(cur && cur->flag != 1) {
+        rec_list_node *tmp = cur->next;
+		if (cur->rec) free(cur->rec);
+        free(cur);
+        cur = tmp;
+    }
+
+	if(cur && cur->flag == 1) {
+		cur->flag = 0;	
+	}
+	
+	allocas_list = cur;
 }
