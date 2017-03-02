@@ -301,7 +301,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 								//
 								// --> we must update the nI, so that the new
 								// instruction is inserted after the arguments
-								CastI->insertAfter(I);
+								CastI->insertAfter(nI);
 								nI = CastI;
 							}
 							args.push_back(CastI);
