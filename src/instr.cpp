@@ -1,44 +1,43 @@
-#include "rewriter.hpp"
-#include "instr_log.hpp"
-#include "instr_analyzer.hpp"
-#include <iostream>
-#include <fstream>
 #include <exception>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string>
 
-#include <llvm/Pass.h>
-#include <llvm/IR/PassManager.h>
-#include <llvm/Support/raw_os_ostream.h>
-#include <llvm/IR/Function.h>
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Bitcode/ReaderWriter.h>
-#include <llvm/IR/Instructions.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/DataLayout.h>
-#include <llvm/IRReader/IRReader.h>
-#include <llvm/IR/Instruction.h>
-#include <llvm/Bitcode/ReaderWriter.h>
-#include <llvm/IRReader/IRReader.h>
 #include <llvm/IR/Constants.h>
-#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DebugInfoMetadata.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/PassManager.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Pass.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/raw_os_ostream.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/SourceMgr.h>
 
-#if (LLVM_VERSION_MINOR >= 5)
+#if LLVM_VERSION_MAJOR >= 4
+#include <llvm/Bitcode/BitcodeReader.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
+#else
+#include <llvm/Bitcode/ReaderWriter.h>
+#endif
+
+#if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 5)
 #include "llvm/IR/InstIterator.h"
 #else
 #include "llvm/Support/InstIterator.h"
 #endif
-#include <llvm/Support/SourceMgr.h>
 
-//#include "llvm-c/BitWriter.h"
-
-#include <memory>
-#include <string>
-
-#define uint unsigned int
+#include "rewriter.hpp"
+#include "instr_log.hpp"
+#include "instr_analyzer.hpp"
 
 using namespace llvm;
-
 using namespace std;
 
 Logger logger("log.txt");
@@ -735,7 +734,7 @@ int main(int argc, char *argv[]) {
 	// Get module from LLVM file
 	LLVMContext Context;
 	SMDiagnostic Err;
-#if (LLVM_VERSION_MINOR >= 6)
+#if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 6)
 	std::unique_ptr<Module> _m = parseIRFile(argv[2], Err, Context);
 	Module *m = _m.release();
 #else
