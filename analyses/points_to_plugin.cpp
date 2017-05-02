@@ -83,9 +83,23 @@ class PointsToPlugin : public InstrPlugin
             if (size > ptr.target->getSize()
                 || *ptr.offset > ptr.target->getSize() - size) {
                 return false;
-            }
+            }	
+			
+			if (llvm::Instruction *I = llvm::dyn_cast<llvm::Instruction>(a)) {
+				if(llvm::Instruction *Iptr = llvm::dyn_cast<llvm::Instruction>(ptr.target->getUserData<llvm::Value>())) {
+					llvm::Function *F = I->getParent()->getParent();
+					if (Iptr->getParent()->getParent() != F || !F->doesNotRecurse()) {
+						return false;
+					}
+				}
+				else {
+					llvm::errs() << "In bound pointer for non-allocated memory: " << *a << "\n";
+				}
+			} else {
+				llvm::errs() << "In bound pointer for non-allocated memory: " << *a << "\n";
+			}
       }
-
+	
       // this pointer is valid
 	  return true;
   }

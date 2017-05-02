@@ -154,8 +154,8 @@ void EraseInstructions(Instruction* I, int count) {
 void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
                            RewriteRule rw_rule, Instruction *currentInstr,
                            inst_iterator *Iiterator) {
-	// Create new call instruction
-	CallInst *newInstr = CallInst::Create(CalleeF, args);
+    // Create new call instruction
+    CallInst *newInstr = CallInst::Create(CalleeF, args);
 
     // duplicate the metadata of the instruction for which we
     // instrument the code, some passes (e.g. inliner) can
@@ -299,7 +299,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 								//
 								// --> we must update the nI, so that the new
 								// instruction is inserted after the arguments
-								CastI->insertAfter(I);
+								CastI->insertAfter(nI);
 								nI = CastI;
 							}
 							args.push_back(CastI);
@@ -646,6 +646,85 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
 }
 
 /**
+ * Instruments new insruction at the entry of the given function.
+ * @param M module
+ * @param F function to be instrumented
+ * @param rw_config set of rules
+ * @return true if instrumented, false otherwise
+ */
+bool InstrumentEntryPoint(Module &M, Function* F, RewriterConfig rw_config){
+	if(F->isDeclaration()) return true;
+	for (RewriteRule& rw : rw_config) {
+
+		// Check type of the rule
+		if(rw.where != InstrumentPlacement::ENTRY) continue;
+		// Check if the function should be instrumented
+		string functionName = F->getName().str();
+		if(rw.inFunction != "*" && rw.inFunction!=functionName)	continue;
+
+		// Get name of function
+		string param = *(--rw.newInstr.parameters.end());
+		Function *CalleeF = M.getFunction(param);
+		if (!CalleeF) {
+			logger.write_error("Unknown function: " + param);
+			return false;
+		}
+	
+		// Create new call instruction
+		std::vector<Value *> args;
+		CallInst *newInstr = CallInst::Create(CalleeF, args);
+	
+		//Insert at the beginning of function
+		Instruction* firstInstr = (&*(F->begin()))->getFirstNonPHIOrDbg();
+		if(firstInstr == NULL) continue; // TODO check this properly
+		newInstr->insertBefore(firstInstr);
+
+		logger.write_info("Inserting instruction at the beginning of function " + functionName);
+	}
+
+	return true;
+}
+
+/**
+ * Instruments new instruction before all return instructions in a given
+ * function.
+ * @param M module
+ * @param F function to be instrumented
+ * @param rw_config set fo rules
+ * @return true if instrumented, false otherwise
+ */
+bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
+	for (RewriteRule& rw : rw_config) {
+		
+		// Check type of the rule
+		if(rw.where != InstrumentPlacement::RETURN) continue;
+		// Check whether the function should be instrumented
+		string functionName = F->getName().str();
+		if(rw.inFunction != "*" && rw.inFunction!=functionName)	continue;
+
+		// Get name of function
+		string param = *(--rw.newInstr.parameters.end());
+		Function *CalleeF = M.getFunction(param);
+		if (!CalleeF) {
+			logger.write_error("Unknown function: " + param);
+			return false;
+		}
+	
+		// Create new call instruction
+		std::vector<Value *> args;
+		CallInst *newInstr = CallInst::Create(CalleeF, args);
+
+		for (auto& block : *F) {
+			if (isa<ReturnInst>(block.getTerminator())) {
+				newInstr->insertBefore(block.getTerminator());
+				logger.write_info("Inserting instruction at the beginning of function " + functionName);
+			}
+		}
+	}
+	return true;
+}
+
+/**
  * Instruments given module with rules from json file.
  * @param M module to be instrumented.
  * @param rw parsed rules to apply.
@@ -668,6 +747,9 @@ bool instrumentModule(Module &M, Rewriter rw) {
 			logger.write_info("Omitting function " + functionName + " from instrumentation.");
 			continue;
 		}
+	
+		if(!InstrumentEntryPoint(M, &*Fiterator, rw_config)) return false;
+		if(!InstrumentReturns(M, &*Fiterator, rw_config)) return false;
 
 		for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
 			// This iterator may be replaced (by an iterator to the following
@@ -686,7 +768,6 @@ bool instrumentModule(Module &M, Rewriter rw) {
     out_file.close();
 	return true;
 }
-
 
 /**
  * Loads all plugins.
@@ -708,7 +789,7 @@ int main(int argc, char *argv[]) {
 		usage(argv[0]);
 		exit(1);
 	}
-
+	
 	// TODO: Check for failure
 	ifstream config_file;
 	config_file.open(argv[1]);
