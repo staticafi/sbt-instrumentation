@@ -14,53 +14,59 @@ Run script `instr`. This script takes a C file, generates .bc file using clang
 and then instruments the file according to given config.json. You may use --bc
 switch to indicate that the input file is .bc file
 
+Usage: `./instr OPTS config.json source.c` where `OPTS` can be following:
+* `--output=FILE` 	- specify output file
+* `--help	`	- show help message
+* `--bc`		- given file is a bytecode
+* `--ll`		- generate .ll file from output .bc file.
+
 Json config files should look like this:
 ```
-    {
-		"file": string,
-		"analyses": list of strings,
-		"globalVariablesRule": 	optional, a rule to instrument global variables
+{
+	"file": string,
+	"analyses": list of strings,
+	"globalVariablesRule": 	optional, a rule to instrument global variables
+	{
+		"findGlobals": {
+				 	"globalVariable": string,
+					"getSizeTo": string
+				},
+		"newInstruction": {
+					"returnValue": string,
+					"instruction": string(call, alloca),
+					"operands": list of strings
+				},
+		"in": string (name of function, where new instruction should be inserted to)
+	},
+	"instructionRules":
+	[
 		{
-			"findGlobals": {
-					 	"globalVariable": string,
-						"getSizeTo": string
-					},
-			"newInstruction": {
-						"returnValue": string,
-						"instruction": string(call, alloca),
-						"operands": list of strings
-					},
-			"in": string (name of function, where new instruction should be inserted to)
-		},
-		"instructionRules":
-		[
-			{
-				"findInstructions": sequence of instructions we are looking for, e.g.
-						   [
-							   {
-							      "returnValue": string,
-							      "instruction": string(call,alloca,...),
-							      "operands": list of strings
-							      "getSizeTo": string (optional, for alloca, load or store)
-							   },
-							   {
-							      "returnValue": string,
-							      "instruction": string(call,alloca,...),
-							      "operands": list of strings
-							   },
-							   ...
-						   ],
-				"newInstruction": {
+			"findInstructions": sequence of instructions we are looking for, e.g.
+					   [
+						   {
 						      "returnValue": string,
-						      "instruction": call,
+						      "instruction": string(call,alloca,...),
 						      "operands": list of strings
-						  },
-				"where": "before"/"after",
-				"condition": list of strings (optional, can be used only together with analyses)
-				"in": string (name of function, can be "*" for any function)
-			}
-		]
-    }
+						      "getSizeTo": string (optional, for alloca, load or store)
+						   },
+						   {
+						      "returnValue": string,
+						      "instruction": string(call,alloca,...),
+						      "operands": list of strings
+						   },
+						   ...
+					   ],
+			"newInstruction": {
+					      "returnValue": string,
+					      "instruction": call,
+					      "operands": list of strings
+					  },
+			"where": "before"/"after",
+			"condition": list of strings (optional, can be used only together with analyses)
+			"in": string (name of function, can be "*" for any function)
+		}
+	]
+}
 ```
 
 `<x>` is variable, `*` matches any string. The new instruction can only be a `call` for now. 
@@ -73,45 +79,44 @@ Instrumentation can be used together with static analyses to make the instrument
 
 Example:
 ```json
-
-    {
-		"file": "example.c",
-		"analyses": ["libPoints_to_plugin.so"],
-		"globalVariablesRule": 	
+{
+	"file": "example.c",
+	"analyses": ["libPoints_to_plugin.so"],
+	"globalVariablesRule": 	
+	{
+		"findGlobals": {
+					"globalVariable": "<t1>",
+					"getSizeTo": "<t2>"
+				},
+		"newInstruction": {
+					"returnValue": "*",
+					"instruction": "call",
+					"operands": ["<t1>","<t2>", "__INSTR_remember"]
+				  },
+		"in": "main"
+	},
+	"instructionRules":
+	[
 		{
-			"findGlobals": {
-						"globalVariable": "<t1>",
-						"getSizeTo": "<t2>"
-					},
+			"findInstructions": [
+						   {
+							  "returnValue": "*",
+							  "instruction": "load",
+							  "operands": ["<t1>"],
+							  "getSizeTo": "<t2>"
+						   }
+					   ],
 			"newInstruction": {
-						"returnValue": "*",
-						"instruction": "call",
-						"operands": ["<t1>","<t2>", "__INSTR_remember"]
+					      "returnValue": "*",
+					      "instruction": "call",
+					      "operands": ["<t1>","<t2>", "__INSTR_check_load_store"]
 					  },
-			"in": "main"
-		},
-		"instructionRules":
-		[
-			{
-				"findInstructions": [
-							   {
-								  "returnValue": "*",
-								  "instruction": "load",
-								  "operands": ["<t1>"],
-								  "getSizeTo": "<t2>"
-							   }
-						   ],
-				"newInstruction": {
-						      "returnValue": "*",
-						      "instruction": "call",
-						      "operands": ["<t1>","<t2>", "__INSTR_check_load_store"]
-						  },
-				"where": "before",
-				"condition": ["!isValidPointer", "<t1>", "<t2>"],
-				"in": "*"
-			}
-		]
-    }
+			"where": "before",
+			"condition": ["!isValidPointer", "<t1>", "<t2>"],
+			"in": "*"
+		}
+	]
+}
 ```
 
 
