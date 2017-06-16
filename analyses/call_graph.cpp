@@ -1,5 +1,6 @@
 #include "call_graph.hpp"
 #include <llvm/IR/Function.h>
+#include <list>
 
 #if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 5)
 #include "llvm/IR/InstIterator.h"
@@ -10,7 +11,7 @@
 using namespace llvm;
 using dg::analysis::pta::PSNode;
 
-CallGraph::CallGraph(llvm::Module &M, const dg::LLVMPointerAnalysis &PTA) {
+CallGraph::CallGraph(llvm::Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA) {
 	
 	// Go through functions
 	for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
@@ -23,6 +24,31 @@ CallGraph::CallGraph(llvm::Module &M, const dg::LLVMPointerAnalysis &PTA) {
 	}
 }
 
-void CallGraph::handleCallInst(const dg::LLVMPointerAnalysis &PTA, const Function *F,  const CallInst *CI) {
-	//TODO
+template<typename OutputIterator>
+void getCalls(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, const CallInst *CI, OutputIterator out) {
+	const Value *CV = CI->getCalledValue()->stripPointerCasts();
+	
+	if (const Function *F = dyn_cast<Function>(CV)) {
+		*out++ = F;
+	} else {
+		PSNode *psnode = PTA->getPointsTo(CV);
+		for (auto& ptr : psnode->pointsTo) {
+			Value *llvmValue = ptr.target->getUserData<llvm::Value>();
+			if (const Function *F = dyn_cast<Function>(llvmValue))
+					  *out++ = F;
+		}
+	}
 }
+
+void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, const Function *F,  const CallInst *CI) {
+	std::list<const Value*> calledFunctions;
+	getCalls(PTA, CI, std::back_inserter(calledFunctions));
+
+	// Store called functions for F in a map
+	for (auto calledValue : calledFunctions) {
+		const Function *calledF = dyn_cast<Function>(calledValue);
+		callsMap.insert(std::pair<const Function*, const Function*>(F, calledF));
+	}
+}
+
+
