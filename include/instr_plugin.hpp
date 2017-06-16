@@ -10,39 +10,40 @@ class InstrPlugin
 	public:
       // the default behaviour is returning true, since we have
       // no information about the value, so it may be anything
-	  virtual bool isNull(llvm::Value*) {
+      virtual bool isNull(llvm::Value*) {
         return true;
       }
 
       // XXX: we should probably rename it to isValidPointerRange
-	  virtual bool isValidPointer(llvm::Value*, llvm::Value *) {
+      virtual bool isValidPointer(llvm::Value*, llvm::Value *) {
         return true;
       }
 
-	  virtual bool isEqual(llvm::Value*, llvm::Value*) {
+      virtual bool isEqual(llvm::Value*, llvm::Value*) {
         return true;
       }
 
-	  virtual bool isNotEqual(llvm::Value*, llvm::Value*) {
+      virtual bool isNotEqual(llvm::Value*, llvm::Value*) {
         return true;
       }
 
-	  virtual bool greaterThan(llvm::Value*, llvm::Value*) {
-        return true;
-      }
-	  virtual bool lessThan(llvm::Value*, llvm::Value*) {
+      virtual bool greaterThan(llvm::Value*, llvm::Value*) {
         return true;
       }
 
-	  virtual bool lessOrEqual(llvm::Value*, llvm::Value*) {
+      virtual bool lessThan(llvm::Value*, llvm::Value*) {
         return true;
       }
 
-	  virtual bool greaterOrEqual(llvm::Value*, llvm::Value*) {
+      virtual bool lessOrEqual(llvm::Value*, llvm::Value*) {
         return true;
       }
 
-	  virtual bool isConstant(llvm::Value* a) {
+      virtual bool greaterOrEqual(llvm::Value*, llvm::Value*) {
+        return true;
+      }
+	  
+      virtual bool isConstant(llvm::Value* a) {
         return llvm::isa<llvm::Constant>(a);
 	  }
 
