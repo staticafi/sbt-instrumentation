@@ -24,6 +24,16 @@ CallGraph::CallGraph(llvm::Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &
 	}
 }
 
+bool CallGraph::containsCall(const Function* caller, const Function* callee) {
+	auto callerCalls = callsMap.equal_range(caller);
+	for (auto c = callerCalls.first; c != callerCalls.second; ++c) {
+		if (c->second == callee) {
+			return true;
+		}
+	}
+	return false;
+}
+
 template<typename OutputIterator>
 void getCalls(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, const CallInst *CI, OutputIterator out) {
 	const Value *CV = CI->getCalledValue()->stripPointerCasts();
@@ -47,7 +57,9 @@ void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, co
 	// Store called functions for F in a map
 	for (auto calledValue : calledFunctions) {
 		const Function *calledF = dyn_cast<Function>(calledValue);
-		callsMap.insert(std::pair<const Function*, const Function*>(F, calledF));
+		if(!containsCall(F, calledF)) {
+			callsMap.insert(std::pair<const Function*, const Function*>(F, calledF));
+		}
 	}
 }
 

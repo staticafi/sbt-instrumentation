@@ -10,6 +10,7 @@
 class CallGraph {
 	public:
 		CallGraph(llvm::Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA);
+		bool containsCall(const llvm::Function* caller, const llvm::Function* callee);
 
 	private:
 		void handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, const llvm::Function *F, const llvm::CallInst *CI);
