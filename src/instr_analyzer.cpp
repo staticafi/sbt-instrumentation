@@ -9,19 +9,19 @@ using namespace std;
 
 unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module){
 
-	if(path.empty())
+    if(path.empty())
 		return nullptr;
 
     std::string err;
     auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str(), &err);
 
-	if (!DL.isValid()) {
+    if (!DL.isValid()) {
         cerr << "Cannot open library: " << path << "\n";
         cerr << err << endl;
         return nullptr;
     }
 
-	InstrPlugin* (*create)(llvm::Module*);
+    InstrPlugin* (*create)(llvm::Module*);
     void *symbol = DL.getAddressOfSymbol("create_object");
     if (!symbol) {
         cerr << "Cannot load symbol 'create_object' from " << path << endl;
@@ -40,14 +40,14 @@ bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, ll
     // we are told to instrument only when
     // the value is null, so check if the value
     // can be null.
-	if(condition == "null") {
-		return plugin->isNull(a);
+    if(condition == "null") {
+        return plugin->isNull(a);
     } else if (condition == "constant") {
-		return plugin->isConstant(a);
-	} else if (condition == "isValidPointer") {
-		return plugin->isValidPointer(a, b);
-	} else if (condition == "!isValidPointer") {
-		return !plugin->isValidPointer(a, b);
+        return plugin->isConstant(a);
+    } else if (condition == "isValidPointer") {
+        return plugin->isValidPointer(a, b);
+    } else if (condition == "!isValidPointer") {
+        return !plugin->isValidPointer(a, b);
     }
 
     /* TODO
