@@ -80,6 +80,9 @@ else()
   llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter)
 endif()
 
+enable_testing()
+
 add_subdirectory(analyses)
 add_subdirectory(instrumentations)
 add_subdirectory(src)
+add_subdirectory(tests)

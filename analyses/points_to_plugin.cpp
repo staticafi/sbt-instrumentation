@@ -4,6 +4,7 @@
 #include "instr_plugin.hpp"
 #include "llvm/analysis/PointsTo/PointsTo.h"
 #include "analysis/PointsTo/PointsToFlowInsensitive.h"
+#include "call_graph.hpp"
 
 using dg::analysis::pta::PSNode;
 class PointsToPlugin : public InstrPlugin
@@ -67,11 +68,11 @@ class PointsToPlugin : public InstrPlugin
       }
 
 	  for (const auto& ptr : psnode->pointsTo) {
-          // unknown pointer and null are not invalid
+          // unknown pointer and null are invalid
           if (ptr.isNull() || ptr.isUnknown())
               return false;
 
-            // if the offset is unknown, that the pointer
+            // if the offset is unknown, than the pointer
             // may point after the end of allocated memory
             if (ptr.offset.isUnknown())
                 return false;
@@ -84,11 +85,14 @@ class PointsToPlugin : public InstrPlugin
                 || *ptr.offset > ptr.target->getSize() - size) {
                 return false;
             }	
+
 			
 			if (llvm::Instruction *I = llvm::dyn_cast<llvm::Instruction>(a)) {
 				if(llvm::Instruction *Iptr = llvm::dyn_cast<llvm::Instruction>(ptr.target->getUserData<llvm::Value>())) {
 					llvm::Function *F = I->getParent()->getParent();
-					if (Iptr->getParent()->getParent() != F || !F->doesNotRecurse()) {
+				//	if (Iptr->getParent()->getParent() != F || !F->doesNotRecurse()) {
+					CallGraph cg(*(I->getModule()), PTA);
+					if(Iptr->getParent()->getParent() != F || cg.containsCall(F,F)){
 						return false;
 					}
 				}
