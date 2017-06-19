@@ -18,14 +18,13 @@ using namespace llvm;
 Module* getModule(std::string fileName) {
 	
 	// Get module from LLVM file
-	LLVMContext Context;
 	SMDiagnostic Err;
 
 	#if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 6)
-	std::unique_ptr<Module> _m = parseIRFile(fileName, Err, Context);
+	std::unique_ptr<Module> _m = parseIRFile(fileName, Err, getGlobalContext());
 	Module *m = _m.release();
 	#else
-	Module *m = ParseIRFile(fileName, Err, Context);
+	Module *m = ParseIRFile(fileName, Err, getGlobalContext());
 	#endif
 
 	return m;
@@ -34,7 +33,6 @@ Module* getModule(std::string fileName) {
 TEST_CASE( "recursive01", "[callgraph]" ) {
 
 	Module *m = getModule("sources/recursive01.ll");
-	
 	std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
 	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
 	CallGraph cg(*m, PTA);
