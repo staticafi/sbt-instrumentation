@@ -37,17 +37,18 @@ TEST_CASE( "recursive01", "[callgraph]" ) {
 	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
 	CallGraph cg(*m, PTA);
 	
+	Function *main = m->getFunction("main");
+	Function *recursive = m->getFunction("recursive");
+	
 	SECTION("main function calls recursive function") {
-		
-		Function *main = m->getFunction("main");
-		Function *recursive = m->getFunction("recursive");
-		
 		REQUIRE(cg.containsCall(main, recursive));
 	}
 
 	SECTION("recursive function calls itself") {
+		REQUIRE(cg.containsCall(recursive, recursive));
 	}
 
-	SECTION("there are no duplicates in callgraph multimap") {
+	SECTION("recursive function does not call main function") {
+		REQUIRE(!cg.containsCall(recursive, main));
 	}
 }
