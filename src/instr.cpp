@@ -83,22 +83,42 @@ uint64_t getAllocatedSize(Instruction *I, Module* M){
 	return size;
 }
 
-/** Clone metadata from one instruction to another
+/** Clone metadata from one instruction to another.
+ * If i1 does not contain any metadata, then the instruction
+ * that is closest to i1 is picked (we prefer the one that is after
+ * and if there is none, then use the closest one before).
+ *
  * @param i1 the first instruction
  * @param i2 the second instruction without any metadata
 */
 void CloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2)
 {
-    if (!i1->hasMetadata())
+    if (i1->hasMetadata()) {
+        i2->setDebugLoc(i1->getDebugLoc());
         return;
-
-    assert(!i2->hasMetadata());
-    llvm::SmallVector< std::pair< unsigned, llvm::MDNode * >, 2> mds;
-    i1->getAllMetadata(mds);
-
-    for (const auto& it : mds) {
-        i2->setMetadata(it.first, it.second->clone().release());
     }
+
+    const llvm::Instruction *metadataI = nullptr;
+    bool after = false;
+    for (const llvm::Instruction& I : *i1->getParent()) {
+        if (&I == i1) {
+            after = true;
+            continue;
+        }
+
+        if (I.hasMetadata()) {
+            // store every "last" instruction with metadata,
+            // so that in the case that we won't find anything
+            // after i1, we can use metadata that are the closest
+            // "before" i1
+            metadataI = &I;
+            if (after)
+                break;
+        }
+    }
+
+    assert(metadataI && "Did not find dbg in any instruction of a block");
+    i2->setDebugLoc(metadataI->getDebugLoc());
 }
 
 /**
@@ -158,17 +178,10 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
     CallInst *newInstr = CallInst::Create(CalleeF, args);
 
     // duplicate the metadata of the instruction for which we
-    // instrument the code, some passes (e.g. inliner) can
+    // instrument the code because some passes (e.g. inliner) can
     // break the code when there's an instruction without metadata
     // when all other instructions have metadata
-    if (currentInstr->hasMetadata()) {
-        CloneMetadata(currentInstr, newInstr);
-    } else if (const DISubprogram *DS = currentInstr->getParent()->getParent()->getSubprogram()) {
-        // no metadata? then it is going to be the instrumentation
-        // of alloca or such at the beggining of function,
-        // so just add debug loc of the beginning of the function
-        newInstr->setDebugLoc(DebugLoc::get(DS->getLine(), 0, DS));
-    }
+    CloneMetadata(currentInstr, newInstr);
 
 	if(rw_rule.where == InstrumentPlacement::BEFORE) {
 		// Insert before
@@ -678,6 +691,7 @@ bool InstrumentEntryPoint(Module &M, Function* F, RewriterConfig rw_config){
 		Instruction* firstInstr = (&*(F->begin()))->getFirstNonPHIOrDbg();
 		if(firstInstr == NULL) continue; // TODO check this properly
 		newInstr->insertBefore(firstInstr);
+        CloneMetadata(firstInstr, newInstr);
 
 		logger.write_info("Inserting instruction at the beginning of function " + functionName);
 	}
@@ -716,7 +730,9 @@ bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
 
 		for (auto& block : *F) {
 			if (isa<ReturnInst>(block.getTerminator())) {
-				newInstr->insertBefore(block.getTerminator());
+                llvm::Instruction *termInst = block.getTerminator();
+				newInstr->insertBefore(termInst);
+                CloneMetadata(termInst, newInstr);
 				logger.write_info("Inserting instruction at the beginning of function " + functionName);
 			}
 		}
