@@ -12,6 +12,7 @@ docs
 
 CMakeCache.txt
 CMakeFiles/
+Testing/
 LLVMinstr
 Makefile
 cmake_install.cmake
