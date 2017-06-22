@@ -38,15 +38,35 @@ TEST_CASE( "recursive01", "[callgraph]" ) {
 	Function *main = m->getFunction("main");
 	Function *recursive = m->getFunction("recursive");
 	
-	SECTION("main function calls recursive function") {
-		REQUIRE(cg.containsCall(main, recursive));
-	}
+	// main function calls recursive function
+	REQUIRE(cg.containsCall(main, recursive));
 
-	SECTION("recursive function calls itself") {
-		REQUIRE(cg.containsCall(recursive, recursive));
-	}
+	// recursive function calls itself
+	REQUIRE(cg.containsCall(recursive, recursive));
 
-	SECTION("recursive function does not call main function") {
-		REQUIRE(!cg.containsCall(recursive, main));
-	}
+	// recursive function does not call main function
+	REQUIRE(!cg.containsCall(recursive, main));
+
+	// main is not recursive
+	REQUIRE(!cg.containsCall(main, main));
+}
+
+TEST_CASE( "function_pointers01", "[callgraph]" ) {
+
+	Module *m = getModule("sources/function_pointers01.ll");
+	std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
+	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
+	CallGraph cg(*m, PTA);
+	
+	Function *main = m->getFunction("main");
+	Function *sum = m->getFunction("sum");
+	
+	// main function calls sum function
+	REQUIRE(cg.containsCall(main, sum));
+
+	// sum function is not recursive
+	REQUIRE(!cg.containsCall(sum, sum));
+
+	// sum function does not call main function
+	REQUIRE(!cg.containsCall(sum, main));
 }
