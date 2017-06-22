@@ -9,6 +9,7 @@ lib/Makefile
 *.*~
 docs
 *.swp
+tests/sources/*.ll
 
 CMakeCache.txt
 CMakeFiles/
