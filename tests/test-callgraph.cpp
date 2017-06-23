@@ -17,13 +17,14 @@ Module* getModule(std::string fileName) {
 	
 	// Get module from LLVM file
 	SMDiagnostic Err;
+	LLVMContext C;
 
-	#if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 6)
-	std::unique_ptr<Module> _m = parseIRFile(fileName, Err, getGlobalContext());
+#if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 6)
+	std::unique_ptr<Module> _m = parseIRFile(fileName, Err, C);
 	Module *m = _m.release();
-	#else
-	Module *m = ParseIRFile(fileName, Err, getGlobalContext());
-	#endif
+#else
+	Module *m = ParseIRFile(fileName, Err, C);
+#endif
 
 	return m;
 }
