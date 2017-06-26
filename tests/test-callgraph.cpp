@@ -39,16 +39,16 @@ TEST_CASE( "recursive01", "[callgraph]" ) {
 	Function *recursive = m->getFunction("recursive");
 	
 	INFO("main function calls recursive function");
-	REQUIRE(cg.containsCall(main, recursive));
+	REQUIRE(cg.containsDirectCall(main, recursive));
 
 	INFO("recursive function calls itself");
-	REQUIRE(cg.containsCall(recursive, recursive));
+	REQUIRE(cg.containsDirectCall(recursive, recursive));
 
 	INFO("recursive function does not call main function");
-	REQUIRE(!cg.containsCall(recursive, main));
+	REQUIRE(!cg.containsDirectCall(recursive, main));
 
 	INFO("main is not recursive");
-	REQUIRE(!cg.containsCall(main, main));
+	REQUIRE(!cg.containsDirectCall(main, main));
 }
 
 TEST_CASE( "function_pointers01", "[callgraph]" ) {
@@ -62,13 +62,13 @@ TEST_CASE( "function_pointers01", "[callgraph]" ) {
 	Function *sum = m->getFunction("sum");
 	
 	INFO("main function calls sum function");
-	REQUIRE(cg.containsCall(main, sum));
+	REQUIRE(cg.containsDirectCall(main, sum));
 
 	INFO("sum function is not recursive");
-	REQUIRE(!cg.containsCall(sum, sum));
+	REQUIRE(!cg.containsDirectCall(sum, sum));
 
 	INFO("sum function does not call main function");
-	REQUIRE(!cg.containsCall(sum, main));
+	REQUIRE(!cg.containsDirectCall(sum, main));
 }
 
 TEST_CASE( "recursive02", "[callgraph]" ) {
@@ -83,20 +83,20 @@ TEST_CASE( "recursive02", "[callgraph]" ) {
 	Function *foo = m->getFunction("foo");
 	
 	INFO("main function calls call_foo function");
-	REQUIRE(cg.containsCall(main, call_foo));
+	REQUIRE(cg.containsDirectCall(main, call_foo));
 
 	INFO("main function does not call foo function");
-	REQUIRE(!cg.containsCall(main, foo));
+	REQUIRE(!cg.containsDirectCall(main, foo));
 
 	INFO("call_foo function is not recursive");
-	REQUIRE(!cg.containsCall(call_foo, call_foo));
+	REQUIRE(!cg.containsDirectCall(call_foo, call_foo));
 
 	INFO("call_foo function calls foo function");
-	REQUIRE(cg.containsCall(call_foo, foo));
+	REQUIRE(cg.containsDirectCall(call_foo, foo));
 
 	INFO("foo function is recursive");
-	REQUIRE(cg.containsCall(foo, foo));
+	REQUIRE(cg.containsDirectCall(foo, foo));
 
 	INFO("foo function does not call call_foo function");
-	REQUIRE(!cg.containsCall(foo, call_foo));
+	REQUIRE(!cg.containsDirectCall(foo, call_foo));
 }
