@@ -1,6 +1,7 @@
 #include "call_graph.hpp"
 #include <llvm/IR/Function.h>
 #include <list>
+#include <iostream> 
 
 #if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 5)
 #include "llvm/IR/InstIterator.h"
@@ -15,7 +16,8 @@ const int RESERVE_SIZE = 4;
 
 CGNode::CGNode(const Function* callerF, int nodeId) {
 	caller = callerF;
-	id = id;
+	id = nodeId;
+	//calls = std::vector<int>();
 	calls.reserve(RESERVE_SIZE);
 }
 
@@ -27,10 +29,9 @@ int CGNode::getId() const {
 	return id;
 }
 
-bool CGNode::containsCall(const Function* call) {
+bool CGNode::containsCall(std::vector<CGNode> nodeMapping, const Function* call) {
 	for(auto node : calls) {
-		
-		if(node->getCaller() == call) {
+		if(nodeMapping[node].getCaller() == call) {
 			return true;
 		}
 	}
@@ -39,11 +40,14 @@ bool CGNode::containsCall(const Function* call) {
 
 CallGraph::CallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA) {
 	lastId = 0;
-	
+	nodes = std::vector<CGNode>();
+	int distance = std::distance(M.begin(),M.end());
+	nodes.reserve(distance+1);
+
 	// Creates nodes from functions
 	for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
-		CGNode *newNode = new CGNode(&*Fiterator, lastId++);
-		nodes.insert(std::pair<const Function*, CGNode*>(&*Fiterator, newNode));
+		CGNode newNode(&*Fiterator, nodes.size());
+		nodes.push_back(newNode);
 	}
 
 	// Go through functions
@@ -57,41 +61,53 @@ CallGraph::CallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA) {
 	}
 }
 
-void  CallGraph::BFS(const CGNode *currentNode, std::vector<bool> &visited) {	
+int CallGraph::findNode(const Function* function) {
+	for(auto& node : nodes) {
+		if(node.getCaller() == function) {
+			return node.getId();
+		}
+	}
+
+	return -1;
+}
+
+void  CallGraph::BFS(const CGNode startNode, std::vector<bool> &visited) {	
 	for(auto i : visited) {
 		i = false;
 	}
     
-	std::list<const CGNode*> queue;
-	visited[currentNode->getId()] = true;
-	queue.push_back(currentNode);
+	std::list<int> queue;
+	CGNode currentNode = startNode;
+	visited[currentNode.getId()] = true;
+	queue.push_back(currentNode.getId());
     
 	while (!queue.empty()) {
-		currentNode = queue.front();
+		currentNode = nodes[queue.front()];
 		queue.pop_front();
-		for(auto node : currentNode->calls) {
-			if(!visited[node->getId()]) {
-				visited[node->getId()] = true;
-				queue.push_back(node);
+		for(auto nodeId : currentNode.calls) {
+			if(!visited[nodeId]) {
+				visited[nodeId] = true;
+				queue.push_back(nodeId);
 			}
 		}
 	}
 }
 
 bool CallGraph::containsCall(const Function* caller, const Function* callee) {
-	for(auto node : nodes) {
-		if(node.second->getCaller() == caller) {
+	for(auto& node : nodes) {
+		if(node.getCaller() == caller) {
 			std::vector<bool> visited(RESERVE_SIZE);
-			BFS(node.second, visited);
+			BFS(node, visited);
+			//TODO
 		}
 	}
 	return false;
 }
 
 bool CallGraph::containsDirectCall(const Function* caller, const Function* callee) {
-	for(auto node : nodes) {
-		if(node.second->getCaller() == caller) {
-			return node.second->containsCall(callee);
+	for(auto& node : nodes) {
+		if(node.getCaller() == caller) {
+			return node.containsCall(nodes, callee);
 		}
 	}
 	return false;
@@ -102,14 +118,14 @@ bool CallGraph::isRecursive(const Function* function) {
 }
 
 void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, const Function *F,  const CallInst *CI) {
-	CGNode* caller = (nodes.find(F))->second;
-
+	CGNode *caller = &nodes[findNode(F)];
+	
 	// Store called functions for F in its vector
 	const Value *CV = CI->getCalledValue()->stripPointerCasts();
-	
+		
 	if (const Function *calledF = dyn_cast<Function>(CV)) {
 		if(!containsDirectCall(F, calledF)) {
-			caller->calls.push_back(nodes.find(calledF)->second);
+			caller->calls.push_back(nodes[findNode(calledF)].getId());
 		}
 	} else {
 		PSNode *psnode = PTA->getPointsTo(CV);
@@ -117,7 +133,7 @@ void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, co
 			Value *llvmValue = ptr.target->getUserData<llvm::Value>();
 			if (const Function *calledF = dyn_cast<Function>(llvmValue)){
 				if(!containsDirectCall(F, calledF)) {
-					caller->calls.push_back(nodes.find(calledF)->second);
+					caller->calls.push_back(nodes[findNode(calledF)].getId());
 				}
 			}
 		}

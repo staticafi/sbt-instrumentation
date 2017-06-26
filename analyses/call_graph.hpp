@@ -10,10 +10,10 @@
 class CGNode {
 	public:
 		CGNode(const llvm::Function* callerF, int id);
-		bool containsCall(const llvm::Function* call);
+		bool containsCall(std::vector<CGNode> nodeMapping, const llvm::Function* call);
 		const llvm::Function* getCaller() const;
 		int getId() const;
-		std::vector<const CGNode*> calls;
+		std::vector<int> calls;
 
 	private:
 		int id;
@@ -22,16 +22,17 @@ class CGNode {
 
 class CallGraph {
 	public:
+		std::vector<CGNode> nodes;
 		CallGraph(llvm::Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA);
 		bool containsCall(const llvm::Function* caller, const llvm::Function* callee);
 		bool containsDirectCall(const llvm::Function* caller, const llvm::Function* callee);
 		bool isRecursive(const llvm::Function* function);
 
 	private:
-		std::map<const llvm::Function*, CGNode*> nodes;
 		int lastId;
 		void handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, const llvm::Function *F, const llvm::CallInst *CI);
-		void BFS(const CGNode *startNode, std::vector<bool> &visited);
+		void BFS(const CGNode startNode, std::vector<bool> &visited);
+		int findNode(const llvm::Function* function);
 };
 
 #endif
