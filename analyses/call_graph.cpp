@@ -30,7 +30,7 @@ int CGNode::getId() const {
 }
 
 bool CGNode::containsCall(std::vector<CGNode> nodeMapping, const Function* call) {
-	for(auto node : calls) {
+	for(auto& node : calls) {
 		if(nodeMapping[node].getCaller() == call) {
 			return true;
 		}
@@ -94,14 +94,11 @@ void  CallGraph::BFS(const CGNode startNode, std::vector<bool> &visited) {
 }
 
 bool CallGraph::containsCall(const Function* caller, const Function* callee) {
-	for(auto& node : nodes) {
-		if(node.getCaller() == caller) {
-			std::vector<bool> visited(RESERVE_SIZE);
-			BFS(node, visited);
-			//TODO
-		}
-	}
-	return false;
+	CGNode callerNode = nodes[findNode(caller)];
+	int calleeId = findNode(callee);
+	std::vector<bool> visited(RESERVE_SIZE);
+	BFS(callerNode, visited);
+	return visited[calleeId];
 }
 
 bool CallGraph::containsDirectCall(const Function* caller, const Function* callee) {
