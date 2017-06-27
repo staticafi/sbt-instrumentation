@@ -71,9 +71,11 @@ int CallGraph::findNode(const Function* function) {
 	return -1;
 }
 
-void  CallGraph::BFS(const CGNode startNode, std::vector<bool> &visited) {	
-	for(auto i : visited) {
-		i = false;
+bool CallGraph::BFS(const CGNode startNode, std::vector<bool> &visited) {	
+	bool recursive = false;
+
+	for(auto v : visited) {
+		v = false;
 	}
     
 	std::list<int> queue;
@@ -88,16 +90,23 @@ void  CallGraph::BFS(const CGNode startNode, std::vector<bool> &visited) {
 			if(!visited[nodeId]) {
 				visited[nodeId] = true;
 				queue.push_back(nodeId);
+			} else if(nodeId == startNode.getId()) {
+				recursive = true;
 			}
 		}
 	}
+
+	return recursive;
 }
 
 bool CallGraph::containsCall(const Function* caller, const Function* callee) {
 	CGNode callerNode = nodes[findNode(caller)];
 	int calleeId = findNode(callee);
 	std::vector<bool> visited(RESERVE_SIZE);
-	BFS(callerNode, visited);
+	bool recursive = BFS(callerNode, visited);
+
+	if(caller==callee) return recursive;
+
 	return visited[calleeId];
 }
 

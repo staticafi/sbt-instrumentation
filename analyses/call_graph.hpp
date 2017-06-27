@@ -31,7 +31,7 @@ class CallGraph {
 	private:
 		int lastId;
 		void handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, const llvm::Function *F, const llvm::CallInst *CI);
-		void BFS(const CGNode startNode, std::vector<bool> &visited);
+		bool BFS(const CGNode startNode, std::vector<bool> &visited);
 		int findNode(const llvm::Function* function);
 };
 
