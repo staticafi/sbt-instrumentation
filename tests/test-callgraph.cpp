@@ -150,3 +150,43 @@ TEST_CASE( "indirect_calls01", "[callgraph]" ) {
 	INFO("foo1 function calls foo3 function");
 	REQUIRE(cg.containsCall(foo1, foo3));
 }
+
+TEST_CASE( "indirect_calls02", "[callgraph]" ) {
+
+	Module *m = getModule("sources/indirect_calls02.ll");
+	std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
+	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
+	CallGraph cg(*m, PTA);
+	
+	Function *main = m->getFunction("main");
+	Function *foo1 = m->getFunction("foo1");
+	Function *foo2 = m->getFunction("foo2");
+	Function *foo3 = m->getFunction("foo3");
+	
+	INFO("main function does not call foo2 function directly");
+	REQUIRE(!cg.containsDirectCall(main, foo2));
+
+	INFO("main function calls foo2 function indirectly");
+	REQUIRE(cg.containsCall(main, foo2));
+
+	INFO("foo1 function calls foo2 function indirectly");
+	REQUIRE(cg.containsCall(foo1, foo2));
+
+	INFO("foo1 function does not call foo2 function directly");
+	REQUIRE(!cg.containsDirectCall(foo1, foo2));
+
+	INFO("foo1 function calls foo2 function indirectly");
+	REQUIRE(cg.containsCall(foo1, foo2));
+
+	INFO("foo3 function is recursive");
+	REQUIRE(cg.isRecursive(foo3));
+
+	INFO("foo3 function calls foo2 function");
+	REQUIRE(cg.containsCall(foo3, foo2));
+	
+	INFO("foo2 function calls foo3 function");
+	REQUIRE(cg.containsCall(foo2, foo3));
+	
+	INFO("foo2 function does not call foo1 function");
+	REQUIRE(!cg.containsCall(foo2, foo1));
+}
