@@ -135,6 +135,10 @@ void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, co
 		}
 	} else {
 		PSNode *psnode = PTA->getPointsTo(CV);
+		if(!psnode) {
+			llvm::errs()<<"WARNING unknown call target: " << *CI << "\n";
+			return;
+		}
 		for (auto& ptr : psnode->pointsTo) {
 			Value *llvmValue = ptr.target->getUserData<llvm::Value>();
 			if (const Function *calledF = dyn_cast<Function>(llvmValue)){
