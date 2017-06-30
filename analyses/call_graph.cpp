@@ -17,9 +17,9 @@ const int RESERVE_SIZE = 4;
 CGNode::CGNode(const Function* callerF, int nodeId) {
 	caller = callerF;
 	id = nodeId;
-	//calls = std::vector<int>();
-	calls.reserve(RESERVE_SIZE);
-}
+	calls = std::vector<int>();
+	// Do not reserve vector for node that represents an unknown call target
+	if (id != 0) calls.reserve(RESERVE_SIZE); }
 
 const Function* CGNode::getCaller() const {
 	return caller;
@@ -30,8 +30,9 @@ int CGNode::getId() const {
 }
 
 bool CGNode::containsCall(std::vector<CGNode> nodeMapping, const Function* call) {
-	for(auto& node : calls) {
-		if(nodeMapping[node].getCaller() == call) {
+	for(auto node : calls) {
+		// If node contains call for unknown target or given call, return true
+		if(node == 0 || nodeMapping[node].getCaller() == call) {
 			return true;
 		}
 	}
@@ -39,10 +40,12 @@ bool CGNode::containsCall(std::vector<CGNode> nodeMapping, const Function* call)
 }
 
 CallGraph::CallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA) {
-	lastId = 0;
 	nodes = std::vector<CGNode>();
 	int distance = std::distance(M.begin(),M.end());
 	nodes.reserve(distance+1);
+
+	// Create special node for unknown call targets
+	nodes.push_back(CGNode(NULL, 0));
 
 	// Creates nodes from functions
 	for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
@@ -107,7 +110,8 @@ bool CallGraph::containsCall(const Function* caller, const Function* callee) {
 
 	if(caller==callee) return recursive;
 
-	return visited[calleeId];
+	// If node for unknown call target is visited (id 0), return true
+	return (visited[calleeId] || visited[0]);
 }
 
 bool CallGraph::containsDirectCall(const Function* caller, const Function* callee) {
@@ -135,10 +139,14 @@ void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, co
 		}
 	} else {
 		PSNode *psnode = PTA->getPointsTo(CV);
+		
+		// Deal with unknown call targets
 		if(!psnode) {
 			llvm::errs()<<"WARNING unknown call target: " << *CI << "\n";
+			caller->calls.push_back(0);
 			return;
 		}
+
 		for (auto& ptr : psnode->pointsTo) {
 			Value *llvmValue = ptr.target->getUserData<llvm::Value>();
 			if (const Function *calledF = dyn_cast<Function>(llvmValue)){
