@@ -90,9 +90,9 @@ class PointsToPlugin : public InstrPlugin
 			if (llvm::Instruction *I = llvm::dyn_cast<llvm::Instruction>(a)) {
 				if(llvm::Instruction *Iptr = llvm::dyn_cast<llvm::Instruction>(ptr.target->getUserData<llvm::Value>())) {
 					llvm::Function *F = I->getParent()->getParent();
-				//	if (Iptr->getParent()->getParent() != F || !F->doesNotRecurse()) {
-					CallGraph cg(*(I->getModule()), PTA);
-					if(Iptr->getParent()->getParent() != F || cg.containsCall(F,F)){
+					if (Iptr->getParent()->getParent() != F || !F->doesNotRecurse()) {
+					//CallGraph cg(*(I->getModule()), PTA);
+					//if(Iptr->getParent()->getParent() != F || cg.containsCall(F,F)){
 						return false;
 					}
 				}
