@@ -13,11 +13,12 @@
 
 using namespace llvm;
 
+LLVMContext C;
+
 Module* getModule(std::string fileName) {
 	
 	// Get module from LLVM file
 	SMDiagnostic Err;
-	LLVMContext C;
 
 #if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 6)
 	std::unique_ptr<Module> _m = parseIRFile(fileName, Err, C);
