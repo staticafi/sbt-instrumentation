@@ -148,6 +148,10 @@ void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, co
 		}
 
 		for (auto& ptr : psnode->pointsTo) {
+            // skip invalid pointers
+            if (!ptr.isValid() || ptr.isInvalidated())
+                continue;
+
 			Value *llvmValue = ptr.target->getUserData<llvm::Value>();
 			if (const Function *calledF = dyn_cast<Function>(llvmValue)){
 				if(!containsDirectCall(F, calledF)) {
