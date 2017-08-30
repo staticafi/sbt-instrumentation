@@ -3,7 +3,7 @@
 #include <llvm/IR/Constants.h>
 #include "instr_plugin.hpp"
 #include "llvm/analysis/PointsTo/PointsTo.h"
-#include "analysis/PointsTo/PointsToFlowInsensitive.h"
+#include "analysis/PointsTo/PointsToFlowSensitive.h"
 #include "call_graph.hpp"
 
 using dg::analysis::pta::PSNode;
@@ -66,10 +66,14 @@ class PointsToPlugin : public InstrPlugin
             // we know nothing, it may be invalid
             return false;
         }
-
+        
         for (const auto& ptr : psnode->pointsTo) {
             // unknown pointer and null are invalid
             if (ptr.isNull() || ptr.isUnknown())
+                return false;
+               
+            // the memory this pointer points-to was invalidated
+            if (ptr.isInvalidated())
                 return false;
                 
             // if the offset is unknown, than the pointer
@@ -91,9 +95,8 @@ class PointsToPlugin : public InstrPlugin
                     llvm::Function *F = I->getParent()->getParent();
                     //if (Iptr->getParent()->getParent() != F || !F->doesNotRecurse()) {
                     CallGraph cg(*(I->getModule()), PTA);
-                    if(Iptr->getParent()->getParent() != F || cg.isRecursive(F)){
+                    if(Iptr->getParent()->getParent() != F || cg.isRecursive(F))
                         return false;
-                    }
                 } else {
                     llvm::errs() << "In bound pointer for non-allocated memory: " << *a << "\n";
                 }
@@ -173,7 +176,7 @@ class PointsToPlugin : public InstrPlugin
     PointsToPlugin(llvm::Module* module) {
         llvm::errs() << "Running points-to analysis...\n";
         PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(module));
-        PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
+        PTA->run<dg::analysis::pta::PointsToFlowSensitive>();
     }
 };
 
