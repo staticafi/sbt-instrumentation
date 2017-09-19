@@ -29,50 +29,50 @@ void Rewriter::parseConfig(ifstream &config_file) {
         Phase r_phase;
 
         // load rewrite rules for instructions
-        for (uint i = 0; i < phase["instructionRules"].size(); ++i) {
+        for (auto rule : phase["instructionRules"]) {
             RewriteRule r;
 
             // TODO make function from this
             // Get findInstructions
-            for (uint k = 0; k < phase["instructionRules"][i]["findInstructions"].size(); ++k) {
+            for (auto findInstruction : rule["findInstructions"]) {
                 InstrumentInstruction instr;
-                instr.returnValue = phase["instructionRules"][i]["findInstructions"][k]["returnValue"].asString();
-                instr.instruction = phase["instructionRules"][i]["findInstructions"][k]["instruction"].asString();
-                for (uint j = 0; j < phase["instructionRules"][i]["findInstructions"][k]["operands"].size(); ++j) {
-                    instr.parameters.push_back(phase["instructionRules"][i]["findInstructions"][k]["operands"][j].asString());
+                instr.returnValue = findInstruction["returnValue"].asString();
+                instr.instruction = findInstruction["instruction"].asString();
+                for (auto operand : findInstruction["operands"]) {
+                    instr.parameters.push_back(operand.asString());
                 }
-                instr.getSizeTo = phase["instructionRules"][i]["findInstructions"][k]["getSizeTo"].asString();
-                instr.stripInboundsOffsets = phase["instructionRules"][i]["findInstructions"][k]["stripInboundsOffsets"].asString();
+                instr.getSizeTo = findInstruction["getSizeTo"].asString();
+                instr.stripInboundsOffsets = findInstruction["stripInboundsOffsets"].asString();
                 r.foundInstrs.push_back(instr);
             }
 
             // Get newInstruction
-            r.newInstr.returnValue = phase["instructionRules"][i]["newInstruction"]["returnValue"].asString();
-            r.newInstr.instruction = phase["instructionRules"][i]["newInstruction"]["instruction"].asString();
-            for (uint j = 0; j < phase["instructionRules"][i]["newInstruction"]["operands"].size(); ++j) {
-                r.newInstr.parameters.push_back(phase["instructionRules"][i]["newInstruction"]["operands"][j].asString());
+            r.newInstr.returnValue = rule["newInstruction"]["returnValue"].asString();
+            r.newInstr.instruction = rule["newInstruction"]["instruction"].asString();
+            for (uint j = 0; j < rule["newInstruction"]["operands"].size(); ++j) {
+                r.newInstr.parameters.push_back(rule["newInstruction"]["operands"][j].asString());
             }
 
-            if (phase["instructionRules"][i]["where"] == "before") {
+            if (rule["where"] == "before") {
                 r.where = InstrumentPlacement::BEFORE;
             }
-            else if (phase["instructionRules"][i]["where"] == "after") {
+            else if (rule["where"] == "after") {
                 r.where = InstrumentPlacement::AFTER;
             }
-            else if (phase["instructionRules"][i]["where"] == "replace") {
+            else if (rule["where"] == "replace") {
                 r.where = InstrumentPlacement::REPLACE;
             }
-            else if (phase["instructionRules"][i]["where"] == "return") {
+            else if (rule["where"] == "return") {
                 r.where = InstrumentPlacement::RETURN;
             }
-            else if (phase["instructionRules"][i]["where"] == "entry") {
+            else if (rule["where"] == "entry") {
                 r.where = InstrumentPlacement::ENTRY;
             }
 
-            r.inFunction = phase["instructionRules"][i]["in"].asString();
+            r.inFunction = rule["in"].asString();
 
-            for(uint j = 0; j < phase["instructionRules"][i]["condition"].size(); ++j){
-                r.condition.push_back(phase["instructionRules"][i]["condition"][j].asString());
+            for(auto condition : rule["condition"]){
+                r.condition.push_back(condition.asString());
             }
 
             r_phase.config.push_back(r);
