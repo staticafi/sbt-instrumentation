@@ -10,73 +10,75 @@ using namespace std;
 void Rewriter::parseConfig(ifstream &config_file) {
 	Json::Value json_rules;
 	Json::Reader reader;
-	bool parsingSuccessful = reader.parse(config_file, json_rules);
-	if (!parsingSuccessful)	{
-		cerr  << "Failed to parse configuration\n"
-			  << reader.getFormattedErrorMessages();
-		throw runtime_error("Config parsing failure.");
-	}
+    bool parsingSuccessful = reader.parse(config_file, json_rules);
+    if (!parsingSuccessful)	{
+        cerr  << "Failed to parse configuration\n"
+              << reader.getFormattedErrorMessages();
+        throw runtime_error("Config parsing failure.");
+    }
 
-	// TODO catch exceptions here
+    // TODO catch exceptions here
 
-	// load paths to analyses
-	for(uint i = 0; i < json_rules["analyses"].size(); ++i){
-		this->analysisPaths.push_back(json_rules["analyses"][i].asString());
-	}
+    // load paths to analyses
+    for(uint i = 0; i < json_rules["analyses"].size(); ++i){
+        this->analysisPaths.push_back(json_rules["analyses"][i].asString());
+    }
 
-	RewriterConfig rw_config;
+    // load phases
+    for (auto phase : json_rules["phases"]) {
+        Phase r_phase;
 
-	// load rewrite rules for instructions
-	for (uint i = 0; i < json_rules["instructionRules"].size(); ++i) {
-		RewriteRule r;
+        // load rewrite rules for instructions
+        for (uint i = 0; i < phase["instructionRules"].size(); ++i) {
+            RewriteRule r;
 
-		// TODO make function from this
-		// Get findInstructions
-		for (uint k = 0; k < json_rules["instructionRules"][i]["findInstructions"].size(); ++k) {
-			InstrumentInstruction instr;
-			instr.returnValue = json_rules["instructionRules"][i]["findInstructions"][k]["returnValue"].asString();
-			instr.instruction = json_rules["instructionRules"][i]["findInstructions"][k]["instruction"].asString();
-			for (uint j = 0; j < json_rules["instructionRules"][i]["findInstructions"][k]["operands"].size(); ++j) {
-				instr.parameters.push_back(json_rules["instructionRules"][i]["findInstructions"][k]["operands"][j].asString());
-			}
-			instr.getSizeTo = json_rules["instructionRules"][i]["findInstructions"][k]["getSizeTo"].asString();
-			instr.stripInboundsOffsets = json_rules["instructionRules"][i]["findInstructions"][k]["stripInboundsOffsets"].asString();
-			r.foundInstrs.push_back(instr);
-		}
+            // TODO make function from this
+            // Get findInstructions
+            for (uint k = 0; k < phase["instructionRules"][i]["findInstructions"].size(); ++k) {
+                InstrumentInstruction instr;
+                instr.returnValue = phase["instructionRules"][i]["findInstructions"][k]["returnValue"].asString();
+                instr.instruction = phase["instructionRules"][i]["findInstructions"][k]["instruction"].asString();
+                for (uint j = 0; j < phase["instructionRules"][i]["findInstructions"][k]["operands"].size(); ++j) {
+                    instr.parameters.push_back(phase["instructionRules"][i]["findInstructions"][k]["operands"][j].asString());
+                }
+                instr.getSizeTo = phase["instructionRules"][i]["findInstructions"][k]["getSizeTo"].asString();
+                instr.stripInboundsOffsets = phase["instructionRules"][i]["findInstructions"][k]["stripInboundsOffsets"].asString();
+                r.foundInstrs.push_back(instr);
+            }
 
-		// Get newInstruction
-		r.newInstr.returnValue = json_rules["instructionRules"][i]["newInstruction"]["returnValue"].asString();
-		r.newInstr.instruction = json_rules["instructionRules"][i]["newInstruction"]["instruction"].asString();
-		for (uint j = 0; j < json_rules["instructionRules"][i]["newInstruction"]["operands"].size(); ++j) {
-			r.newInstr.parameters.push_back(json_rules["instructionRules"][i]["newInstruction"]["operands"][j].asString());
-		}
+            // Get newInstruction
+            r.newInstr.returnValue = phase["instructionRules"][i]["newInstruction"]["returnValue"].asString();
+            r.newInstr.instruction = phase["instructionRules"][i]["newInstruction"]["instruction"].asString();
+            for (uint j = 0; j < phase["instructionRules"][i]["newInstruction"]["operands"].size(); ++j) {
+                r.newInstr.parameters.push_back(phase["instructionRules"][i]["newInstruction"]["operands"][j].asString());
+            }
 
-		if (json_rules["instructionRules"][i]["where"] == "before") {
-			r.where = InstrumentPlacement::BEFORE;
-		}
-		else if (json_rules["instructionRules"][i]["where"] == "after") {
-			r.where = InstrumentPlacement::AFTER;
-		}
-		else if (json_rules["instructionRules"][i]["where"] == "replace") {
-			r.where = InstrumentPlacement::REPLACE;
-		}
-		else if (json_rules["instructionRules"][i]["where"] == "return") {
-			r.where = InstrumentPlacement::RETURN;
-		}
-		else if (json_rules["instructionRules"][i]["where"] == "entry") {
-			r.where = InstrumentPlacement::ENTRY;
-		}
+            if (phase["instructionRules"][i]["where"] == "before") {
+                r.where = InstrumentPlacement::BEFORE;
+            }
+            else if (phase["instructionRules"][i]["where"] == "after") {
+                r.where = InstrumentPlacement::AFTER;
+            }
+            else if (phase["instructionRules"][i]["where"] == "replace") {
+                r.where = InstrumentPlacement::REPLACE;
+            }
+            else if (phase["instructionRules"][i]["where"] == "return") {
+                r.where = InstrumentPlacement::RETURN;
+            }
+            else if (phase["instructionRules"][i]["where"] == "entry") {
+                r.where = InstrumentPlacement::ENTRY;
+            }
 
-		r.inFunction = json_rules["instructionRules"][i]["in"].asString();
+            r.inFunction = phase["instructionRules"][i]["in"].asString();
 
-		for(uint j = 0; j < json_rules["instructionRules"][i]["condition"].size(); ++j){
-			r.condition.push_back(json_rules["instructionRules"][i]["condition"][j].asString());
-		}
+            for(uint j = 0; j < phase["instructionRules"][i]["condition"].size(); ++j){
+                r.condition.push_back(phase["instructionRules"][i]["condition"][j].asString());
+            }
 
-		rw_config.push_back(r);
-	}
-
-	this->config = rw_config;
+            r_phase.config.push_back(r);
+        }
+        this->phases.push_back(r_phase);
+    }
 
 	GlobalVarsRule rw_globals_rule;
 
@@ -100,10 +102,10 @@ void Rewriter::parseConfig(ifstream &config_file) {
 	this->globalVarsRule = rw_globals_rule;
 }
 
-RewriterConfig Rewriter::getConfig() {
-	return this->config;
+const Phases& Rewriter::getPhases() {
+	return this->phases;
 }
 
-GlobalVarsRule Rewriter::getGlobalsConfig() {
+const GlobalVarsRule& Rewriter::getGlobalsConfig() {
 	return this->globalVarsRule;
 }
