@@ -7,6 +7,59 @@
 
 using namespace std;
 
+void parseRule(const Json::Value& rule, RewriteRule& r) {
+    // Get findInstructions
+    for (auto findInstruction : rule["findInstructions"]) {
+        InstrumentInstruction instr;
+        instr.returnValue = findInstruction["returnValue"].asString();
+        instr.instruction = findInstruction["instruction"].asString();
+        for (auto operand : findInstruction["operands"]) {
+            instr.parameters.push_back(operand.asString());
+        }
+        instr.getSizeTo = findInstruction["getSizeTo"].asString();
+        instr.stripInboundsOffsets = findInstruction["stripInboundsOffsets"].asString();
+        r.foundInstrs.push_back(instr);
+    }
+
+    // Get newInstruction
+    r.newInstr.returnValue = rule["newInstruction"]["returnValue"].asString();
+    r.newInstr.instruction = rule["newInstruction"]["instruction"].asString();
+    for (uint j = 0; j < rule["newInstruction"]["operands"].size(); ++j) {
+        r.newInstr.parameters.push_back(rule["newInstruction"]["operands"][j].asString());
+    }
+
+    if (rule["where"] == "before") {
+        r.where = InstrumentPlacement::BEFORE;
+    }
+    else if (rule["where"] == "after") {
+        r.where = InstrumentPlacement::AFTER;
+    }
+    else if (rule["where"] == "replace") {
+        r.where = InstrumentPlacement::REPLACE;
+    }
+    else if (rule["where"] == "return") {
+        r.where = InstrumentPlacement::RETURN;
+    }
+    else if (rule["where"] == "entry") {
+        r.where = InstrumentPlacement::ENTRY;
+    }
+
+    r.inFunction = rule["in"].asString();
+
+    for(auto condition : rule["condition"]){
+        r.condition.push_back(condition.asString());
+    }
+}
+
+void parsePhase(const Json::Value& phase, Phase& r_phase) {
+    // load rewrite rules for instructions
+    for (auto rule : phase["instructionRules"]) {
+        RewriteRule rw_rule;
+        parseRule(rule, rw_rule);
+        r_phase.config.push_back(rw_rule);
+    }
+}
+
 void Rewriter::parseConfig(ifstream &config_file) {
 	Json::Value json_rules;
 	Json::Reader reader;
@@ -25,59 +78,11 @@ void Rewriter::parseConfig(ifstream &config_file) {
     }
 
     // load phases
+    Phase rw_phase;
     for (auto phase : json_rules["phases"]) {
-        Phase r_phase;
-
-        // load rewrite rules for instructions
-        for (auto rule : phase["instructionRules"]) {
-            RewriteRule r;
-
-            // TODO make function from this
-            // Get findInstructions
-            for (auto findInstruction : rule["findInstructions"]) {
-                InstrumentInstruction instr;
-                instr.returnValue = findInstruction["returnValue"].asString();
-                instr.instruction = findInstruction["instruction"].asString();
-                for (auto operand : findInstruction["operands"]) {
-                    instr.parameters.push_back(operand.asString());
-                }
-                instr.getSizeTo = findInstruction["getSizeTo"].asString();
-                instr.stripInboundsOffsets = findInstruction["stripInboundsOffsets"].asString();
-                r.foundInstrs.push_back(instr);
-            }
-
-            // Get newInstruction
-            r.newInstr.returnValue = rule["newInstruction"]["returnValue"].asString();
-            r.newInstr.instruction = rule["newInstruction"]["instruction"].asString();
-            for (uint j = 0; j < rule["newInstruction"]["operands"].size(); ++j) {
-                r.newInstr.parameters.push_back(rule["newInstruction"]["operands"][j].asString());
-            }
-
-            if (rule["where"] == "before") {
-                r.where = InstrumentPlacement::BEFORE;
-            }
-            else if (rule["where"] == "after") {
-                r.where = InstrumentPlacement::AFTER;
-            }
-            else if (rule["where"] == "replace") {
-                r.where = InstrumentPlacement::REPLACE;
-            }
-            else if (rule["where"] == "return") {
-                r.where = InstrumentPlacement::RETURN;
-            }
-            else if (rule["where"] == "entry") {
-                r.where = InstrumentPlacement::ENTRY;
-            }
-
-            r.inFunction = rule["in"].asString();
-
-            for(auto condition : rule["condition"]){
-                r.condition.push_back(condition.asString());
-            }
-
-            r_phase.config.push_back(r);
-        }
-        this->phases.push_back(r_phase);
+        Phase rw_phase;
+        parsePhase(phase, rw_phase);
+        this->phases.push_back(rw_phase);
     }
 
 	GlobalVarsRule rw_globals_rule;
