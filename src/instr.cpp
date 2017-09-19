@@ -781,13 +781,13 @@ bool runPhase(Module &M, const Phase& phase) {
  * @return true if instrumentation was done without problems, false otherwise
  */
 bool instrumentModule(Module &M, Rewriter rw) {
+    logger.write_info("Starting instrumentation.");
+
     // Instrument global variables
     if(!InstrumentGlobals(M, rw)) return false;
 
     Phases rw_phases = rw.getPhases();
     //RewriterConfig rw_config = rw.getConfig();
-
-    bool result = false;
 
     for (const auto& phase : rw_phases) {
         if(!runPhase(M, phase))
@@ -836,6 +836,7 @@ int main(int argc, char *argv[]) {
     outputName = argv[3];
 
     // Parse json file
+    logger.write_info("Parsing configuration...");
     Rewriter rw;
     try {
         rw.parseConfig(config_file);
@@ -857,6 +858,7 @@ int main(int argc, char *argv[]) {
 #else
     Module *m = ParseIRFile(argv[2], Err, Context);
 #endif
+
     if (!m) {
         logger.write_error("Error parsing .bc file.");
         Err.print(argv[0], errs());
