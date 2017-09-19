@@ -52,13 +52,20 @@ class RewriteRule {
 
 typedef std::list<RewriteRule> RewriterConfig;
 
+class Phase {
+ public:
+    RewriterConfig config; 
+};
+
+typedef std::list<Phase> Phases;
+
 // Rewriter
 class Rewriter {
-	RewriterConfig config;
+	Phases phases;
 	GlobalVarsRule globalVarsRule;
 	public:
-		RewriterConfig getConfig();
-		GlobalVarsRule getGlobalsConfig();
+		const Phases& getPhases();
+		const GlobalVarsRule& getGlobalsConfig();
 		void parseConfig(std::ifstream &config_file);
 		std::list<std::string> analysisPaths;
 };

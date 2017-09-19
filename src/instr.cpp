@@ -741,17 +741,12 @@ bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
 }
 
 /**
- * Instruments given module with rules from json file.
+ * Runs one phase of instrumentation rules.
  * @param M module to be instrumented.
- * @param rw parsed rules to apply.
- * @return true if instrumentation was done without problems, false otherwise
- */
-bool instrumentModule(Module &M, Rewriter rw) {
-    // Instrument global variables
-    if(!InstrumentGlobals(M, rw)) return false;
-
-    RewriterConfig rw_config = rw.getConfig();
-
+ * @param phase current phase of instrumentation
+ * @return true if instrumentation was completed without problems, false otherwise
+*/
+bool runPhase(Module &M, const Phase& phase) {
     // Instrument instructions in functions
     for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
 
@@ -764,16 +759,41 @@ bool instrumentModule(Module &M, Rewriter rw) {
             continue;
         }
     
-        if(!InstrumentEntryPoint(M, &*Fiterator, rw_config)) return false;
-        if(!InstrumentReturns(M, &*Fiterator, rw_config)) return false;
+        if(!InstrumentEntryPoint(M, &*Fiterator, phase.config)) return false;
+        if(!InstrumentReturns(M, &*Fiterator, phase.config)) return false;
 
         for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
             // This iterator may be replaced (by an iterator to the following
             // instruction) in the InsertCallInstruction function
             // Check if the instruction is relevant
-            if(!CheckInstruction(&*Iiterator, M, &*Fiterator, rw_config, &Iiterator)) return false;
+            if(!CheckInstruction(&*Iiterator, M, &*Fiterator, phase.config, &Iiterator)) return false;
         }
     }
+
+    return true;
+}
+
+
+/**
+ * Instruments given module with rules from json file.
+ * @param M module to be instrumented.
+ * @param rw parsed rules to apply.
+ * @return true if instrumentation was done without problems, false otherwise
+ */
+bool instrumentModule(Module &M, Rewriter rw) {
+    // Instrument global variables
+    if(!InstrumentGlobals(M, rw)) return false;
+
+    Phases rw_phases = rw.getPhases();
+    //RewriterConfig rw_config = rw.getConfig();
+
+    bool result = false;
+
+    for (const auto& phase : rw_phases) {
+        if(!runPhase(M, phase))
+            return false;
+    }
+
     // Write instrumented module into the output file
     ofstream out_file;
     out_file.open(outputName, ios::out | ios::binary);
