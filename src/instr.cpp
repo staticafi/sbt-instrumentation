@@ -61,16 +61,16 @@ uint64_t getAllocatedSize(Instruction *I, Module* M){
     Type* Ty;
 
     if(const AllocaInst *AI = dyn_cast<AllocaInst>(I)){
-      Ty = AI->getAllocatedType();
+        Ty = AI->getAllocatedType();
     }
     else if(const StoreInst *SI = dyn_cast<StoreInst>(I)){
-      Ty = SI->getOperand(0)->getType();
+        Ty = SI->getOperand(0)->getType();
     }
     else if(const LoadInst *LI = dyn_cast<LoadInst>(I)){
-      Ty = LI->getType();
+        Ty = LI->getType();
     }
     else{
-      return 0;
+        return 0;
     }
 
     if(!Ty->isSized())
@@ -90,7 +90,7 @@ uint64_t getAllocatedSize(Instruction *I, Module* M){
  *
  * @param i1 the first instruction
  * @param i2 the second instruction without any metadata
-*/
+ */
 void CloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2)
 {
     if (i1->hasMetadata()) {
@@ -172,8 +172,8 @@ void EraseInstructions(Instruction* I, int count) {
  * @param Iiterator pointer to instructions iterator
  */
 void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
-                           RewriteRule rw_rule, Instruction *currentInstr,
-                           inst_iterator *Iiterator) {
+        RewriteRule rw_rule, Instruction *currentInstr,
+        inst_iterator *Iiterator) {
     // Create new call instruction
     CallInst *newInstr = CallInst::Create(CalleeF, args);
 
@@ -214,7 +214,7 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
  * @param currentInstr current instruction
  */
 void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
-                           Instruction *currentInstr) {
+        Instruction *currentInstr) {
     // Create new call instruction
     CallInst *newInstr = CallInst::Create(CalleeF, args);
 
@@ -249,7 +249,7 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
  *         argument)
  */
 tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_newInstr, Instruction *I,
-                                                    Function* CalleeF, const map <string, Value*>& variables, InstrumentPlacement where) {
+        Function* CalleeF, const map <string, Value*>& variables, InstrumentPlacement where) {
     std::vector<Value *> args;
     unsigned i = 0;
     Instruction* nI = I;
@@ -342,7 +342,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
  * @return 1 if error
  */
 int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
-          const map <string, Value*>& variables, inst_iterator *Iiterator) {
+        const map <string, Value*>& variables, inst_iterator *Iiterator) {
     logger.write_info("Applying rule...");
 
     // Work just with call instructions for now...
@@ -382,7 +382,7 @@ int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
  * @return 1 if error
  */
 int applyRule(Module &M, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
-          const map <string, Value*>& variables) {
+        const map <string, Value*>& variables) {
     logger.write_info("Applying rule for global variable...");
 
     // Work just with call instructions for now...
@@ -440,7 +440,7 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
                 variables[param] = op->stripInBoundsOffsets();
             }
         } else if(param != "*"
-                  && param != (op->stripPointerCasts()->getName()).str()) {
+                && param != (op->stripPointerCasts()->getName()).str()) {
             // NOTE: we're comparing a name of the value, but the name
             // is set only sometimes. Since we're now matching just CallInst
             // it is OK, but it may not be OK in the future
@@ -530,7 +530,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
                 // check return value
                 if(checkInstr.returnValue != "*") {
                     if(checkInstr.returnValue[0] == '<'
-                       && checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
+                            && checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
                         variables[checkInstr.returnValue] = currentInstr;
                     }
                 }
@@ -618,7 +618,7 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
 
     // If there is no rule for global variables, do not try to instrument
     if(rw_globals.inFunction.empty() || rw_globals.globalVar.globalVariable.empty()) // TODO this is not very nice
-      return true;
+        return true;
 
     // Iterate through global variables
     Module::global_iterator GI = M.global_begin(), GE = M.global_end();
@@ -627,31 +627,31 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
         if (!GV) continue;
 
         if(rw_globals.inFunction == "*"){
-          //TODO
-          return false;
-          logger.write_error("Rule for global variables for instrumenting to all function not supported yet.");
+            //TODO
+            return false;
+            logger.write_error("Rule for global variables for instrumenting to all function not supported yet.");
         }
         else{
-          Function* F = M.getFunction(rw_globals.inFunction);
-          // Get operands of new instruction
-          map <string, Value*> variables;
+            Function* F = M.getFunction(rw_globals.inFunction);
+            // Get operands of new instruction
+            map <string, Value*> variables;
 
-          if(rw_globals.globalVar.globalVariable != "*")
-        variables[rw_globals.globalVar.globalVariable] = GV;
-          if(rw_globals.globalVar.globalVariable != "*"){
-        variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getGlobalVarSize(GV, &M));
-          }
+            if(rw_globals.globalVar.globalVariable != "*")
+                variables[rw_globals.globalVar.globalVariable] = GV;
+            if(rw_globals.globalVar.globalVariable != "*"){
+                variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getGlobalVarSize(GV, &M));
+            }
 
-          // Try to instrument the code
-          if(checkAnalysis(rw_globals.condition,variables)) {
-        // Try to apply rule
-        inst_iterator IIterator = inst_begin(F);
-        Instruction *firstI = &*IIterator; //TODO
-        if(applyRule(M, firstI, rw_globals.newInstr, variables) == 1) {
-          logger.write_error("Cannot apply rule.");
-          return false;
-        }
-          }
+            // Try to instrument the code
+            if(checkAnalysis(rw_globals.condition,variables)) {
+                // Try to apply rule
+                inst_iterator IIterator = inst_begin(F);
+                Instruction *firstI = &*IIterator; //TODO
+                if(applyRule(M, firstI, rw_globals.newInstr, variables) == 1) {
+                    logger.write_error("Cannot apply rule.");
+                    return false;
+                }
+            }
         }
     }
 
@@ -682,11 +682,11 @@ bool InstrumentEntryPoint(Module &M, Function* F, RewriterConfig rw_config){
             logger.write_error("Unknown function: " + param);
             return false;
         }
-    
+
         // Create new call instruction
         std::vector<Value *> args;
         CallInst *newInstr = CallInst::Create(CalleeF, args);
-    
+
         //Insert at the beginning of function
         Instruction* firstInstr = (&*(F->begin()))->getFirstNonPHIOrDbg();
         if(firstInstr == NULL) continue; // TODO check this properly
@@ -709,7 +709,7 @@ bool InstrumentEntryPoint(Module &M, Function* F, RewriterConfig rw_config){
  */
 bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
     for (RewriteRule& rw : rw_config) {
-        
+
         // Check type of the rule
         if(rw.where != InstrumentPlacement::RETURN) continue;
         // Check whether the function should be instrumented
@@ -723,7 +723,7 @@ bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
             logger.write_error("Unknown function: " + param);
             return false;
         }
-    
+
         // Create new call instruction
         std::vector<Value *> args;
         CallInst *newInstr = CallInst::Create(CalleeF, args);
@@ -745,7 +745,7 @@ bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
  * @param M module to be instrumented.
  * @param phase current phase of instrumentation
  * @return true if instrumentation was completed without problems, false otherwise
-*/
+ */
 bool runPhase(Module &M, const Phase& phase) {
     // Instrument instructions in functions
     for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
@@ -754,11 +754,11 @@ bool runPhase(Module &M, const Phase& phase) {
         string functionName = (&*Fiterator)->getName().str();
 
         if(functionName.find("__INSTR_")!=string::npos ||
-           functionName.find("__VERIFIER_")!=string::npos) { //TODO just starts with
+                functionName.find("__VERIFIER_")!=string::npos) { //TODO just starts with
             logger.write_info("Omitting function " + functionName + " from instrumentation.");
             continue;
         }
-    
+
         if(!InstrumentEntryPoint(M, &*Fiterator, phase.config)) return false;
         if(!InstrumentReturns(M, &*Fiterator, phase.config)) return false;
 
@@ -825,7 +825,7 @@ int main(int argc, char *argv[]) {
         usage(argv[0]);
         exit(1);
     }
-    
+
     // TODO: Check for failure
     ifstream config_file;
     config_file.open(argv[1]);
