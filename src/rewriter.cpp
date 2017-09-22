@@ -8,7 +8,7 @@
 using namespace std;
 
 void parseRule(const Json::Value& rule, RewriteRule& r) {
-    // Get findInstructions
+    // Get findInstructions 
     for (auto findInstruction : rule["findInstructions"]) {
         InstrumentInstruction instr;
         instr.returnValue = findInstruction["returnValue"].asString();
@@ -24,8 +24,8 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     // Get newInstruction
     r.newInstr.returnValue = rule["newInstruction"]["returnValue"].asString();
     r.newInstr.instruction = rule["newInstruction"]["instruction"].asString();
-    for (uint j = 0; j < rule["newInstruction"]["operands"].size(); ++j) {
-        r.newInstr.parameters.push_back(rule["newInstruction"]["operands"][j].asString());
+    for (auto op : rule["newInstruction"]["operands"]) {
+        r.newInstr.parameters.push_back(op.asString());
     }
 
     if (rule["where"] == "before") {
@@ -46,8 +46,14 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
 
     r.inFunction = rule["in"].asString();
 
-    for(auto condition : rule["condition"]){
-        r.condition.push_back(condition.asString());
+    // TODO extract function
+    for(auto condition : rule["conditions"]){
+        Condition r_condition;
+        r_condition.name = condition[0].asString();
+        for (uint i = 1; i < condition.size(); i++) {
+            r_condition.arguments.push_back(condition[i].asString());
+        }
+        r.conditions.push_back(r_condition);
     }
 }
 
@@ -61,10 +67,10 @@ void parsePhase(const Json::Value& phase, Phase& r_phase) {
 }
 
 void Rewriter::parseConfig(ifstream &config_file) {
-	Json::Value json_rules;
-	Json::Reader reader;
+    Json::Value json_rules;
+    Json::Reader reader;
     bool parsingSuccessful = reader.parse(config_file, json_rules);
-    if (!parsingSuccessful)	{
+    if (!parsingSuccessful) {
         cerr  << "Failed to parse configuration\n"
               << reader.getFormattedErrorMessages();
         throw runtime_error("Config parsing failure.");
@@ -73,44 +79,72 @@ void Rewriter::parseConfig(ifstream &config_file) {
     // TODO catch exceptions here
 
     // load paths to analyses
-    for(uint i = 0; i < json_rules["analyses"].size(); ++i){
-        this->analysisPaths.push_back(json_rules["analyses"][i].asString());
+    for(auto analysis : json_rules["analyses"]){
+        this->analysisPaths.push_back(analysis.asString());
     }
 
     // load phases
-    Phase rw_phase;
     for (auto phase : json_rules["phases"]) {
         Phase rw_phase;
         parsePhase(phase, rw_phase);
         this->phases.push_back(rw_phase);
     }
 
-	GlobalVarsRule rw_globals_rule;
+    GlobalVarsRule rw_globals_rule;
 
-	// Get rule for global variables
-	rw_globals_rule.globalVar.globalVariable = json_rules["globalVariablesRule"]["findGlobals"]["globalVariable"].asString();
-	rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getSizeTo"].asString();
+    // Get rule for global variables
+    rw_globals_rule.globalVar.globalVariable = json_rules["globalVariablesRule"]["findGlobals"]["globalVariable"].asString();
+    rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getSizeTo"].asString();
 
-	for(uint j = 0; j < json_rules["globalVariablesRule"]["condition"].size(); ++j){
-		rw_globals_rule.condition.push_back(json_rules["globalVariablesRule"]["condition"][j].asString());
-	}
+    for (auto condition : json_rules["globalVariablesRule"]["conditions"]){
+        Condition r_condition;
+        r_condition.name = condition[0].asString();
+        for (uint i = 1; i < condition.size(); i++) {
+            r_condition.arguments.push_back(condition[i].asString());
+        }
+        rw_globals_rule.conditions.push_back(r_condition);
+    }
 
-	rw_globals_rule.newInstr.returnValue = json_rules["globalVariablesRule"]["newInstruction"]["returnValue"].asString();
-	rw_globals_rule.newInstr.instruction = json_rules["globalVariablesRule"]["newInstruction"]["instruction"].asString();
+    rw_globals_rule.newInstr.returnValue = json_rules["globalVariablesRule"]["newInstruction"]["returnValue"].asString();
+    rw_globals_rule.newInstr.instruction = json_rules["globalVariablesRule"]["newInstruction"]["instruction"].asString();
 
-	for (uint j = 0; j < json_rules["globalVariablesRule"]["newInstruction"]["operands"].size(); ++j) {
-		rw_globals_rule.newInstr.parameters.push_back(json_rules["globalVariablesRule"]["newInstruction"]["operands"][j].asString());
-	}
+    for (auto operand : json_rules["globalVariablesRule"]["newInstruction"]["operands"]) {
+        rw_globals_rule.newInstr.parameters.push_back(operand.asString());
+    }
 
-	rw_globals_rule.inFunction = json_rules["globalVariablesRule"]["in"].asString();
+    rw_globals_rule.inFunction = json_rules["globalVariablesRule"]["in"].asString();
 
-	this->globalVarsRule = rw_globals_rule;
+    this->globalVarsRule = rw_globals_rule;
 }
 
 const Phases& Rewriter::getPhases() {
-	return this->phases;
+    return this->phases;
 }
 
 const GlobalVarsRule& Rewriter::getGlobalsConfig() {
-	return this->globalVarsRule;
+    return this->globalVarsRule;
 }
+
+void Rewriter::addFlag(string name) {
+    this->flags.insert(Flag(name, ""));
+}
+
+bool Rewriter::isFlag(string name) {
+    auto search = this->flags.find(name);
+    return search != this->flags.end();
+}
+
+void Rewriter::setFlag(string name, string value) {
+    auto search = this->flags.find(name); 
+    if (search != this->flags.end())
+            search->second = value;
+}
+
+string Rewriter::getFlagValue(string name) {
+    auto search = this->flags.find(name);
+    if (search != this->flags.end())
+        return search->second;
+
+    return "";
+}
+

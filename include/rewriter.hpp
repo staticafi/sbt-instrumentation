@@ -5,7 +5,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-
+#include <map>
 
 // Configuration
 enum class InstrumentPlacement {
@@ -31,12 +31,19 @@ class InstrumentGlobalVar {
 	std::string getSizeTo;
 };
 
+class Condition {
+    public:
+        std::string name;
+        std::list<std::string> arguments;
+};
+
+
 class GlobalVarsRule {
  public:
 	InstrumentGlobalVar globalVar;
 	InstrumentInstruction newInstr;
 	std::string inFunction;
-	std::list<std::string> condition;
+	std::list<Condition> conditions;
 };
 
 typedef std::list<InstrumentInstruction> InstrumentSequence;
@@ -47,7 +54,7 @@ class RewriteRule {
 	InstrumentInstruction newInstr;
 	InstrumentPlacement where;
 	std::string inFunction;
-	std::list<std::string> condition;
+	std::list<Condition> conditions;
 };
 
 typedef std::list<RewriteRule> RewriterConfig;
@@ -58,16 +65,23 @@ class Phase {
 };
 
 typedef std::list<Phase> Phases;
+typedef std::map<std::string, std::string> Flags;
+typedef std::pair<std::string, std::string> Flag; 
 
 // Rewriter
 class Rewriter {
 	Phases phases;
 	GlobalVarsRule globalVarsRule;
+    Flags flags;
 	public:
+		std::list<std::string> analysisPaths;
 		const Phases& getPhases();
 		const GlobalVarsRule& getGlobalsConfig();
 		void parseConfig(std::ifstream &config_file);
-		std::list<std::string> analysisPaths;
+        void setFlag(std::string name, std::string value);
+        bool isFlag(std::string name);
+        std::string getFlagValue(std::string name);
+        void addFlag(std::string name);
 };
 
 #endif
