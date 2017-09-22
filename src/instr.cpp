@@ -422,7 +422,8 @@ int applyRule(Module &M, Instruction *currentInstr, InstrumentInstruction rw_new
  * @return true if OK, false otherwise
  */
 bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
-    unsigned opIndex = 0;
+    unsigned opIndex = 0; 
+    
     for(const string& param : rwIns.parameters){
         if(rwIns.parameters.size() == 1 && param=="*"){
             return true;
@@ -449,7 +450,7 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 
         opIndex++;
     }
-
+  
     return true;
 }
 
@@ -460,28 +461,41 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
  * @param variables
  * @return true if condition is ok, false otherwise
  */
-bool checkAnalysis(list<string> condition, const map<string, Value*>& variables){
+bool checkAnalysis(Condition condition, const map<string, Value*>& variables){
     // condition: first element is operator, other one or two elements
     // are variables, TODO do we need more than two variables?
-    if(condition.empty())
+    if(condition.name == "")
         return true;
 
-    string conditionOp = condition.front();
-    list<string>::iterator it = condition.begin();
-    it++;
+    list<string>::iterator it = condition.arguments.begin();
     string aName = *it;
     string bName = "";
 
-    Value* aValue = (variables.find(aName))->second;
+    // get first argument
+    Value* aValue = NULL;
+    auto search = variables.find(aName);
+    if(search != variables.end()) {
+        aValue = search->second;
+    } else {
+        return true;
+    }
+
+    // get second argument
     Value* bValue = NULL;
-    if(condition.size()>2){
+    if(condition.arguments.size()>1){
         it++;
         bName = *it;
+        auto search = variables.find(bName);
+        if(search != variables.end()) {
+            bValue = search->second;
+        } else {
+            return true;
+        }
         bValue = (variables.find(bName))->second;
     }
 
     for(auto& plugin : plugins){
-        if(!Analyzer::shouldInstrument(plugin.get(), conditionOp, aValue, bValue)){
+        if(!Analyzer::shouldInstrument(plugin.get(), condition.name, aValue, bValue)){
             // some plugin told us that we should not instrument
             return false;
         }
@@ -505,14 +519,13 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
         // check if this rule should be applied in this function
         string functionName = F->getName().str();
 
-        if(rw.inFunction != "*" && rw.inFunction!=functionName)
+        if(rw.inFunction != "*" && rw.inFunction != functionName)
             continue;
 
         // check sequence of instructions
         map <string, Value*> variables;
         bool instrument = false;
         Instruction* currentInstr = ins;
-
         for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
             if(currentInstr == NULL) {
                 break;
@@ -526,7 +539,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
                 if(!CheckOperands(checkInstr, currentInstr, variables)) {
                     break;
                 }
-
+                
                 // check return value
                 if(checkInstr.returnValue != "*") {
                     if(checkInstr.returnValue[0] == '<'
@@ -548,19 +561,27 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
             else {
                 break;
             }
-        }
+        } 
 
         if(rw.foundInstrs.size() == 1){
             InstrumentInstruction allocaIns = rw.foundInstrs.front();
             if(!allocaIns.getSizeTo.empty()){
                 variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getAllocatedSize(ins,&M));
             }
-
         }
 
+        // check the conditions
+        bool satisfied = true;
+        for (auto condition : rw.conditions) {
+            if(!checkAnalysis(condition, variables)) {
+                satisfied = false;
+                break;
+            }
+        }
 
-        // if all instructions match, try to instrument the code
-        if(instrument && checkAnalysis(rw.condition,variables)) {
+        // if all instructions match and conditions are satisfied
+        // try to instrument the code
+        if(instrument && satisfied) {
             // try to apply rule
             Instruction *where;
             if(rw.where == InstrumentPlacement::BEFORE){
@@ -642,8 +663,17 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
                 variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getGlobalVarSize(GV, &M));
             }
 
+            // Check the conditions
+            bool satisfied = true;
+            for (auto condition : rw_globals.conditions) {
+                if(!checkAnalysis(condition, variables)) {
+                    satisfied = false;
+                    break;
+                }
+            }
+
             // Try to instrument the code
-            if(checkAnalysis(rw_globals.condition,variables)) {
+            if(satisfied) {
                 // Try to apply rule
                 inst_iterator IIterator = inst_begin(F);
                 Instruction *firstI = &*IIterator; //TODO
@@ -673,7 +703,7 @@ bool InstrumentEntryPoint(Module &M, Function* F, RewriterConfig rw_config){
         if(rw.where != InstrumentPlacement::ENTRY) continue;
         // Check if the function should be instrumented
         string functionName = F->getName().str();
-        if(rw.inFunction != "*" && rw.inFunction!=functionName)    continue;
+        if(rw.inFunction != "*" && rw.inFunction!=functionName) continue;
 
         // Get name of function
         string param = *(--rw.newInstr.parameters.end());
@@ -772,7 +802,6 @@ bool runPhase(Module &M, const Phase& phase) {
 
     return true;
 }
-
 
 /**
  * Instruments given module with rules from json file.
