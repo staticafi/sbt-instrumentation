@@ -40,6 +40,8 @@
 using namespace llvm;
 using namespace std;
 
+typedef map<string, Value*> Variables;
+
 Logger logger("log.txt");
 list<unique_ptr<InstrPlugin>> plugins;
 
@@ -249,7 +251,7 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
  *         argument)
  */
 tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_newInstr, Instruction *I,
-        Function* CalleeF, const map <string, Value*>& variables, InstrumentPlacement where) {
+        Function* CalleeF, const Variables& variables, InstrumentPlacement where) {
     std::vector<Value *> args;
     unsigned i = 0;
     Instruction* nI = I;
@@ -342,7 +344,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
  * @return 1 if error
  */
 int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
-        const map <string, Value*>& variables, inst_iterator *Iiterator) {
+        const Variables& variables, inst_iterator *Iiterator) {
     logger.write_info("Applying rule...");
 
     // Work just with call instructions for now...
@@ -382,7 +384,7 @@ int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
  * @return 1 if error
  */
 int applyRule(Module &M, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
-        const map <string, Value*>& variables) {
+        const Variables& variables) {
     logger.write_info("Applying rule for global variable...");
 
     // Work just with call instructions for now...
@@ -421,7 +423,7 @@ int applyRule(Module &M, Instruction *currentInstr, InstrumentInstruction rw_new
  * @param variables map for remembering some parameters.
  * @return true if OK, false otherwise
  */
-bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, Value*> &variables) {
+bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& variables) {
     unsigned opIndex = 0; 
     
     for(const string& param : rwIns.parameters){
@@ -455,13 +457,24 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, map <string, V
 }
 
 /**
+ * Checks whether the given flag is set as they should be.
+ * @param condition condition to be satisfied
+ * @param rewriter rewriter
+ * @return true if satisfied, false otherwise
+**/
+bool checkFlag(Condition condition, Rewriter rewriter) {
+    string value = rewriter.getFlagValue(condition.name);
+    return value == condition.arguments.front();
+}
+
+/**
  * Runs all plugins for static analyses and decides, whether to
  * instrument or not.
  * @param condition condition that must be satisfied to instrument
  * @param variables
  * @return true if condition is ok, false otherwise
  */
-bool checkAnalysis(Condition condition, const map<string, Value*>& variables){
+bool checkAnalysis(Condition condition, const Variables& variables){
     // condition: first element is operator, other one or two elements
     // are variables, TODO do we need more than two variables?
     if(condition.name == "")
@@ -506,14 +519,49 @@ bool checkAnalysis(Condition condition, const map<string, Value*>& variables){
 }
 
 /**
+ * Checks whether the conditions are satisfied for this rule.
+ * @param conditions list of conditions
+ * @param rewriter rewriter
+ * @param variables list of variables
+ * @return true if conditions are satisfied, false otherwise
+ **/
+bool checkConditions(const std::list<Condition>& conditions, Rewriter& rewriter, const Variables& variables) {
+    // check the conditions
+    for (auto condition : conditions) {
+        if(rewriter.isFlag(condition.name)) {
+            if(!checkFlag(condition, rewriter)) {
+                return false;
+            }
+        }
+        else if(!checkAnalysis(condition, variables)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Sets flags according to the given rule.
+ * @param rule instrumentation rule
+ * @param rewriter rewriter
+**/
+void setFlags(const RewriteRule& rule, Rewriter& rewriter) {
+    for (const auto& flag : rule.setFlags) {
+        rewriter.setFlag(flag.first, flag.second);
+    }
+}
+
+/**
  * Checks if the given instruction should be instrumented.
  * @param ins instruction to be checked.
  * @param M module.
  * @param rw_config parsed rules to apply.
  * @param Iiterator pointer to instructions iterator
+ * @param rewriter rewriter
  * @return true if OK, false otherwise
  */
-bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator) {
+bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator, Rewriter& rewriter) {
     // iterate through rewrite rules
     for (RewriteRule& rw : rw_config){
         // check if this rule should be applied in this function
@@ -523,7 +571,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
             continue;
 
         // check sequence of instructions
-        map <string, Value*> variables;
+        Variables variables;
         bool instrument = false;
         Instruction* currentInstr = ins;
         for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
@@ -566,22 +614,16 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
         if(rw.foundInstrs.size() == 1){
             InstrumentInstruction allocaIns = rw.foundInstrs.front();
             if(!allocaIns.getSizeTo.empty()){
-                variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getAllocatedSize(ins,&M));
-            }
-        }
-
-        // check the conditions
-        bool satisfied = true;
-        for (auto condition : rw.conditions) {
-            if(!checkAnalysis(condition, variables)) {
-                satisfied = false;
-                break;
+                variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getAllocatedSize(ins, &M));
             }
         }
 
         // if all instructions match and conditions are satisfied
         // try to instrument the code
-        if(instrument && satisfied) {
+        if(instrument && checkConditions(rw.conditions, rewriter, variables)) {
+            // set flags (TODO do we want to set flags even if teh conditions were not satisifed?)
+            setFlags(rw, rewriter);
+
             // try to apply rule
             Instruction *where;
             if(rw.where == InstrumentPlacement::BEFORE){
@@ -773,10 +815,11 @@ bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
 /**
  * Runs one phase of instrumentation rules.
  * @param M module to be instrumented.
- * @param phase current phase of instrumentation
+ * @param phase current phase of instrumentation.
+ * @param rewriter rewriter
  * @return true if instrumentation was completed without problems, false otherwise
  */
-bool runPhase(Module &M, const Phase& phase) {
+bool RunPhase(Module &M, const Phase& phase, Rewriter& rewriter) {
     // Instrument instructions in functions
     for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
 
@@ -796,7 +839,7 @@ bool runPhase(Module &M, const Phase& phase) {
             // This iterator may be replaced (by an iterator to the following
             // instruction) in the InsertCallInstruction function
             // Check if the instruction is relevant
-            if(!CheckInstruction(&*Iiterator, M, &*Fiterator, phase.config, &Iiterator)) return false;
+            if(!CheckInstruction(&*Iiterator, M, &*Fiterator, phase.config, &Iiterator, rewriter)) return false;
         }
     }
 
@@ -816,10 +859,9 @@ bool instrumentModule(Module &M, Rewriter rw) {
     if(!InstrumentGlobals(M, rw)) return false;
 
     Phases rw_phases = rw.getPhases();
-    //RewriterConfig rw_config = rw.getConfig();
 
     for (const auto& phase : rw_phases) {
-        if(!runPhase(M, phase))
+        if(!RunPhase(M, phase, rw))
             return false;
     }
 
