@@ -74,7 +74,7 @@
                         },
                         "where": "after",
                         "in": "*",
-                        "setFlag": [["malloc", "true"]]
+                        "setFlags": [["malloc", "true"]]
                     },
                     {
                         "findInstructions": [
@@ -91,7 +91,7 @@
                         },
                         "where": "after",
                         "in": "*",
-                        "setFlag": [["malloc", "true"]]
+                        "setFlags": [["malloc", "true"]]
                     },
                     {
                         "findInstructions": [
@@ -108,7 +108,7 @@
                         },
                         "where": "after",
                         "in": "*",
-                        "setFlag": [["malloc", "true"]]
+                        "setFlags": [["malloc", "true"]]
 
                     },
                     {
@@ -126,7 +126,7 @@
                         },
                         "where": "after",
                         "in": "*",
-                        "setFlag": [["malloc", "true"]]
+                        "setFlags": [["malloc", "true"]]
                     },
                     {
                         "findInstructions": [
@@ -143,7 +143,7 @@
                         },
                         "where": "after",
                         "in": "*",
-                        "setFlag": [["malloc", "true"]]
+                        "setFlags": [["malloc", "true"]]
                     },
                     {
                         "findInstructions": [
@@ -160,7 +160,7 @@
                         },
                         "where": "after",
                         "in": "*",
-                        "setFlag": [["malloc", "true"]]
+                        "setFlags": [["malloc", "true"]]
 
                     },
                     {
@@ -178,7 +178,7 @@
                         },
                         "where": "after",
                         "in": "*",
-                        "setFlag": [["malloc", "true"]]
+                        "setFlags": [["malloc", "true"]]
                     },
 
                     {
@@ -539,7 +539,8 @@
                         "operands": ["__INSTR_check_leaks"]
                     },
                     "where": "before",
-                    "in": "main"
+                    "in": "main",
+                    "conditions": [["malloc", "true"]]
                 }
                 ]
             }

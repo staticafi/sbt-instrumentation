@@ -47,6 +47,8 @@ class GlobalVarsRule {
 };
 
 typedef std::list<InstrumentInstruction> InstrumentSequence;
+typedef std::map<std::string, std::string> Flags;
+typedef std::pair<std::string, std::string> Flag; 
 
 class RewriteRule {
  public:
@@ -55,6 +57,7 @@ class RewriteRule {
 	InstrumentPlacement where;
 	std::string inFunction;
 	std::list<Condition> conditions;
+    Flags setFlags;
 };
 
 typedef std::list<RewriteRule> RewriterConfig;
@@ -65,8 +68,6 @@ class Phase {
 };
 
 typedef std::list<Phase> Phases;
-typedef std::map<std::string, std::string> Flags;
-typedef std::pair<std::string, std::string> Flag; 
 
 // Rewriter
 class Rewriter {
@@ -81,7 +82,6 @@ class Rewriter {
         void setFlag(std::string name, std::string value);
         bool isFlag(std::string name);
         std::string getFlagValue(std::string name);
-        void addFlag(std::string name);
 };
 
 #endif
