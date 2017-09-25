@@ -9,11 +9,11 @@ using namespace std;
 
 void parseRule(const Json::Value& rule, RewriteRule& r) {
     // Get findInstructions 
-    for (auto findInstruction : rule["findInstructions"]) {
+    for (const auto& findInstruction : rule["findInstructions"]) {
         InstrumentInstruction instr;
         instr.returnValue = findInstruction["returnValue"].asString();
         instr.instruction = findInstruction["instruction"].asString();
-        for (auto operand : findInstruction["operands"]) {
+        for (const auto& operand : findInstruction["operands"]) {
             instr.parameters.push_back(operand.asString());
         }
         instr.getSizeTo = findInstruction["getSizeTo"].asString();
@@ -24,7 +24,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     // Get newInstruction
     r.newInstr.returnValue = rule["newInstruction"]["returnValue"].asString();
     r.newInstr.instruction = rule["newInstruction"]["instruction"].asString();
-    for (auto op : rule["newInstruction"]["operands"]) {
+    for (const auto& op : rule["newInstruction"]["operands"]) {
         r.newInstr.parameters.push_back(op.asString());
     }
 
@@ -47,7 +47,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     r.inFunction = rule["in"].asString();
 
     // TODO extract function
-    for (auto condition : rule["conditions"]){
+    for (const auto& condition : rule["conditions"]){
         Condition r_condition;
         r_condition.name = condition[0].asString();
         for (uint i = 1; i < condition.size(); i++) {
@@ -56,14 +56,14 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
         r.conditions.push_back(r_condition);
     }
 
-    for (auto setFlag : rule["setFlags"]){
+    for (const auto& setFlag : rule["setFlags"]){
         r.setFlags.insert(Flag(setFlag[0].asString(), setFlag[1].asString()));
     }
 }
 
 void parsePhase(const Json::Value& phase, Phase& r_phase) {
     // load rewrite rules for instructions
-    for (auto rule : phase["instructionRules"]) {
+    for (const auto& rule : phase["instructionRules"]) {
         RewriteRule rw_rule;
         parseRule(rule, rw_rule);
         r_phase.config.push_back(rw_rule);
@@ -83,17 +83,17 @@ void Rewriter::parseConfig(ifstream &config_file) {
     // TODO catch exceptions here
 
     // load paths to analyses
-    for(auto analysis : json_rules["analyses"]){
+    for(const auto& analysis : json_rules["analyses"]){
         this->analysisPaths.push_back(analysis.asString());
     }
 
     // load flags
-    for (auto flag : json_rules["flags"]) {
+    for (const auto& flag : json_rules["flags"]) {
         this->flags.insert(Flag(flag.asString(), ""));
     }
-
+    
     // load phases
-    for (auto phase : json_rules["phases"]) {
+    for (const auto& phase : json_rules["phases"]) {
         Phase rw_phase;
         parsePhase(phase, rw_phase);
         this->phases.push_back(rw_phase);
