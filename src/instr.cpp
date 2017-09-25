@@ -474,13 +474,13 @@ bool checkFlag(Condition condition, Rewriter rewriter) {
  * @param variables
  * @return true if condition is ok, false otherwise
  */
-bool checkAnalysis(Condition condition, const Variables& variables){
+bool checkAnalysis(const Condition& condition, const Variables& variables){
     // condition: first element is operator, other one or two elements
     // are variables, TODO do we need more than two variables?
     if(condition.name == "")
         return true;
 
-    list<string>::iterator it = condition.arguments.begin();
+    list<string>::const_iterator it = condition.arguments.begin();
     string aName = *it;
     string bName = "";
 
@@ -504,7 +504,6 @@ bool checkAnalysis(Condition condition, const Variables& variables){
         } else {
             return true;
         }
-        bValue = (variables.find(bName))->second;
     }
 
     for(auto& plugin : plugins){
@@ -527,7 +526,7 @@ bool checkAnalysis(Condition condition, const Variables& variables){
  **/
 bool checkConditions(const std::list<Condition>& conditions, Rewriter& rewriter, const Variables& variables) {
     // check the conditions
-    for (auto condition : conditions) {
+    for (const auto& condition : conditions) {
         if(rewriter.isFlag(condition.name)) {
             if(!checkFlag(condition, rewriter)) {
                 return false;
