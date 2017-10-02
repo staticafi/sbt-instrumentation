@@ -40,12 +40,25 @@
 using namespace llvm;
 using namespace std;
 
+
 typedef map<string, Value*> Variables;
 
-Logger logger("log.txt");
-list<unique_ptr<InstrPlugin>> plugins;
+// TODO extract this to a separate file
+class LLVMInstrumentation {
+    public:
+        Module& module;
+        list<unique_ptr<InstrPlugin>> plugins;
+        string outputName;
+        list<Value*> rememberedValues;
+        Variables variables;
+        Rewriter rewriter;
+        
+        LLVMInstrumentation(Module& m) : module(m) {
+        }
+};
 
-string outputName;
+
+Logger logger("log.txt");
 
 void usage(char *name) {
     cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName> <options>" << endl;
@@ -57,8 +70,8 @@ void usage(char *name) {
  * @param M module.
  * @return size of allocated type.
  */
-uint64_t getAllocatedSize(Instruction *I, Module* M){
-    DataLayout* DL = new DataLayout(M);
+uint64_t getAllocatedSize(Instruction *I, const Module& M){
+    DataLayout* DL = new DataLayout(&M);
 
     Type* Ty;
 
@@ -336,14 +349,14 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 
 /**
  * Applies a rule.
- * @param M module
+ * @param instr instrumentation object
  * @param currentInstr current instruction
  * @param rw_rule rule to apply
  * @param variables map of found parameters form config
  * @param Iiterator pointer to instructions iterator
  * @return 1 if error
  */
-int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
+int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule rw_rule,
         const Variables& variables, inst_iterator *Iiterator) {
     logger.write_info("Applying rule...");
 
@@ -359,7 +372,7 @@ int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
 
     // Get name of function
     string param = *(--rw_rule.newInstr.parameters.end());
-    CalleeF = M.getFunction(param);
+    CalleeF = instr.module.getFunction(param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
         return 1;
@@ -377,13 +390,13 @@ int applyRule(Module &M, Instruction *currentInstr, RewriteRule rw_rule,
 
 /**
  * Applies a rule for global variables.
- * @param M module
+ * @param instr instrumentation object
  * @param I current instruction
  * @param rw_newInstr rule to apply - new instruction
  * @param variables map of found parameters form config
  * @return 1 if error
  */
-int applyRule(Module &M, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
+int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
         const Variables& variables) {
     logger.write_info("Applying rule for global variable...");
 
@@ -399,7 +412,7 @@ int applyRule(Module &M, Instruction *currentInstr, InstrumentInstruction rw_new
 
     // Get name of function
     string param = *(--rw_newInstr.parameters.end());
-    CalleeF = M.getFunction(param);
+    CalleeF = instr.module.getFunction(param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
         return 1;
@@ -458,7 +471,7 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& var
 
 /**
  * Checks whether the given flag is set as they should be.
- * @param condition condition to be satisfied
+     * @param condition condition to be satisfied
  * @param rewriter rewriter
  * @return true if satisfied, false otherwise
 **/
@@ -470,11 +483,12 @@ bool checkFlag(Condition condition, Rewriter rewriter) {
 /**
  * Runs all plugins for static analyses and decides, whether to
  * instrument or not.
+ * @param instr instrumentation object
  * @param condition condition that must be satisfied to instrument
  * @param variables
  * @return true if condition is ok, false otherwise
  */
-bool checkAnalysis(const Condition& condition, const Variables& variables){
+bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const Variables& variables){
     // condition: first element is operator, other one or two elements
     // are variables, TODO do we need more than two variables?
     if(condition.name == "")
@@ -506,7 +520,7 @@ bool checkAnalysis(const Condition& condition, const Variables& variables){
         }
     }
 
-    for(auto& plugin : plugins){
+    for(auto& plugin : instr.plugins){
         if(!Analyzer::shouldInstrument(plugin.get(), condition.name, aValue, bValue)){
             // some plugin told us that we should not instrument
             return false;
@@ -520,19 +534,19 @@ bool checkAnalysis(const Condition& condition, const Variables& variables){
 /**
  * Checks whether the conditions are satisfied for this rule.
  * @param conditions list of conditions
- * @param rewriter rewriter
+ * @param instr instrumentation object
  * @param variables list of variables
  * @return true if conditions are satisfied, false otherwise
  **/
-bool checkConditions(const std::list<Condition>& conditions, Rewriter& rewriter, const Variables& variables) {
+bool checkConditions(const std::list<Condition>& conditions, LLVMInstrumentation& instr, const Variables& variables) {
     // check the conditions
     for (const auto& condition : conditions) {
-        if(rewriter.isFlag(condition.name)) {
-            if(!checkFlag(condition, rewriter)) {
+        if(instr.rewriter.isFlag(condition.name)) {
+            if(!checkFlag(condition, instr.rewriter)) {
                 return false;
             }
         }
-        else if(!checkAnalysis(condition, variables)) {
+        else if(!checkAnalysis(instr, condition, variables)) {
             return false;
         }
     }
@@ -554,13 +568,12 @@ void setFlags(const RewriteRule& rule, Rewriter& rewriter) {
 /**
  * Checks if the given instruction should be instrumented.
  * @param ins instruction to be checked.
- * @param M module.
  * @param rw_config parsed rules to apply.
  * @param Iiterator pointer to instructions iterator
- * @param rewriter rewriter
+ * @param instr instrumentation object
  * @return true if OK, false otherwise
  */
-bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator, Rewriter& rewriter) {
+bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator, LLVMInstrumentation& instr) {
     // iterate through rewrite rules
     for (RewriteRule& rw : rw_config){
         // check if this rule should be applied in this function
@@ -613,15 +626,15 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
         if(rw.foundInstrs.size() == 1){
             InstrumentInstruction allocaIns = rw.foundInstrs.front();
             if(!allocaIns.getSizeTo.empty()){
-                variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getAllocatedSize(ins, &M));
+                variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
             }
         }
 
         // if all instructions match and conditions are satisfied
         // try to instrument the code
-        if(instrument && checkConditions(rw.conditions, rewriter, variables)) {
-            // set flags (TODO do we want to set flags even if teh conditions were not satisifed?)
-            setFlags(rw, rewriter);
+        if(instrument && checkConditions(rw.conditions, instr, variables)) {
+            // set flags (TODO do we want to set flags even if the conditions were not satisifed?)
+            setFlags(rw, instr.rewriter);
 
             // try to apply rule
             Instruction *where;
@@ -635,7 +648,7 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
                 where = currentInstr;
             }
 
-            if(applyRule(M, where, rw, variables, Iiterator) == 1) {
+            if(applyRule(instr, where, rw, variables, Iiterator) == 1) {
                 logger.write_error("Cannot apply rule.");
                 return false;
             }
@@ -651,12 +664,11 @@ bool CheckInstruction(Instruction* ins, Module& M, Function* F, RewriterConfig r
  * @param M module.
  * @return size of global variable.
  */
-uint64_t getGlobalVarSize(GlobalVariable* GV, Module* M){
+uint64_t getGlobalVarSize(GlobalVariable* GV, const Module& M){
 
-    DataLayout* DL = new DataLayout(M);
+    DataLayout* DL = new DataLayout(&M);
 
     Type* Ty = GV->getType()->getElementType();
-
 
     if(!Ty->isSized())
         return 0;
@@ -672,18 +684,17 @@ uint64_t getGlobalVarSize(GlobalVariable* GV, Module* M){
 /**
  * Instruments global variable if they should be instrumented.
  * @param M module.
- * @param rw_config parsed rules to apply.
  * @return true if instrumentation of global variables was done without problems, false otherwise
  */
-bool InstrumentGlobals(Module& M, Rewriter rw) {
-    GlobalVarsRule rw_globals = rw.getGlobalsConfig();
+bool InstrumentGlobals(LLVMInstrumentation& instr) {
+    GlobalVarsRule rw_globals = instr.rewriter.getGlobalsConfig();
 
     // If there is no rule for global variables, do not try to instrument
     if(rw_globals.inFunction.empty() || rw_globals.globalVar.globalVariable.empty()) // TODO this is not very nice
         return true;
 
     // Iterate through global variables
-    Module::global_iterator GI = M.global_begin(), GE = M.global_end();
+    Module::global_iterator GI = instr.module.global_begin(), GE = instr.module.global_end();
     for ( ; GI != GE; ++GI) {
         GlobalVariable *GV = dyn_cast<GlobalVariable>(GI);
         if (!GV) continue;
@@ -694,20 +705,20 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
             logger.write_error("Rule for global variables for instrumenting to all function not supported yet.");
         }
         else{
-            Function* F = M.getFunction(rw_globals.inFunction);
+            Function* F = instr.module.getFunction(rw_globals.inFunction);
             // Get operands of new instruction
             map <string, Value*> variables;
 
             if(rw_globals.globalVar.globalVariable != "*")
                 variables[rw_globals.globalVar.globalVariable] = GV;
             if(rw_globals.globalVar.globalVariable != "*"){
-                variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(M.getContext()), getGlobalVarSize(GV, &M));
+                variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getGlobalVarSize(GV, instr.module));
             }
 
             // Check the conditions
             bool satisfied = true;
             for (auto condition : rw_globals.conditions) {
-                if(!checkAnalysis(condition, variables)) {
+                if(!checkAnalysis(instr, condition, variables)) {
                     satisfied = false;
                     break;
                 }
@@ -718,7 +729,7 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
                 // Try to apply rule
                 inst_iterator IIterator = inst_begin(F);
                 Instruction *firstI = &*IIterator; //TODO
-                if(applyRule(M, firstI, rw_globals.newInstr, variables) == 1) {
+                if(applyRule(instr, firstI, rw_globals.newInstr, variables) == 1) {
                     logger.write_error("Cannot apply rule.");
                     return false;
                 }
@@ -736,7 +747,7 @@ bool InstrumentGlobals(Module& M, Rewriter rw) {
  * @param rw_config set of rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentEntryPoint(Module &M, Function* F, RewriterConfig rw_config){
+bool InstrumentEntryPoint(const Module &M, Function* F, RewriterConfig rw_config){
     if(F->isDeclaration()) return true;
     for (RewriteRule& rw : rw_config) {
 
@@ -778,7 +789,7 @@ bool InstrumentEntryPoint(Module &M, Function* F, RewriterConfig rw_config){
  * @param rw_config set fo rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
+bool InstrumentReturns(const Module &M, Function* F, RewriterConfig rw_config){
     for (RewriteRule& rw : rw_config) {
 
         // Check type of the rule
@@ -813,14 +824,13 @@ bool InstrumentReturns(Module &M, Function* F, RewriterConfig rw_config){
 
 /**
  * Runs one phase of instrumentation rules.
- * @param M module to be instrumented.
+ * @param instr instrumentation object
  * @param phase current phase of instrumentation.
- * @param rewriter rewriter
  * @return true if instrumentation was completed without problems, false otherwise
  */
-bool RunPhase(Module &M, const Phase& phase, Rewriter& rewriter) {
+bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
     // Instrument instructions in functions
-    for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
+    for (Module::iterator Fiterator = instr.module.begin(), E = instr.module.end(); Fiterator != E; ++Fiterator) {
 
         // Do not instrument functions linked for instrumentation
         string functionName = (&*Fiterator)->getName().str();
@@ -831,14 +841,14 @@ bool RunPhase(Module &M, const Phase& phase, Rewriter& rewriter) {
             continue;
         }
 
-        if(!InstrumentEntryPoint(M, &*Fiterator, phase.config)) return false;
-        if(!InstrumentReturns(M, &*Fiterator, phase.config)) return false;
+        if(!InstrumentEntryPoint(instr.module, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentReturns(instr.module, (&*Fiterator), phase.config)) return false;
 
         for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
             // This iterator may be replaced (by an iterator to the following
             // instruction) in the InsertCallInstruction function
             // Check if the instruction is relevant
-            if(!CheckInstruction(&*Iiterator, M, &*Fiterator, phase.config, &Iiterator, rewriter)) return false;
+            if(!CheckInstruction(&*Iiterator, (&*Fiterator), phase.config, &Iiterator, instr)) return false;
         }
     }
 
@@ -847,29 +857,28 @@ bool RunPhase(Module &M, const Phase& phase, Rewriter& rewriter) {
 
 /**
  * Instruments given module with rules from json file.
- * @param M module to be instrumented.
- * @param rw parsed rules to apply.
+ * @param instr instrumentation object
  * @return true if instrumentation was done without problems, false otherwise
  */
-bool instrumentModule(Module &M, Rewriter rw) {
+bool instrumentModule(LLVMInstrumentation& instr) {
     logger.write_info("Starting instrumentation.");
 
     // Instrument global variables
-    if(!InstrumentGlobals(M, rw)) return false;
+    if(!InstrumentGlobals(instr)) return false;
 
-    Phases rw_phases = rw.getPhases();
+    Phases rw_phases = instr.rewriter.getPhases();
 
     for (const auto& phase : rw_phases) {
-        if(!RunPhase(M, phase, rw))
+        if(!RunPhase(instr, phase))
             return false;
     }
 
     // Write instrumented module into the output file
     ofstream out_file;
-    out_file.open(outputName, ios::out | ios::binary);
+    out_file.open(instr.outputName, ios::out | ios::binary);
     raw_os_ostream rstream(out_file);
 
-    WriteBitcodeToFile(&M, rstream);
+    WriteBitcodeToFile(&instr.module, rstream);
     rstream.flush();
     out_file.close();
     return true;
@@ -877,14 +886,13 @@ bool instrumentModule(Module &M, Rewriter rw) {
 
 /**
  * Loads all plugins.
- * @param rw Rules from config file.
- * @param module Module to be instrumented.
+ * @param instr instrumentation object
  */
-void loadPlugins(Rewriter rw, Module* module) {
-    for(const string& path : rw.analysisPaths) {
-        auto plugin = Analyzer::analyze(path, module);
+void loadPlugins(LLVMInstrumentation& instr) {
+    for(const string& path : instr.rewriter.analysisPaths) {
+        auto plugin = Analyzer::analyze(path, &instr.module);
         if (plugin)
-            plugins.push_back(std::move(plugin));
+            instr.plugins.push_back(std::move(plugin));
         else
             cout <<"Failed loading plugin: " << path << endl;
     }
@@ -902,8 +910,6 @@ int main(int argc, char *argv[]) {
 
     ifstream llvmir_file;
     llvmir_file.open(argv[2]);
-
-    outputName = argv[3];
 
     // Parse json file
     logger.write_info("Parsing configuration...");
@@ -937,16 +943,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    LLVMInstrumentation instr(*m);
+    instr.rewriter = rw;
+    instr.outputName = argv[3];
+
     if(argc <= 4 || std::string(argv[4]).compare("--disable-plugins") != 0){
         logger.write_info("Loading plugins...");
-        loadPlugins(rw,m);
+        loadPlugins(instr);
     }
     else{
         logger.write_info("Plugins disabled.");
     }
 
     // Instrument
-    bool resultOK = instrumentModule(*m, rw);
+    bool resultOK = instrumentModule(instr);
 
     delete m;
     config_file.close();
