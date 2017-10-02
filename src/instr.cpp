@@ -566,6 +566,21 @@ void setFlags(const RewriteRule& rule, Rewriter& rewriter) {
 }
 
 /**
+ * Adds values that should be remembered into
+ * instr's list.
+ * @param name name of the value to be remembered
+ * @param instr instrumentation object
+ * @param variables list of variables
+**/
+void rememberValues(string name, LLVMInstrumentation& instr, Variables variables) {
+    auto search = variables.find(name);
+    if(search != variables.end()) {
+        instr.rememberedValues.push_back(search->second);
+    }
+    // TODO else branch?
+}
+
+/**
  * Checks if the given instruction should be instrumented.
  * @param ins instruction to be checked.
  * @param rw_config parsed rules to apply.
@@ -635,6 +650,9 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
         if(instrument && checkConditions(rw.conditions, instr, variables)) {
             // set flags (TODO do we want to set flags even if the conditions were not satisifed?)
             setFlags(rw, instr.rewriter);
+
+            // remember values that should be remembered
+            rememberValues(rw.remember, instr, variables);
 
             // try to apply rule
             Instruction *where;

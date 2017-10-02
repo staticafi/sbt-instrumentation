@@ -58,6 +58,7 @@ class RewriteRule {
 	std::string inFunction;
 	std::list<Condition> conditions;
     Flags setFlags;
+    std::string remember;
 };
 
 typedef std::list<RewriteRule> RewriterConfig;

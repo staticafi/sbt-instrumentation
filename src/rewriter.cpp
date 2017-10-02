@@ -45,6 +45,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     }
 
     r.inFunction = rule["in"].asString();
+    r.remember = rule["remember"].asString();
 
     // TODO extract function
     for (const auto& condition : rule["conditions"]){
