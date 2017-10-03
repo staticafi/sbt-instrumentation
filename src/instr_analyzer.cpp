@@ -35,7 +35,8 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 }
 
 // we should instrument only if the condition may not hold
-bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, llvm::Value* a, llvm::Value* b){
+bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, InstrPlugin* plugin, 
+                                const string &condition, llvm::Value* a, llvm::Value* b) {
 
     // we are told to instrument only when
     // the value is null, so check if the value
@@ -48,6 +49,12 @@ bool Analyzer::shouldInstrument(InstrPlugin* plugin, const string &condition, ll
         return plugin->isValidPointer(a, b);
     } else if (condition == "!isValidPointer") {
         return !plugin->isValidPointer(a, b);
+    } else if (condition == "isRemembered") {
+        for (auto v : rememberedValues) {
+            if (plugin->isEqual(v, a))
+                return true;
+        }
+        return false;
     }
 
     /* TODO

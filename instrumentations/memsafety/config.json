@@ -6,14 +6,14 @@
             "findGlobals": {
                 "globalVariable": "<t1>",
                 "getSizeTo": "<t2>"
-            }
-            ,
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["<t1>","<t2>", "1", "__INSTR_remember"]
-                },
-                "in": "main"
+            },
+            "newInstruction": {
+                "returnValue": "*",
+                "instruction": "call",
+                "operands": ["<t1>","<t2>", "1", "__INSTR_remember"]
+            },
+            "in": "main",
+            "conditions": [["isRemembered", "<t1>"]]
         },
         "phases":
             [   
@@ -36,27 +36,6 @@
                             "operands": ["__INSTR_destroy_allocas"]
                         },
                         "where": "return",
-                        "in": "*"
-                    },
-                    {
-                        "findInstructions": [
-                        {
-                            "returnValue": "<t1>",
-                            "instruction": "alloca",
-                            "operands": ["<t0>"],
-                            // get only size of _one_ element,
-                            // maybe rename to "getAllocatedTypeSize"
-                            "getSizeTo": "<t2>"
-                        }
-                        ],
-                        "newInstruction": {
-                            "returnValue": "*",
-                            "instruction": "call",
-                            // __INSTR_remember takes the pointer, size of one element
-                            // and number of elements and computes total size as <t2>*<t0>
-                            "operands": ["<t1>","<t2>", "<t0>", "__INSTR_remember"]
-                        },
-                        "where": "after",
                         "in": "*"
                     },
                     {
@@ -212,7 +191,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -229,7 +209,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -246,7 +227,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -264,7 +246,8 @@
                         },
                         "where": "before",
                         "conditions": [["!isValidPointer", "<t1>", "<t2>"]],
-                        "in": "*"
+                        "in": "*", 
+                        "remember": "<t1>"
                     },
                     {
                         "findInstructions": [
@@ -282,7 +265,8 @@
                         },
                         "where": "before",
                         "conditions": [["!isValidPointer", "<t2>", "<t3>"]],
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t2>"
                     },
                     {
                         "findInstructions": [
@@ -299,7 +283,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -316,7 +301,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -333,7 +319,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -350,7 +337,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -367,7 +355,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -384,7 +373,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -401,7 +391,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -418,7 +409,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -435,7 +427,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -452,7 +445,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -469,7 +463,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     },
                     {
                         "findInstructions": [
@@ -486,7 +481,8 @@
                             "stripInboundsOffsets": "<t3>"
                         },
                         "where": "before",
-                        "in": "*"
+                        "in": "*",
+                        "remember": "<t3>"
                     }
                 //{
                 //    "findInstructions": [
@@ -503,7 +499,8 @@
                 //                  "stripInboundsOffsets": "<t3>"
                 //              },
                 //    "where": "before",
-                //    "in": "*"
+                //    "in": "*",
+                //    "remember": "<t3>"
                 //},
                 //{
                 //    "findInstructions": [
@@ -523,26 +520,54 @@
                 //}
                 ]
             },
-            {
-                "instructionRules": [
+            {   "instructionRules": 
+                [    
                 {
                     "findInstructions": [
                     {
-                        "returnValue": "*",
-                        "instruction": "ret",
-                        "operands": ["*"]
+                        "returnValue": "<t1>",
+                        "instruction": "alloca",
+                        "operands": ["<t0>"],
+                        // get only size of _one_ element,
+                        // maybe rename to "getAllocatedTypeSize"
+                        "getSizeTo": "<t2>"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["__INSTR_check_leaks"]
+                        // __INSTR_remember takes the pointer, size of one element
+                        // and number of elements and computes total size as <t2>*<t0>
+                        "operands": ["<t1>","<t2>", "<t0>", "__INSTR_remember"]
                     },
-                    "where": "before",
-                    "in": "main",
-                    "conditions": [["malloc", "true"]]
+                    "where": "after",
+                    "in": "*",
+                    "conditions": [["isRemembered", "<t1>"]]
                 }
                 ]
+
+            },
+            {
+                "instructionRules": 
+                    [
+                    {
+                        "findInstructions": [
+                        {
+                            "returnValue": "*",
+                            "instruction": "ret",
+                            "operands": ["*"]
+                        }
+                        ],
+                        "newInstruction": {
+                            "returnValue": "*",
+                            "instruction": "call",
+                            "operands": ["__INSTR_check_leaks"]
+                        },
+                        "where": "before",
+                        "in": "main",
+                        "conditions": [["malloc", "true"]]
+                    }
+                    ]
             }
         ]
 }
