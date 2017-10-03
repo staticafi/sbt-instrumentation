@@ -521,7 +521,7 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
     }
 
     for(auto& plugin : instr.plugins){
-        if(!Analyzer::shouldInstrument(plugin.get(), condition.name, aValue, bValue)){
+        if(!Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition.name, aValue, bValue)){
             // some plugin told us that we should not instrument
             return false;
         }
@@ -881,15 +881,16 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
 bool instrumentModule(LLVMInstrumentation& instr) {
     logger.write_info("Starting instrumentation.");
 
-    // Instrument global variables
-    if(!InstrumentGlobals(instr)) return false;
-
     Phases rw_phases = instr.rewriter.getPhases();
 
     for (const auto& phase : rw_phases) {
         if(!RunPhase(instr, phase))
             return false;
     }
+
+     // Instrument global variables
+    if(!InstrumentGlobals(instr)) return false;
+
 
     // Write instrumented module into the output file
     ofstream out_file;
