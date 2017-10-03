@@ -19,6 +19,13 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/SourceMgr.h>
+#include <llvm/Transforms/Utils/Cloning.h>
+
+#if ((LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR < 5))
+ #include <llvm/Analysis/Verifier.h>
+#else // >= 3.5
+ #include <llvm/IR/Verifier.h>
+#endif
 
 #if LLVM_VERSION_MAJOR >= 4
 #include <llvm/Bitcode/BitcodeReader.h>
@@ -891,15 +898,21 @@ bool instrumentModule(LLVMInstrumentation& instr) {
      // Instrument global variables
     if(!InstrumentGlobals(instr)) return false;
 
+#if ((LLVM_VERSION_MAJOR >= 4) || (LLVM_VERSION_MINOR >= 5))
+    if (llvm::verifyModule(instr.module, &llvm::errs()))
+#else
+    if (llvm::verifyModule(instr.module, llvm::PrintMessageAction))
+#endif
+        return false;
 
     // Write instrumented module into the output file
-    ofstream out_file;
-    out_file.open(instr.outputName, ios::out | ios::binary);
-    raw_os_ostream rstream(out_file);
+    std::ofstream ofs(instr.outputName);
+    llvm::raw_os_ostream ostream(ofs);
 
-    WriteBitcodeToFile(&instr.module, rstream);
-    rstream.flush();
-    out_file.close();
+    // write the module
+    errs() << "Saving the instrumented module to: " << instr.outputName << "\n";
+    llvm::WriteBitcodeToFile(&instr.module, ostream);
+
     return true;
 }
 
