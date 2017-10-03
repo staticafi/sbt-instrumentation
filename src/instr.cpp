@@ -54,21 +54,23 @@ typedef map<string, Value*> Variables;
 class LLVMInstrumentation {
     public:
         Module& module;
+        Module& definitionsModule;
         list<unique_ptr<InstrPlugin>> plugins;
         string outputName;
         list<Value*> rememberedValues;
         Variables variables;
         Rewriter rewriter;
         
-        LLVMInstrumentation(Module& m) : module(m) {
-        }
+        LLVMInstrumentation(Module& m, Module& dm)
+          : module(m), definitionsModule(dm) {}
 };
 
 
 Logger logger("log.txt");
 
 void usage(char *name) {
-    cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName> <options>" << endl;
+
+	cerr << "Usage: " << name << " <config.json> <IR to be instrumented> <IR with definitions> <outputFileName> <options>" << endl;
 }
 
 /**
@@ -354,6 +356,23 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
     return make_tuple(args,nI);
 }
 
+static llvm::Function *getOrInsertFunc(LLVMInstrumentation& I,
+                                       const std::string& name) {
+    llvm::Constant *cF = I.module.getFunction(name);
+    if (!cF) {
+        // get the function from the module with definitions
+        // so that we can copy it
+        Function *defF = I.definitionsModule.getFunction(name);
+        if (!defF) {
+            llvm::errs() << "Failed finding the definition of a function " << name << "\n";
+            return nullptr;
+        }
+
+        return cast<Function>(I.module.getOrInsertFunction(name, defF->getFunctionType()));
+    } else
+        return cast<Function>(cF);
+}
+
 /**
  * Applies a rule.
  * @param instr instrumentation object
@@ -375,11 +394,10 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
 
     // Get operands
     std::vector<Value *> args;
-    Function *CalleeF = NULL;
 
     // Get name of function
     string param = *(--rw_rule.newInstr.parameters.end());
-    CalleeF = instr.module.getFunction(param);
+    Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
         return 1;
@@ -415,11 +433,10 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
 
     // Get operands
     std::vector<Value *> args;
-    Function *CalleeF = NULL;
 
     // Get name of function
     string param = *(--rw_newInstr.parameters.end());
-    CalleeF = instr.module.getFunction(param);
+    Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
         return 1;
@@ -772,7 +789,7 @@ bool InstrumentGlobals(LLVMInstrumentation& instr) {
  * @param rw_config set of rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentEntryPoint(const Module &M, Function* F, RewriterConfig rw_config){
+bool InstrumentEntryPoint(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config){
     if(F->isDeclaration()) return true;
     for (RewriteRule& rw : rw_config) {
 
@@ -784,7 +801,7 @@ bool InstrumentEntryPoint(const Module &M, Function* F, RewriterConfig rw_config
 
         // Get name of function
         string param = *(--rw.newInstr.parameters.end());
-        Function *CalleeF = M.getFunction(param);
+        Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
             logger.write_error("Unknown function: " + param);
             return false;
@@ -814,7 +831,7 @@ bool InstrumentEntryPoint(const Module &M, Function* F, RewriterConfig rw_config
  * @param rw_config set fo rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentReturns(const Module &M, Function* F, RewriterConfig rw_config){
+bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config){
     for (RewriteRule& rw : rw_config) {
 
         // Check type of the rule
@@ -825,7 +842,7 @@ bool InstrumentReturns(const Module &M, Function* F, RewriterConfig rw_config){
 
         // Get name of function
         string param = *(--rw.newInstr.parameters.end());
-        Function *CalleeF = M.getFunction(param);
+        Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
             logger.write_error("Unknown function: " + param);
             return false;
@@ -866,8 +883,8 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
             continue;
         }
 
-        if(!InstrumentEntryPoint(instr.module, (&*Fiterator), phase.config)) return false;
-        if(!InstrumentReturns(instr.module, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentEntryPoint(instr, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentReturns(instr, (&*Fiterator), phase.config)) return false;
 
         for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
             // This iterator may be replaced (by an iterator to the following
@@ -931,7 +948,7 @@ void loadPlugins(LLVMInstrumentation& instr) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 4) {
+    if (argc < 5) {
         usage(argv[0]);
         exit(1);
     }
@@ -961,13 +978,13 @@ int main(int argc, char *argv[]) {
     LLVMContext Context;
     SMDiagnostic Err;
 #if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 6)
-    std::unique_ptr<Module> _m = parseIRFile(argv[2], Err, Context);
-    Module *m = _m.release();
+    std::unique_ptr<Module> module = parseIRFile(argv[2], Err, Context);
+    std::unique_ptr<Module> defModule = parseIRFile(argv[3], Err, Context);
 #else
-    Module *m = ParseIRFile(argv[2], Err, Context);
+    std::unique_ptr<Module> module = std::unique_ptr<Module>(ParseIRFile(argv[2], Err, Context));
+    std::unique_ptr<Module> defModule = std::unique_ptr<Module>(ParseIRFile(argv[3], Err, Context));
 #endif
-
-    if (!m) {
+    if (!module) {
         logger.write_error("Error parsing .bc file.");
         Err.print(argv[0], errs());
         config_file.close();
@@ -975,11 +992,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    LLVMInstrumentation instr(*m);
-    instr.rewriter = rw;
-    instr.outputName = argv[3];
+    if (!defModule) {
+        logger.write_error("Error parsing .bc file with definitions.");
+        Err.print(argv[0], errs());
+        config_file.close();
+        llvmir_file.close();
+        return 1;
+    }
 
-    if(argc <= 4 || std::string(argv[4]).compare("--disable-plugins") != 0){
+
+    LLVMInstrumentation instr(*module.get(), *defModule.get());
+    instr.rewriter = std::move(rw);
+    instr.outputName = argv[4];
+
+    if(argc <= 5 || (strcmp(argv[5], "--disable-plugins") != 0)){
         logger.write_info("Loading plugins...");
         loadPlugins(instr);
     }
@@ -990,7 +1016,6 @@ int main(int argc, char *argv[]) {
     // Instrument
     bool resultOK = instrumentModule(instr);
 
-    delete m;
     config_file.close();
     llvmir_file.close();
 
