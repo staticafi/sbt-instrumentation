@@ -149,7 +149,8 @@ void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, co
 
 		for (auto& ptr : psnode->pointsTo) {
             // skip invalid pointers
-            if (!ptr.isValid() || ptr.isInvalidated())
+            if (!ptr.isValid())
+                //|| ptr.isInvalidated()) TODO uncomment this when we start to use new analysis
                 continue;
 
 			Value *llvmValue = ptr.target->getUserData<llvm::Value>();
