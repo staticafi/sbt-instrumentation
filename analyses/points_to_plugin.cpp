@@ -3,8 +3,8 @@
 #include <llvm/IR/Constants.h>
 #include "instr_plugin.hpp"
 #include "llvm/analysis/PointsTo/PointsTo.h"
-#include "analysis/PointsTo/PointsToFlowSensitive.h"
 #include "call_graph.hpp"
+#include "analysis/PointsTo/PointsToFlowSensitive.h"
 
 using dg::analysis::pta::PSNode;
 class PointsToPlugin : public InstrPlugin
@@ -73,8 +73,9 @@ class PointsToPlugin : public InstrPlugin
                 return false;
                
             // the memory this pointer points-to was invalidated
-            if (ptr.isInvalidated())
-                return false;
+            // TODO uncomment this when we start to use new analysis
+            //if (ptr.isInvalidated())
+            //    return false;
                 
             // if the offset is unknown, than the pointer
             // may point after the end of allocated memory
