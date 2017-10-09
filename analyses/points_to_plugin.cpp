@@ -113,6 +113,7 @@ class PointsToPlugin : public InstrPlugin
     bool isEqual(llvm::Value* a, llvm::Value* b) {
         if(PTA) {
             PSNode *psnode = PTA->getPointsTo(a);
+            if (!psnode) return true;
             for (auto& ptr : psnode->pointsTo) {
                 llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
                 if(llvmVal == b) return true;
