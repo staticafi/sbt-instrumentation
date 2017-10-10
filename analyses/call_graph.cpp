@@ -39,7 +39,7 @@ bool CGNode::containsCall(std::vector<CGNode> nodeMapping, const Function* call)
 	return false;
 }
 
-CallGraph::CallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA) {
+void CallGraph::buildCallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA) {
 	nodes = std::vector<CGNode>();
 	int distance = std::distance(M.begin(),M.end());
 	nodes.reserve(distance+1);

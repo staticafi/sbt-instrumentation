@@ -43,6 +43,7 @@
 #include "rewriter.hpp"
 #include "instr_log.hpp"
 #include "instr_analyzer.hpp"
+#include "points_to_plugin.hpp"
 
 using namespace llvm;
 using namespace std;
@@ -876,6 +877,28 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
 }
 
 /**
+ * Finds out whether the given function is reachable from main.
+ * @param f function
+ * @param instr LLVMInstrumentation object
+ * @return true if the function is reachable from main, false otherwise
+*/
+bool isReachable(const Function& f, LLVMInstrumentation& instr) {
+    for (auto& plugin : instr.plugins) {
+        if(plugin->getName() == "PointsTo") {
+            PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
+            Function* main = instr.module.getFunction("main");
+            if(main) {
+                return pp->isReachableFunction(*main, f);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
  * Runs one phase of instrumentation rules.
  * @param instr instrumentation object
  * @param phase current phase of instrumentation.
@@ -896,8 +919,15 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
             continue;
         }
 
-        if(!InstrumentEntryPoint(instr, (&*Fiterator), phase.config)) return false;
-        if(!InstrumentReturns(instr, (&*Fiterator), phase.config)) return false;
+        // If we have info from points-to plugin, do not 
+        // instrument functions that are not reachable from main
+        if (!isReachable((*Fiterator), instr) && functionName != "main") {
+            logger.write_info("Omitting function " + functionName + " from instrumentation, not reachable from main.");
+            continue;
+        }
+
+        if(!InstrumentEntryPoint(instr.module, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentReturns(instr.module, (&*Fiterator), phase.config)) return false;
 
         for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
             // This iterator may be replaced (by an iterator to the following

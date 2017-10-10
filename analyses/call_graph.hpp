@@ -23,7 +23,7 @@ class CGNode {
 class CallGraph {
 	public:
 		std::vector<CGNode> nodes;
-		CallGraph(llvm::Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA);
+		void buildCallGraph(llvm::Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA);
 		bool containsCall(const llvm::Function* caller, const llvm::Function* callee);
 		bool containsDirectCall(const llvm::Function* caller, const llvm::Function* callee);
 		bool isRecursive(const llvm::Function* function);
