@@ -35,7 +35,8 @@ TEST_CASE( "recursive01", "[callgraph]" ) {
 	Module *m = getModule("sources/recursive01.ll");
 	std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
 	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
-	CallGraph cg(*m, PTA);
+	CallGraph cg;
+    cg.buildCallGraph(*m, PTA);
 	
 	Function *main = m->getFunction("main");
 	Function *recursive = m->getFunction("recursive");
@@ -58,7 +59,8 @@ TEST_CASE( "function_pointers01", "[callgraph]" ) {
 	Module *m = getModule("sources/function_pointers01.ll");
 	std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
 	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
-	CallGraph cg(*m, PTA);
+	CallGraph cg;
+    cg.buildCallGraph(*m, PTA);
 	
 	Function *main = m->getFunction("main");
 	Function *sum = m->getFunction("sum");
@@ -78,7 +80,8 @@ TEST_CASE( "recursive02", "[callgraph]" ) {
 	Module *m = getModule("sources/recursive02.ll");
 	std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
 	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
-	CallGraph cg(*m, PTA);
+	CallGraph cg;
+    cg.buildCallGraph(*m, PTA);
 	
 	Function *main = m->getFunction("main");
 	Function *call_foo = m->getFunction("call_foo");
@@ -111,7 +114,8 @@ TEST_CASE( "indirect_calls01", "[callgraph]" ) {
 	Module *m = getModule("sources/indirect_calls01.ll");
 	std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
 	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
-	CallGraph cg(*m, PTA);
+	CallGraph cg;
+    cg.buildCallGraph(*m, PTA);
 	
 	Function *main = m->getFunction("main");
 	Function *call_foo1 = m->getFunction("call_foo1");
@@ -158,7 +162,8 @@ TEST_CASE( "indirect_calls02", "[callgraph]" ) {
 	Module *m = getModule("sources/indirect_calls02.ll");
 	std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
 	PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
-	CallGraph cg(*m, PTA);
+	CallGraph cg;
+    cg.buildCallGraph(*m, PTA);
 	
 	Function *main = m->getFunction("main");
 	Function *foo1 = m->getFunction("foo1");
