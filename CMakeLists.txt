@@ -16,6 +16,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 
 include_directories(include)
+include_directories(analyses)
 
 find_path(LLVM_SRC_PATH include/llvm/Module.h)
 find_path(LLVM_BUILD_PATH include/llvm/Intrinsics.gen)
@@ -40,6 +41,7 @@ message(STATUS "LLVM definitions: ${LLVM_DEFINITIONS}")
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
+include_directories(${CMAKE_SOURCE_DIR}/analyses)
 add_definitions(-DHAVE_LLVM)
 
 if (DG_PATH)
