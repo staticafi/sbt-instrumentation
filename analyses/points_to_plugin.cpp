@@ -4,7 +4,7 @@
 #include "instr_plugin.hpp"
 #include "llvm/analysis/PointsTo/PointsTo.h"
 #include "call_graph.hpp"
-#include "analysis/PointsTo/PointsToFlowSensitive.h"
+#include "analysis/PointsTo/PointsToWithInvalidate.h"
 
 using dg::analysis::pta::PSNode;
 class PointsToPlugin : public InstrPlugin
@@ -73,9 +73,8 @@ class PointsToPlugin : public InstrPlugin
                 return false;
                
             // the memory this pointer points-to was invalidated
-            // TODO uncomment this when we start to use new analysis
-            //if (ptr.isInvalidated())
-            //    return false;
+            if (ptr.isInvalidated())
+                return false;
                 
             // if the offset is unknown, than the pointer
             // may point after the end of allocated memory
@@ -178,7 +177,7 @@ class PointsToPlugin : public InstrPlugin
     PointsToPlugin(llvm::Module* module) {
         llvm::errs() << "Running points-to analysis...\n";
         PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(module));
-        PTA->run<dg::analysis::pta::PointsToFlowSensitive>();
+        PTA->run<dg::analysis::pta::PointsToWithInvalidate>();
     }
 };
 
