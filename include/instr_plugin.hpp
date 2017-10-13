@@ -60,6 +60,10 @@ class InstrPlugin
           return false;
       }
 
+      virtual bool knownSize(llvm::Value*) {
+          return false;
+      }
+
       std::string getName() { return name; }
 
       InstrPlugin() {}

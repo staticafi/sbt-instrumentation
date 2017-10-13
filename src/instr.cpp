@@ -75,6 +75,35 @@ void usage(char *name) {
 }
 
 /**
+ * Get size of allocated memory to which given pointer points to.
+ * @param I instruction.
+ * @param ins LLVMInstrumentation object.
+ * @return size of allocated memory to which pointer points to.
+ */
+uint64_t getPointerSize(Instruction *I, const LLVMInstrumentation& instr){
+    Value* op;
+    if(const StoreInst *SI = dyn_cast<StoreInst>(I)){
+        op = SI->getOperand(1);
+    }
+    else if(const LoadInst *LI = dyn_cast<LoadInst>(I)){
+        op = LI->getOperand(0);
+    }
+    else {
+        return 0;
+    }
+
+    uint64_t allocaSize = 0;
+    for (auto& plugin : instr.plugins) {
+        if(plugin->getName() == "PointsTo") {
+            PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
+            return pp->getAllocatedSize(op);
+        }
+    }
+
+    return 0;
+}
+
+/**
  * Get size of allocated type.
  * @param I instruction.
  * @param M module.
@@ -95,11 +124,14 @@ uint64_t getAllocatedSize(Instruction *I, const Module& M){
         Ty = LI->getType();
     }
     else{
+        delete DL;
         return 0;
     }
 
-    if(!Ty->isSized())
+    if(!Ty->isSized()) {
+        delete DL;
         return 0;
+    }
 
     uint64_t size = DL->getTypeAllocSize(Ty);
 
@@ -499,7 +531,7 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& var
 
 /**
  * Checks whether the given flag is set as they should be.
-     * @param condition condition to be satisfied
+ * @param condition condition to be satisfied
  * @param rewriter rewriter
  * @return true if satisfied, false otherwise
 **/
@@ -667,9 +699,16 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
         } 
 
         if(rw.foundInstrs.size() == 1){
-            InstrumentInstruction allocaIns = rw.foundInstrs.front();
-            if(!allocaIns.getSizeTo.empty()){
-                variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
+            InstrumentInstruction iIns = rw.foundInstrs.front();
+            if(!iIns.getSizeTo.empty()){
+                variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                     getAllocatedSize(ins, instr.module));
+            }
+
+            if(!iIns.getPointerSizeTo.empty()) {
+                variables[iIns.getPointerSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                            getPointerSize(ins, instr));
+
             }
         }
 

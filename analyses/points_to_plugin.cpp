@@ -1,4 +1,5 @@
 #include "points_to_plugin.hpp"
+#include<iostream>
 
 using dg::analysis::pta::PSNode;
 
@@ -25,6 +26,52 @@ bool PointsToPlugin::isNull(llvm::Value* a) {
     // a can not be null
     return false;
 }
+
+bool PointsToPlugin::knownSize(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.size()!=1) {
+        // we know nothing about the allocated size
+        return false;
+    }
+
+    const auto& ptr = *(psnode->pointsTo.begin());
+
+    if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(ptr.target->getUserData<llvm::Value>())) {
+        if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+uint64_t PointsToPlugin::getAllocatedSize(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.size()!=1) {
+        // we know nothing about the allocated size
+        return 0;
+    }
+
+    const auto& ptr = *(psnode->pointsTo.begin());
+
+    if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(ptr.target->getUserData<llvm::Value>())) {
+        if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) {
+            llvm::DataLayout* DL = new llvm::DataLayout(AI->getModule());
+            llvm::Type* Ty = AI->getAllocatedType();
+            if(!Ty->isSized()) {
+                delete DL;
+                return 0;
+            }
+            return DL->getTypeAllocSize(Ty) * C->getZExtValue();
+        }
+    }
+    return 0;
+}
+
 
 bool PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
     if (!a->getType()->isPointerTy())
