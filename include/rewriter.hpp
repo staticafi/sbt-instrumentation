@@ -23,6 +23,7 @@ class InstrumentInstruction {
 	std::list<std::string> parameters;
 	std::string getSizeTo;
 	std::string stripInboundsOffsets;
+    std::string getPointerSizeTo;
 };
 
 class InstrumentGlobalVar {
