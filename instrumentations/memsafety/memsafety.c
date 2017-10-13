@@ -231,6 +231,13 @@ void __INSTR_remember_malloc_calloc(rec_id id, size_t size, int num ) {
 	}
 }
 
+void __INSTR_check_bounds(a_size size, a_size range) {
+    if (range > size) {
+        assert(0 && "dereference out of range");
+        __VERIFIER_error();
+    }
+}
+
 void __INSTR_check(rec_id id, a_size range, rec r) {
 	if (range > r.size ||
 	    /* id - r->id is the offset into memory.
