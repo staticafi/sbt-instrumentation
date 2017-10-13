@@ -55,6 +55,10 @@ bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, Inst
                 return true;
         }
         return false;
+    } else if (condition == "knownSize") {
+        return plugin->knownSize(a);
+    } else if (condition == "!knownSize") {
+        return !plugin->knownSize(a);
     }
 
     /* TODO

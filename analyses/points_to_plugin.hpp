@@ -25,6 +25,8 @@ class PointsToPlugin : public InstrPlugin
         bool lessThan(llvm::Value* a, llvm::Value* b); 
         bool lessOrEqual(llvm::Value* a, llvm::Value* b);
         bool greaterOrEqual(llvm::Value* a, llvm::Value* b);
+        bool knownSize(llvm::Value* a);
+        virtual uint64_t getAllocatedSize(llvm::Value* a);
         virtual bool isReachableFunction(const llvm::Function& from, const llvm::Function& f);
 
         PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
