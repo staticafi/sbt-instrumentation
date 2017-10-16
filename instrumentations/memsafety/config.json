@@ -171,7 +171,7 @@
                         "newInstruction": {
                             "returnValue": "*",
                             "instruction": "call",
-                            "operands": ["<t1>", "0", "__INSTR_free"]
+                            "operands": ["<t1>", "__INSTR_free"]
                         },
                         "where": "before",
                         "in": "*"
@@ -217,7 +217,7 @@
                         {
                             "returnValue": "*",
                             "instruction": "call",
-                            "operands": ["<t3>","*", "<t4>", "memset"]
+                            "operands": ["<t3>", "*", "<t4>", "memset"]
                         }
                         ],
                         "newInstruction": {
@@ -237,18 +237,17 @@
                             "instruction": "load",
                             "operands": ["<t1>"],
                             "getSizeTo": "<t2>",
-                            "getPointerSizeTo": "<t3>"
+                            "getPointerInfoTo": ["<t3>", "<t4>"]
                         }
                         ],
                         "newInstruction": {
                             "returnValue": "*",
                             "instruction": "call",
-                            "operands": ["<t3>","<t2>", "__INSTR_check_bounds"]
+                            "operands": ["<t3>", "<t4>", "<t1>", "<t2>", "__INSTR_check_bounds"]
                         },
                         "where": "before",
                         "conditions": [["!isValidPointer", "<t1>", "<t2>"], ["knownSize", "<t1>"]],
-                        "in": "*",
-                        "setFlags": [["isChecked", "true"]]
+                        "in": "*"
                     },
                     {
                         "findInstructions": [
@@ -257,18 +256,17 @@
                             "instruction": "store",
                             "operands": ["<t1>", "<t2>"],
                             "getSizeTo": "<t3>",
-                            "getPointerSizeTo": "<t4>"
+                            "getPointerInfoTo": ["<t4>", "<t5>"]
                         }
                         ],
                         "newInstruction": {
                             "returnValue": "*",
                             "instruction": "call",
-                            "operands": ["<t4>","<t3>", "__INSTR_check_bounds"]
+                            "operands": ["<t4>", "<t5>", "<t2>", "<t3>", "__INSTR_check_bounds"]
                         },
                         "where": "before",
                         "conditions": [["!isValidPointer", "<t2>", "<t3>"], ["knownSize", "<t2>"]],
-                        "in": "*",
-                        "setFlags": [["isChecked", "true"]]
+                        "in": "*"
                     },
                     {
                         "findInstructions": [
@@ -285,7 +283,7 @@
                             "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t1>", "<t2>"], ["isChecked", "false"]],
+                        "conditions": [["!isValidPointer", "<t1>", "<t2>"], ["!knownSize", "<t1>"]],
                         "in": "*", 
                         "remember": "<t1>"
                     },
@@ -304,7 +302,7 @@
                             "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t2>", "<t3>"], ["isChecked", "false"]],
+                        "conditions": [["!isValidPointer", "<t2>", "<t3>"], ["!knownSize", "<t2>"]],
                         "in": "*",
                         "remember": "<t2>"
                     },

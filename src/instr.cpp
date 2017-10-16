@@ -66,12 +66,12 @@ void usage(char *name) {
 }
 
 /**
- * Get size of allocated memory to which given pointer points to.
+ * Get info about allocated memory to which given pointer points to.
  * @param I instruction.
  * @param ins LLVMInstrumentation object.
- * @return size of allocated memory to which pointer points to.
+ * @return address and size of allocated memory to which pointer points to.
  */
-uint64_t getPointerSize(Instruction *I, const LLVMInstrumentation& instr){
+std::pair<llvm::Value*, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr){
     Value* op;
     if(const StoreInst *SI = dyn_cast<StoreInst>(I)){
         op = SI->getOperand(1);
@@ -80,18 +80,17 @@ uint64_t getPointerSize(Instruction *I, const LLVMInstrumentation& instr){
         op = LI->getOperand(0);
     }
     else {
-        return 0;
+        return std::make_pair(nullptr, 0);
     }
 
-    uint64_t allocaSize = 0;
     for (auto& plugin : instr.plugins) {
         if(plugin->getName() == "PointsTo") {
             PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
-            return pp->getAllocatedSize(op);
+            return pp->getPointerInfo(op);
         }
     }
 
-    return 0;
+    return std::make_pair(nullptr, 0);
 }
 
 /**
@@ -583,7 +582,6 @@ bool checkConditions(const std::list<Condition>& conditions, LLVMInstrumentation
             return false;
         }
     }
-
     return true;
 }
 
@@ -678,9 +676,11 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                                                                      getAllocatedSize(ins, instr.module));
             }
 
-            if(!iIns.getPointerSizeTo.empty()) {
-                variables[iIns.getPointerSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                            getPointerSize(ins, instr));
+            if(iIns.getPointerInfoTo.size() == 2) {
+                std::pair<llvm::Value*, uint64_t> pointerInfo = getPointerInfo(ins, instr);
+                variables[iIns.getPointerInfoTo.front()] = pointerInfo.first,
+                variables[iIns.getPointerInfoTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                            pointerInfo.second);
 
             }
         }
@@ -688,7 +688,9 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
         // if all instructions match and conditions are satisfied
         // try to instrument the code
         if(instrument && checkConditions(rw.conditions, instr, variables)) {
-            // set flags (TODO do we want to set flags even if the conditions were not satisifed?)
+            InstrumentInstruction iIns = rw.foundInstrs.front();
+
+            // set flags
             setFlags(rw, instr.rewriter);
 
             // remember values that should be remembered
@@ -712,7 +714,6 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             }
         }
     }
-
     return true;
 }
 
@@ -923,10 +924,10 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
 
         // If we have info from points-to plugin, do not 
         // instrument functions that are not reachable from main
-        if (!isReachable((*Fiterator), instr) && functionName != "main") {
+      /*  if (!isReachable((*Fiterator), instr) && functionName != "main") {
             logger.write_info("Omitting function " + functionName + " from instrumentation, not reachable from main.");
             continue;
-        }
+        }*/
 
         if(!InstrumentEntryPoint(instr.module, (&*Fiterator), phase.config)) return false;
         if(!InstrumentReturns(instr.module, (&*Fiterator), phase.config)) return false;
@@ -959,7 +960,6 @@ bool instrumentModule(LLVMInstrumentation& instr) {
 
      // Instrument global variables
     if(!InstrumentGlobals(instr)) return false;
-
 
     // Write instrumented module into the output file
     ofstream out_file;

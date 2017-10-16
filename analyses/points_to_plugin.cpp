@@ -38,38 +38,49 @@ bool PointsToPlugin::knownSize(llvm::Value* a) {
 
     const auto& ptr = *(psnode->pointsTo.begin());
 
+    if (!ptr.target->getUserData<llvm::Value>()) 
+        return false;
+
     if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(ptr.target->getUserData<llvm::Value>())) {
-        if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) {
-            return true;
+        if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) { 
+            if (llvm::Instruction *I = llvm::dyn_cast<llvm::Instruction>(a)) {
+                if (AI->getFunction() == I->getFunction()) {
+                    return true;
+                }
+            }
         }
     }
 
     return false;
 }
 
-uint64_t PointsToPlugin::getAllocatedSize(llvm::Value* a) {
+std::pair<llvm::Value*, uint64_t> PointsToPlugin::getPointerInfo(llvm::Value* a) {
     // need to have the PTA
     assert(PTA);
     PSNode *psnode = PTA->getPointsTo(a);
     if (!psnode || psnode->pointsTo.size()!=1) {
         // we know nothing about the allocated size
-        return 0;
+        return std::make_pair(nullptr, 0);
     }
 
     const auto& ptr = *(psnode->pointsTo.begin());
 
-    if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(ptr.target->getUserData<llvm::Value>())) {
+    llvm::Value* node = ptr.target->getUserData<llvm::Value>();
+    if (!node){
+        return std::make_pair(nullptr, 0);}
+
+    if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(node)) {
         if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) {
             llvm::DataLayout* DL = new llvm::DataLayout(AI->getModule());
             llvm::Type* Ty = AI->getAllocatedType();
             if(!Ty->isSized()) {
                 delete DL;
-                return 0;
+                return std::make_pair(nullptr, 0);
             }
-            return DL->getTypeAllocSize(Ty) * C->getZExtValue();
+            return std::make_pair(node, DL->getTypeAllocSize(Ty) * C->getZExtValue());
         }
     }
-    return 0;
+    return std::make_pair(nullptr, 0);
 }
 
 

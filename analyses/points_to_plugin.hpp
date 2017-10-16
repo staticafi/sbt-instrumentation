@@ -6,7 +6,7 @@
 #include <llvm/IR/Constants.h>
 #include "instr_plugin.hpp"
 #include "llvm/analysis/PointsTo/PointsTo.h"
-#include "analysis/PointsTo/PointsToFlowSensitive.h"
+#include "analysis/PointsTo/PointsToWithInvalidate.h"
 #include "call_graph.hpp"
 
 using dg::analysis::pta::PSNode;
@@ -26,13 +26,13 @@ class PointsToPlugin : public InstrPlugin
         bool lessOrEqual(llvm::Value* a, llvm::Value* b);
         bool greaterOrEqual(llvm::Value* a, llvm::Value* b);
         bool knownSize(llvm::Value* a);
-        virtual uint64_t getAllocatedSize(llvm::Value* a);
+        virtual std::pair<llvm::Value*, uint64_t> getPointerInfo(llvm::Value* a);
         virtual bool isReachableFunction(const llvm::Function& from, const llvm::Function& f);
 
         PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
             llvm::errs() << "Running points-to analysis...\n";
             PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(module));
-            PTA->run<dg::analysis::pta::PointsToFlowSensitive>();
+            PTA->run<dg::analysis::pta::PointsToWithInvalidate>();
             cg.buildCallGraph(*module, PTA);
         }
 };
