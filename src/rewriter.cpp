@@ -17,7 +17,11 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
             instr.parameters.push_back(operand.asString());
         }
         instr.getSizeTo = findInstruction["getSizeTo"].asString();
-        instr.getPointerSizeTo = findInstruction["getPointerSizeTo"].asString();
+
+        for (const auto& info : findInstruction["getPointerInfoTo"]) {
+            instr.getPointerInfoTo.push_back(info.asString());
+        }     
+
         instr.stripInboundsOffsets = findInstruction["stripInboundsOffsets"].asString();
         r.foundInstrs.push_back(instr);
     }
