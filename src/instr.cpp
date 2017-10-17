@@ -884,6 +884,8 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
 bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
     // Instrument instructions in functions
     for (Module::iterator Fiterator = instr.module.begin(), E = instr.module.end(); Fiterator != E; ++Fiterator) {
+        if (Fiterator->isDeclaration())
+          continue;
 
         // Do not instrument functions linked for instrumentation
         string functionName = (&*Fiterator)->getName().str();
