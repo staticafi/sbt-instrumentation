@@ -19,6 +19,13 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/SourceMgr.h>
+#include <llvm/Transforms/Utils/Cloning.h>
+
+#if ((LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR < 5))
+ #include <llvm/Analysis/Verifier.h>
+#else // >= 3.5
+ #include <llvm/IR/Verifier.h>
+#endif
 
 #if LLVM_VERSION_MAJOR >= 4
 #include <llvm/Bitcode/BitcodeReader.h>
@@ -47,21 +54,23 @@ typedef map<string, Value*> Variables;
 class LLVMInstrumentation {
     public:
         Module& module;
+        Module& definitionsModule;
         list<unique_ptr<InstrPlugin>> plugins;
         string outputName;
         list<Value*> rememberedValues;
         Variables variables;
         Rewriter rewriter;
         
-        LLVMInstrumentation(Module& m) : module(m) {
-        }
+        LLVMInstrumentation(Module& m, Module& dm)
+          : module(m), definitionsModule(dm) {}
 };
 
 
 Logger logger("log.txt");
 
 void usage(char *name) {
-    cerr << "Usage: " << name << " <config.json> <llvm IR> <outputFileName> <options>" << endl;
+
+	cerr << "Usage: " << name << " <config.json> <IR to be instrumented> <IR with definitions> <outputFileName> <options>" << endl;
 }
 
 /**
@@ -219,6 +228,9 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
         *Iiterator = ++helper;
         EraseInstructions(currentInstr, rw_rule.foundInstrs.size());
         logger.log_insertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
+    } else {
+        assert("Invalid position for inserting");
+        abort();
     }
 }
 
@@ -347,6 +359,23 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
     return make_tuple(args,nI);
 }
 
+static llvm::Function *getOrInsertFunc(LLVMInstrumentation& I,
+                                       const std::string& name) {
+    llvm::Constant *cF = I.module.getFunction(name);
+    if (!cF) {
+        // get the function from the module with definitions
+        // so that we can copy it
+        Function *defF = I.definitionsModule.getFunction(name);
+        if (!defF) {
+            llvm::errs() << "Failed finding the definition of a function " << name << "\n";
+            return nullptr;
+        }
+
+        return cast<Function>(I.module.getOrInsertFunction(name, defF->getFunctionType()));
+    } else
+        return cast<Function>(cF);
+}
+
 /**
  * Applies a rule.
  * @param instr instrumentation object
@@ -368,11 +397,10 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
 
     // Get operands
     std::vector<Value *> args;
-    Function *CalleeF = NULL;
 
     // Get name of function
-    string param = *(--rw_rule.newInstr.parameters.end());
-    CalleeF = instr.module.getFunction(param);
+    const string& param = *(--rw_rule.newInstr.parameters.end());
+    Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
         return 1;
@@ -408,11 +436,10 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
 
     // Get operands
     std::vector<Value *> args;
-    Function *CalleeF = NULL;
 
     // Get name of function
-    string param = *(--rw_newInstr.parameters.end());
-    CalleeF = instr.module.getFunction(param);
+    const string& param = *(--rw_newInstr.parameters.end());
+    Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
         return 1;
@@ -723,7 +750,7 @@ bool InstrumentGlobals(LLVMInstrumentation& instr) {
             logger.write_error("Rule for global variables for instrumenting to all function not supported yet.");
         }
         else{
-            Function* F = instr.module.getFunction(rw_globals.inFunction);
+            Function* F = getOrInsertFunc(instr, rw_globals.inFunction);
             // Get operands of new instruction
             map <string, Value*> variables;
 
@@ -765,7 +792,7 @@ bool InstrumentGlobals(LLVMInstrumentation& instr) {
  * @param rw_config set of rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentEntryPoint(const Module &M, Function* F, RewriterConfig rw_config){
+bool InstrumentEntryPoint(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config){
     if(F->isDeclaration()) return true;
     for (RewriteRule& rw : rw_config) {
 
@@ -776,8 +803,8 @@ bool InstrumentEntryPoint(const Module &M, Function* F, RewriterConfig rw_config
         if(rw.inFunction != "*" && rw.inFunction!=functionName) continue;
 
         // Get name of function
-        string param = *(--rw.newInstr.parameters.end());
-        Function *CalleeF = M.getFunction(param);
+        const string& param = *(--rw.newInstr.parameters.end());
+        Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
             logger.write_error("Unknown function: " + param);
             return false;
@@ -807,7 +834,7 @@ bool InstrumentEntryPoint(const Module &M, Function* F, RewriterConfig rw_config
  * @param rw_config set fo rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentReturns(const Module &M, Function* F, RewriterConfig rw_config){
+bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config){
     for (RewriteRule& rw : rw_config) {
 
         // Check type of the rule
@@ -817,8 +844,8 @@ bool InstrumentReturns(const Module &M, Function* F, RewriterConfig rw_config){
         if(rw.inFunction != "*" && rw.inFunction!=functionName)    continue;
 
         // Get name of function
-        string param = *(--rw.newInstr.parameters.end());
-        Function *CalleeF = M.getFunction(param);
+        const string& param = *(--rw.newInstr.parameters.end());
+        Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
             logger.write_error("Unknown function: " + param);
             return false;
@@ -828,13 +855,21 @@ bool InstrumentReturns(const Module &M, Function* F, RewriterConfig rw_config){
         std::vector<Value *> args;
         CallInst *newInstr = CallInst::Create(CalleeF, args);
 
+        bool inserted = false;
         for (auto& block : *F) {
             if (isa<ReturnInst>(block.getTerminator())) {
                 llvm::Instruction *termInst = block.getTerminator();
                 newInstr->insertBefore(termInst);
+                inserted = true;
                 CloneMetadata(termInst, newInstr);
                 logger.write_info("Inserting instruction at the beginning of function " + functionName);
             }
+        }
+
+        if (!inserted) {
+            F->dump();
+            assert(0 && "Did not find any return");
+            abort();
         }
     }
     return true;
@@ -849,6 +884,8 @@ bool InstrumentReturns(const Module &M, Function* F, RewriterConfig rw_config){
 bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
     // Instrument instructions in functions
     for (Module::iterator Fiterator = instr.module.begin(), E = instr.module.end(); Fiterator != E; ++Fiterator) {
+        if (Fiterator->isDeclaration())
+          continue;
 
         // Do not instrument functions linked for instrumentation
         string functionName = (&*Fiterator)->getName().str();
@@ -859,8 +896,8 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
             continue;
         }
 
-        if(!InstrumentEntryPoint(instr.module, (&*Fiterator), phase.config)) return false;
-        if(!InstrumentReturns(instr.module, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentEntryPoint(instr, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentReturns(instr, (&*Fiterator), phase.config)) return false;
 
         for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
             // This iterator may be replaced (by an iterator to the following
@@ -891,15 +928,21 @@ bool instrumentModule(LLVMInstrumentation& instr) {
      // Instrument global variables
     if(!InstrumentGlobals(instr)) return false;
 
+#if ((LLVM_VERSION_MAJOR >= 4) || (LLVM_VERSION_MINOR >= 5))
+    if (llvm::verifyModule(instr.module, &llvm::errs()))
+#else
+    if (llvm::verifyModule(instr.module, llvm::PrintMessageAction))
+#endif
+        return false;
 
     // Write instrumented module into the output file
-    ofstream out_file;
-    out_file.open(instr.outputName, ios::out | ios::binary);
-    raw_os_ostream rstream(out_file);
+    std::ofstream ofs(instr.outputName);
+    llvm::raw_os_ostream ostream(ofs);
 
-    WriteBitcodeToFile(&instr.module, rstream);
-    rstream.flush();
-    out_file.close();
+    // write the module
+    errs() << "Saving the instrumented module to: " << instr.outputName << "\n";
+    llvm::WriteBitcodeToFile(&instr.module, ostream);
+
     return true;
 }
 
@@ -918,7 +961,7 @@ void loadPlugins(LLVMInstrumentation& instr) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 4) {
+    if (argc < 5) {
         usage(argv[0]);
         exit(1);
     }
@@ -948,13 +991,13 @@ int main(int argc, char *argv[]) {
     LLVMContext Context;
     SMDiagnostic Err;
 #if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 6)
-    std::unique_ptr<Module> _m = parseIRFile(argv[2], Err, Context);
-    Module *m = _m.release();
+    std::unique_ptr<Module> module = parseIRFile(argv[2], Err, Context);
+    std::unique_ptr<Module> defModule = parseIRFile(argv[3], Err, Context);
 #else
-    Module *m = ParseIRFile(argv[2], Err, Context);
+    std::unique_ptr<Module> module = std::unique_ptr<Module>(ParseIRFile(argv[2], Err, Context));
+    std::unique_ptr<Module> defModule = std::unique_ptr<Module>(ParseIRFile(argv[3], Err, Context));
 #endif
-
-    if (!m) {
+    if (!module) {
         logger.write_error("Error parsing .bc file.");
         Err.print(argv[0], errs());
         config_file.close();
@@ -962,11 +1005,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    LLVMInstrumentation instr(*m);
-    instr.rewriter = rw;
-    instr.outputName = argv[3];
+    if (!defModule) {
+        logger.write_error("Error parsing .bc file with definitions.");
+        Err.print(argv[0], errs());
+        config_file.close();
+        llvmir_file.close();
+        return 1;
+    }
 
-    if(argc <= 4 || std::string(argv[4]).compare("--disable-plugins") != 0){
+
+    LLVMInstrumentation instr(*module.get(), *defModule.get());
+    instr.rewriter = std::move(rw);
+    instr.outputName = argv[4];
+
+    if(argc <= 5 || (strcmp(argv[5], "--disable-plugins") != 0)){
         logger.write_info("Loading plugins...");
         loadPlugins(instr);
     }
@@ -977,7 +1029,6 @@ int main(int argc, char *argv[]) {
     // Instrument
     bool resultOK = instrumentModule(instr);
 
-    delete m;
     config_file.close();
     llvmir_file.close();
 
