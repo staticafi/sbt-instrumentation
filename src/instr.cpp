@@ -228,6 +228,9 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
         *Iiterator = ++helper;
         EraseInstructions(currentInstr, rw_rule.foundInstrs.size());
         logger.log_insertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
+    } else {
+        assert("Invalid position for inserting");
+        abort();
     }
 }
 
@@ -852,13 +855,21 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
         std::vector<Value *> args;
         CallInst *newInstr = CallInst::Create(CalleeF, args);
 
+        bool inserted = false;
         for (auto& block : *F) {
             if (isa<ReturnInst>(block.getTerminator())) {
                 llvm::Instruction *termInst = block.getTerminator();
                 newInstr->insertBefore(termInst);
+                inserted = true;
                 CloneMetadata(termInst, newInstr);
                 logger.write_info("Inserting instruction at the beginning of function " + functionName);
             }
+        }
+
+        if (!inserted) {
+            F->dump();
+            assert(0 && "Did not find any return");
+            abort();
         }
     }
     return true;
