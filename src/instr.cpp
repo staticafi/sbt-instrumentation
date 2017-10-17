@@ -399,7 +399,7 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
     std::vector<Value *> args;
 
     // Get name of function
-    string param = *(--rw_rule.newInstr.parameters.end());
+    const string& param = *(--rw_rule.newInstr.parameters.end());
     Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
@@ -438,7 +438,7 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
     std::vector<Value *> args;
 
     // Get name of function
-    string param = *(--rw_newInstr.parameters.end());
+    const string& param = *(--rw_newInstr.parameters.end());
     Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
@@ -803,7 +803,7 @@ bool InstrumentEntryPoint(LLVMInstrumentation& instr, Function* F, RewriterConfi
         if(rw.inFunction != "*" && rw.inFunction!=functionName) continue;
 
         // Get name of function
-        string param = *(--rw.newInstr.parameters.end());
+        const string& param = *(--rw.newInstr.parameters.end());
         Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
             logger.write_error("Unknown function: " + param);
@@ -844,7 +844,7 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
         if(rw.inFunction != "*" && rw.inFunction!=functionName)    continue;
 
         // Get name of function
-        string param = *(--rw.newInstr.parameters.end());
+        const string& param = *(--rw.newInstr.parameters.end());
         Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
             logger.write_error("Unknown function: " + param);
