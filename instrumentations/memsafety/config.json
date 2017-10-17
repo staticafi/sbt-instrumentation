@@ -10,7 +10,7 @@
             "newInstruction": {
                 "returnValue": "*",
                 "instruction": "call",
-                "operands": ["<t1>","<t2>", "1", "__INSTR_remember"]
+                "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
             },
             "in": "main",
             "conditions": [["isRemembered", "<t1>"]]

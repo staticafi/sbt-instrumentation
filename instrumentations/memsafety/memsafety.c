@@ -32,12 +32,17 @@ typedef struct rec_list_node{
 rec_list_node *rec_list = NULL;
 rec_list_node *allocas_list = NULL;
 rec_list_node *deallocated_list = NULL;
+rec_list_node *globals_list = NULL;
 
 static void __INSTR_list_prepend(rec_list_node *new_node, rec_list_node **head) {
 	if((*head) != NULL)	(*head)->prev = new_node;
 	new_node->next = *head;
 	new_node->prev = NULL;
 	*head = new_node;
+}
+
+static void __INSTR_globals_list_prepend(rec_list_node *node) {
+	__INSTR_list_prepend(node, &globals_list);
 }
 
 static void __INSTR_rec_list_prepend(rec_list_node *node) {
@@ -79,6 +84,11 @@ void __INSTR_rec_create_deallocated(rec_id id, rec_state state, a_size size) {
 	__INSTR_deallocated_list_prepend(node);
 }
 
+void __INSTR_rec_create_global(rec_id id, rec_state state, a_size size) {
+	rec_list_node *node = __INSTR_node_create(id, state, size);
+	__INSTR_globals_list_prepend(node);
+}
+
 rec_list_node* __INSTR_list_search(rec_list_node *head, rec_id id) {
   	rec_list_node *cur = head;
 
@@ -115,58 +125,9 @@ rec_list_node* __INSTR_detach_node(rec_list_node *n, rec_list_node **head){
 	n->next = NULL;
 	n->prev = NULL;
 	return n;
-
-/*	rec* r = NULL;
-	rec_list_node *cur = rec_list;
-	if(cur && (cur->rec.id <= id
-		     && (cur->rec.id == id || // remove this part of condition
-		                               // once we know that rec.size != 0
-		         (id - cur->rec.id < cur->rec.size)))) {
-		rec_list_node *newHead = cur->next;
-		r = cur->rec;
-		free(cur);
-		rec_list = newHead;
-		return r;
-    }
-
-	while((cur) && (cur->next)) {
-		if (cur->next->rec.id <= id
-		     && (cur->next->rec.id == id || // remove this part of condition
-		                               // once we know that rec.size != 0
-		         (id - cur->next->rec.id < cur->next->rec.size))) {
-
-            rec_list_node *tmp = cur->next->next;
-			r = cur->next->rec;
-            free(cur->next);
-		    cur->next = tmp;
-	   		return r;
-	  }
-	  cur = cur->next;
-	}
-
-	return r;*/
 }
 
 void __INSTR_rec_destroy(rec_list_node *n, rec_list_node *head) {
-   /* rec_list_node *cur = head;
-
-    if(cur && cur->rec.id == id) {
-        rec_list_node *new_head = cur->next;
-        free(cur);
-        rec_list = new_head;
-        return;
-    }
-
-  	while((cur) && (cur->next)) {
-  	  if (cur->next->rec.id == id) {
-            rec_list_node *tmp = cur->next->next;
-            free(cur->next);
-	    	cur->next = tmp;
-	    return;
-	  }
-	  cur = cur->next;
-	}*/
-
 	__INSTR_detach_node(n, &head);
 	free(n);
 }
@@ -181,18 +142,11 @@ void __INSTR_free(rec_id id) {
 	rec_list_node *n = __INSTR_list_search(rec_list, id);
 
 	if (n != NULL && n->rec.id == id) {
-		//__INSTR_create_deallocated(n->rec.id, REC_STATE_FREED, n->rec.size);
  		__INSTR_detach_node(n, &rec_list);
 		n->rec.state = REC_STATE_FREED;
 		__INSTR_deallocated_list_prepend(n);
 		return;
 	}
-	
-	// Memory was already freed - double free error
-	/*if (r != NULL && r->state == REC_STATE_FREED) {
-	    assert(0 && "double free");
-		__VERIFIER_error();
-	}*/
 
 	n = __INSTR_list_search(deallocated_list, id);
 
@@ -202,6 +156,31 @@ void __INSTR_free(rec_id id) {
 	} else {
 		assert(0 && "double free");
 		__VERIFIER_error();
+	}
+}
+
+void __INSTR_remember_global(rec_id id, a_size size) {
+
+	rec_list_node *n = __INSTR_list_search(globals_list, id);
+
+	if(n != NULL){
+		// If rec already exists, change the size. This happens because
+		// automatons created by alloca instructions are not destroyed at
+		// return of the function as they shoud be. This is just a temporary
+		// solution.
+		n->rec.state = REC_STATE_NONE;
+		n->rec.size = size;
+		return;
+	} else {
+		n = __INSTR_list_search(deallocated_list, id);
+		if(n != NULL) {
+			__INSTR_detach_node(n, &deallocated_list);
+			n->rec.state = REC_STATE_NONE;
+			__INSTR_globals_list_prepend(n);
+		}
+		else{
+			__INSTR_rec_create_global(id, REC_STATE_NONE, size);
+		}
 	}
 }
 
@@ -278,6 +257,9 @@ void __INSTR_check_pointer(rec_id id, a_size range) {
 	else if ((n = __INSTR_list_search(allocas_list, id))) {
 		__INSTR_check(id, range, n->rec);
 	}
+    else if ((n = __INSTR_list_search(globals_list, id))) {
+		__INSTR_check(id, range, n->rec);
+    }
 	else if ((n = __INSTR_list_search(deallocated_list, id))) {
 		assert(0 && "dereference on freed memory");
 		__VERIFIER_error();
@@ -317,6 +299,7 @@ void __INSTR_destroy_lists() {
 	__INSTR_destroy_list(rec_list);
 	__INSTR_destroy_list(allocas_list);
 	__INSTR_destroy_list(deallocated_list);
+	__INSTR_destroy_list(globals_list);
 }
 
 void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
