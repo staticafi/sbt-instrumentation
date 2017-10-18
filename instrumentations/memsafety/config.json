@@ -217,7 +217,7 @@
                         {
                             "returnValue": "*",
                             "instruction": "call",
-                            "operands": ["<t3>","*", "<t4>", "memset"]
+                            "operands": ["<t3>", "*", "<t4>", "memset"]
                         }
                         ],
                         "newInstruction": {
@@ -236,6 +236,44 @@
                             "returnValue": "*",
                             "instruction": "load",
                             "operands": ["<t1>"],
+                            "getSizeTo": "<t2>",
+                            "getPointerInfoTo": ["<t3>", "<t4>"]
+                        }
+                        ],
+                        "newInstruction": {
+                            "returnValue": "*",
+                            "instruction": "call",
+                            "operands": ["<t3>", "<t4>", "<t1>", "<t2>", "__INSTR_check_bounds"]
+                        },
+                        "where": "before",
+                        "conditions": [["!isValidPointer", "<t1>", "<t2>"], ["knownSize", "<t1>"]],
+                        "in": "*"
+                    },
+                    {
+                        "findInstructions": [
+                        {
+                            "returnValue": "*",
+                            "instruction": "store",
+                            "operands": ["<t1>", "<t2>"],
+                            "getSizeTo": "<t3>",
+                            "getPointerInfoTo": ["<t4>", "<t5>"]
+                        }
+                        ],
+                        "newInstruction": {
+                            "returnValue": "*",
+                            "instruction": "call",
+                            "operands": ["<t4>", "<t5>", "<t2>", "<t3>", "__INSTR_check_bounds"]
+                        },
+                        "where": "before",
+                        "conditions": [["!isValidPointer", "<t2>", "<t3>"], ["knownSize", "<t2>"]],
+                        "in": "*"
+                    },
+                    {
+                        "findInstructions": [
+                        {
+                            "returnValue": "*",
+                            "instruction": "load",
+                            "operands": ["<t1>"],
                             "getSizeTo": "<t2>"
                         }
                         ],
@@ -245,7 +283,7 @@
                             "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t1>", "<t2>"]],
+                        "conditions": [["!isValidPointer", "<t1>", "<t2>"], ["!knownSize", "<t1>"]],
                         "in": "*", 
                         "remember": "<t1>"
                     },
@@ -264,7 +302,7 @@
                             "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t2>", "<t3>"]],
+                        "conditions": [["!isValidPointer", "<t2>", "<t3>"], ["!knownSize", "<t2>"]],
                         "in": "*",
                         "remember": "<t2>"
                     },
@@ -543,31 +581,27 @@
                     "where": "after",
                     "in": "*",
                     "conditions": [["isRemembered", "<t1>"]]
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "ret",
+                        "operands": ["*"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["__INSTR_check_leaks"]
+                    },
+                    "where": "before",
+                    "in": "main",
+                    "conditions": [["malloc", "true"]]
                 }
+
                 ]
 
-            },
-            {
-                "instructionRules": 
-                    [
-                    {
-                        "findInstructions": [
-                        {
-                            "returnValue": "*",
-                            "instruction": "ret",
-                            "operands": ["*"]
-                        }
-                        ],
-                        "newInstruction": {
-                            "returnValue": "*",
-                            "instruction": "call",
-                            "operands": ["__INSTR_check_leaks"]
-                        },
-                        "where": "before",
-                        "in": "main",
-                        "conditions": [["malloc", "true"]]
-                    }
-                    ]
             }
         ]
 }

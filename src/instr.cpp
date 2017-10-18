@@ -43,6 +43,7 @@
 #include "rewriter.hpp"
 #include "instr_log.hpp"
 #include "instr_analyzer.hpp"
+#include "points_to_plugin.hpp"
 
 using namespace llvm;
 using namespace std;
@@ -60,7 +61,7 @@ class LLVMInstrumentation {
         list<Value*> rememberedValues;
         Variables variables;
         Rewriter rewriter;
-        
+
         LLVMInstrumentation(Module& m, Module& dm)
           : module(m), definitionsModule(dm) {}
 };
@@ -71,6 +72,34 @@ Logger logger("log.txt");
 void usage(char *name) {
 
 	cerr << "Usage: " << name << " <config.json> <IR to be instrumented> <IR with definitions> <outputFileName> <options>" << endl;
+}
+
+/**
+ * Get info about allocated memory to which given pointer points to.
+ * @param I instruction.
+ * @param ins LLVMInstrumentation object.
+ * @return address and size of allocated memory to which pointer points to.
+ */
+std::pair<llvm::Value*, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr){
+    Value* op;
+    if(const StoreInst *SI = dyn_cast<StoreInst>(I)){
+        op = SI->getOperand(1);
+    }
+    else if(const LoadInst *LI = dyn_cast<LoadInst>(I)){
+        op = LI->getOperand(0);
+    }
+    else {
+        return std::make_pair(nullptr, 0);
+    }
+
+    for (auto& plugin : instr.plugins) {
+        if(plugin->getName() == "PointsTo") {
+            PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
+            return pp->getPointerInfo(op);
+        }
+    }
+
+    return std::make_pair(nullptr, 0);
 }
 
 /**
@@ -94,11 +123,14 @@ uint64_t getAllocatedSize(Instruction *I, const Module& M){
         Ty = LI->getType();
     }
     else{
+        delete DL;
         return 0;
     }
 
-    if(!Ty->isSized())
+    if(!Ty->isSized()) {
+        delete DL;
         return 0;
+    }
 
     uint64_t size = DL->getTypeAllocSize(Ty);
 
@@ -464,8 +496,8 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
  * @return true if OK, false otherwise
  */
 bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& variables) {
-    unsigned opIndex = 0; 
-    
+    unsigned opIndex = 0;
+
     for(const string& param : rwIns.parameters){
         if(rwIns.parameters.size() == 1 && param=="*"){
             return true;
@@ -492,13 +524,13 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& var
 
         opIndex++;
     }
-  
+
     return true;
 }
 
 /**
  * Checks whether the given flag is set as they should be.
-     * @param condition condition to be satisfied
+ * @param condition condition to be satisfied
  * @param rewriter rewriter
  * @return true if satisfied, false otherwise
 **/
@@ -577,7 +609,6 @@ bool checkConditions(const std::list<Condition>& conditions, LLVMInstrumentation
             return false;
         }
     }
-
     return true;
 }
 
@@ -641,7 +672,7 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                 if(!CheckOperands(checkInstr, currentInstr, variables)) {
                     break;
                 }
-                
+
                 // check return value
                 if(checkInstr.returnValue != "*") {
                     if(checkInstr.returnValue[0] == '<'
@@ -663,19 +694,30 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             else {
                 break;
             }
-        } 
+        }
 
         if(rw.foundInstrs.size() == 1){
-            InstrumentInstruction allocaIns = rw.foundInstrs.front();
-            if(!allocaIns.getSizeTo.empty()){
-                variables[allocaIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
+            InstrumentInstruction iIns = rw.foundInstrs.front();
+            if(!iIns.getSizeTo.empty()){
+                variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                     getAllocatedSize(ins, instr.module));
+            }
+
+            if(iIns.getPointerInfoTo.size() == 2) {
+                std::pair<llvm::Value*, uint64_t> pointerInfo = getPointerInfo(ins, instr);
+                variables[iIns.getPointerInfoTo.front()] = pointerInfo.first,
+                variables[iIns.getPointerInfoTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                            pointerInfo.second);
+
             }
         }
 
         // if all instructions match and conditions are satisfied
         // try to instrument the code
         if(instrument && checkConditions(rw.conditions, instr, variables)) {
-            // set flags (TODO do we want to set flags even if the conditions were not satisifed?)
+            InstrumentInstruction iIns = rw.foundInstrs.front();
+
+            // set flags
             setFlags(rw, instr.rewriter);
 
             // remember values that should be remembered
@@ -699,7 +741,6 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             }
         }
     }
-
     return true;
 }
 
@@ -876,6 +917,28 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
 }
 
 /**
+ * Finds out whether the given function is reachable from main.
+ * @param f function
+ * @param instr LLVMInstrumentation object
+ * @return true if the function is reachable from main, false otherwise
+*/
+bool isReachable(const Function& f, LLVMInstrumentation& instr) {
+    for (auto& plugin : instr.plugins) {
+        if(plugin->getName() == "PointsTo") {
+            PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
+            Function* main = instr.module.getFunction("main");
+            if(main) {
+                return pp->isReachableFunction(*main, f);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
  * Runs one phase of instrumentation rules.
  * @param instr instrumentation object
  * @param phase current phase of instrumentation.
@@ -895,6 +958,13 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
             logger.write_info("Omitting function " + functionName + " from instrumentation.");
             continue;
         }
+
+        // If we have info from points-to plugin, do not
+        // instrument functions that are not reachable from main
+      /*  if (!isReachable((*Fiterator), instr) && functionName != "main") {
+            logger.write_info("Omitting function " + functionName + " from instrumentation, not reachable from main.");
+            continue;
+        }*/
 
         if(!InstrumentEntryPoint(instr, (&*Fiterator), phase.config)) return false;
         if(!InstrumentReturns(instr, (&*Fiterator), phase.config)) return false;
