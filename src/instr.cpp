@@ -966,8 +966,8 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
             continue;
         }*/
 
-        if(!InstrumentEntryPoint(instr.module, (&*Fiterator), phase.config)) return false;
-        if(!InstrumentReturns(instr.module, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentEntryPoint(instr, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentReturns(instr, (&*Fiterator), phase.config)) return false;
 
         for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
             // This iterator may be replaced (by an iterator to the following
