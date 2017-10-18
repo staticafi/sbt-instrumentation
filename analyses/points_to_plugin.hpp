@@ -15,14 +15,14 @@ class PointsToPlugin : public InstrPlugin
      private:
         std::unique_ptr<dg::LLVMPointerAnalysis> PTA;
         CallGraph cg;
-        
+
      public:
         bool isNull(llvm::Value* a);
-        bool isValidPointer(llvm::Value* a, llvm::Value *len); 
-        bool isEqual(llvm::Value* a, llvm::Value* b); 
-        bool isNotEqual(llvm::Value* a, llvm::Value* b); 
+        bool isValidPointer(llvm::Value* a, llvm::Value *len);
+        bool isEqual(llvm::Value* a, llvm::Value* b);
+        bool isNotEqual(llvm::Value* a, llvm::Value* b);
         bool greaterThan(llvm::Value* a, llvm::Value* b);
-        bool lessThan(llvm::Value* a, llvm::Value* b); 
+        bool lessThan(llvm::Value* a, llvm::Value* b);
         bool lessOrEqual(llvm::Value* a, llvm::Value* b);
         bool greaterOrEqual(llvm::Value* a, llvm::Value* b);
         bool knownSize(llvm::Value* a);

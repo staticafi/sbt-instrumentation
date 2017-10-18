@@ -38,11 +38,11 @@ bool PointsToPlugin::knownSize(llvm::Value* a) {
 
     const auto& ptr = *(psnode->pointsTo.begin());
 
-    if (!ptr.target->getUserData<llvm::Value>()) 
+    if (!ptr.target->getUserData<llvm::Value>())
         return false;
 
     if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(ptr.target->getUserData<llvm::Value>())) {
-        if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) { 
+        if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) {
             if (llvm::Instruction *I = llvm::dyn_cast<llvm::Instruction>(a)) {
                 if (AI->getFunction() == I->getFunction()) {
                     return true;

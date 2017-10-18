@@ -61,7 +61,7 @@ class LLVMInstrumentation {
         list<Value*> rememberedValues;
         Variables variables;
         Rewriter rewriter;
-        
+
         LLVMInstrumentation(Module& m, Module& dm)
           : module(m), definitionsModule(dm) {}
 };
@@ -496,8 +496,8 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
  * @return true if OK, false otherwise
  */
 bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& variables) {
-    unsigned opIndex = 0; 
-    
+    unsigned opIndex = 0;
+
     for(const string& param : rwIns.parameters){
         if(rwIns.parameters.size() == 1 && param=="*"){
             return true;
@@ -524,7 +524,7 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& var
 
         opIndex++;
     }
-  
+
     return true;
 }
 
@@ -672,7 +672,7 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                 if(!CheckOperands(checkInstr, currentInstr, variables)) {
                     break;
                 }
-                
+
                 // check return value
                 if(checkInstr.returnValue != "*") {
                     if(checkInstr.returnValue[0] == '<'
@@ -694,7 +694,7 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             else {
                 break;
             }
-        } 
+        }
 
         if(rw.foundInstrs.size() == 1){
             InstrumentInstruction iIns = rw.foundInstrs.front();
@@ -959,7 +959,7 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
             continue;
         }
 
-        // If we have info from points-to plugin, do not 
+        // If we have info from points-to plugin, do not
         // instrument functions that are not reachable from main
       /*  if (!isReachable((*Fiterator), instr) && functionName != "main") {
             logger.write_info("Omitting function " + functionName + " from instrumentation, not reachable from main.");
