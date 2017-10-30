@@ -705,6 +705,8 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
 
             if(iIns.getPointerInfoTo.size() == 2) {
                 std::pair<llvm::Value*, uint64_t> pointerInfo = getPointerInfo(ins, instr);
+                // Do not apply this rule, if there was no relevant answer from pointer analysis
+                if(!pointerInfo.first) instrument = false;
                 variables[iIns.getPointerInfoTo.front()] = pointerInfo.first,
                 variables[iIns.getPointerInfoTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
                                                                             pointerInfo.second);
@@ -995,7 +997,7 @@ bool instrumentModule(LLVMInstrumentation& instr) {
             return false;
     }
 
-     // Instrument global variables
+    // Instrument global variables
     if(!InstrumentGlobals(instr)) return false;
 
 #if ((LLVM_VERSION_MAJOR >= 4) || (LLVM_VERSION_MINOR >= 5))
