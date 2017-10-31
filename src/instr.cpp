@@ -45,6 +45,8 @@
 #include "instr_analyzer.hpp"
 #include "points_to_plugin.hpp"
 
+#include "git-version.h"
+
 using namespace llvm;
 using namespace std;
 
@@ -1033,6 +1035,11 @@ void loadPlugins(LLVMInstrumentation& instr) {
 }
 
 int main(int argc, char *argv[]) {
+    if(argc == 2 && strcmp(argv[1], "--version") == 0) {
+        printf("%s\n", GIT_VERSION);
+        return 0;
+    }
+
     if (argc < 5) {
         usage(argv[0]);
         exit(1);

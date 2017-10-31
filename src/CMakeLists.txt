@@ -1,3 +1,9 @@
+# generate a git-version.h with a HEAD commit hash tag
+# (if it changed)
+	add_custom_target(
+		gitversion ALL sh ../git-version.sh
+)
+
 add_executable(LLVMinstr
 	rewriter.cpp
 	instr_log.cpp
@@ -6,6 +12,7 @@ add_executable(LLVMinstr
 	${JSON_FILES}
 )
 target_link_libraries(LLVMinstr ${llvm_libs} ${JSON_LIBS})
+add_dependencies(LLVMinstr gitversion)
 
 install(TARGETS LLVMinstr RUNTIME DESTINATION bin)
 
