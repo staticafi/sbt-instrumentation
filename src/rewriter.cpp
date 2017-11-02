@@ -8,7 +8,7 @@
 using namespace std;
 
 void parseRule(const Json::Value& rule, RewriteRule& r) {
-    // Get findInstructions 
+    // Get findInstructions
     for (const auto& findInstruction : rule["findInstructions"]) {
         InstrumentInstruction instr;
         instr.returnValue = findInstruction["returnValue"].asString();
@@ -20,7 +20,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
 
         for (const auto& info : findInstruction["getPointerInfoTo"]) {
             instr.getPointerInfoTo.push_back(info.asString());
-        }     
+        }
 
         instr.stripInboundsOffsets = findInstruction["stripInboundsOffsets"].asString();
         r.foundInstrs.push_back(instr);
@@ -55,10 +55,16 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     // TODO extract function
     for (const auto& condition : rule["conditions"]){
         Condition r_condition;
-        r_condition.name = condition[0].asString();
-        for (uint i = 1; i < condition.size(); i++) {
-            r_condition.arguments.push_back(condition[i].asString());
+        r_condition.name = condition["query"][0].asString();
+
+        for (uint i = 1; i < condition["query"].size(); i++) {
+            r_condition.arguments.push_back(condition["query"][i].asString());
         }
+
+        for (uint i = 0; i < condition["expectedValues"].size(); i++) {
+            r_condition.expectedValues.push_back(condition["expectedValues"][i].asString());
+        }
+
         r.conditions.push_back(r_condition);
     }
 
@@ -97,7 +103,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
     for (const auto& flag : json_rules["flags"]) {
         this->flags.insert(Flag(flag.asString(), ""));
     }
-    
+
     // load phases
     for (const auto& phase : json_rules["phases"]) {
         Phase rw_phase;
@@ -112,11 +118,17 @@ void Rewriter::parseConfig(ifstream &config_file) {
     rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getSizeTo"].asString();
 
     for (auto condition : json_rules["globalVariablesRule"]["conditions"]){
-        Condition r_condition;
-        r_condition.name = condition[0].asString();
-        for (uint i = 1; i < condition.size(); i++) {
-            r_condition.arguments.push_back(condition[i].asString());
+		Condition r_condition;
+        r_condition.name = condition["query"][0].asString();
+
+        for (uint i = 1; i < condition["query"].size(); i++) {
+            r_condition.arguments.push_back(condition["query"][i].asString());
         }
+
+        for (uint i = 0; i < condition["expectedValues"].size(); i++) {
+            r_condition.expectedValues.push_back(condition["expectedValues"][i].asString());
+        }
+
         rw_globals_rule.conditions.push_back(r_condition);
     }
 
@@ -146,7 +158,7 @@ bool Rewriter::isFlag(string name) {
 }
 
 void Rewriter::setFlag(string name, string value) {
-    auto search = this->flags.find(name); 
+    auto search = this->flags.find(name);
     if (search != this->flags.end())
             search->second = value;
 }

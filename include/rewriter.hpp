@@ -36,6 +36,7 @@ class Condition {
     public:
         std::string name;
         std::list<std::string> arguments;
+        std::list<std::string> expectedValues;
 };
 
 
