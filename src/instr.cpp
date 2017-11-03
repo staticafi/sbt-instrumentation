@@ -1027,15 +1027,27 @@ bool instrumentModule(LLVMInstrumentation& instr) {
 /**
  * Loads all plugins.
  * @param instr instrumentation object
+ * @return true if plugins were succesfully loaded,
+ * false, otherwise
  */
-void loadPlugins(LLVMInstrumentation& instr) {
+bool loadPlugins(LLVMInstrumentation& instr) {
+    if(instr.rewriter.analysisPaths.size() == 0) {
+        logger.write_info("No plugin specified.");
+        return true;
+    }
+
     for(const string& path : instr.rewriter.analysisPaths) {
         auto plugin = Analyzer::analyze(path, &instr.module);
-        if (plugin)
+        if (plugin) {
             instr.plugins.push_back(std::move(plugin));
-        else
+        }
+        else {
+            logger.write_error("Failed loading plugin " + path);
             cout <<"Failed loading plugin: " << path << endl;
+            return false;
+        }
     }
+    return true;
 }
 
 int main(int argc, char *argv[]) {
@@ -1101,13 +1113,9 @@ int main(int argc, char *argv[]) {
     instr.rewriter = std::move(rw);
     instr.outputName = argv[4];
 
-    if(argc <= 5 || (strcmp(argv[5], "--disable-plugins") != 0)){
-        logger.write_info("Loading plugins...");
-        loadPlugins(instr);
-    }
-    else{
-        logger.write_info("Plugins disabled.");
-    }
+    logger.write_info("Loading plugins...");
+    if (!loadPlugins(instr))
+        return 1;
 
     // Instrument
     bool resultOK = instrumentModule(instr);
