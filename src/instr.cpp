@@ -586,14 +586,14 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
     }
 
     for(auto& plugin : instr.plugins){
-        if(!Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition.name, aValue, bValue)){
-            // some plugin told us that we should not instrument
-            return false;
+        if(Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition, aValue, bValue)){
+            // some plugin told us that we should instrument
+            return true;
         }
     }
 
-    // all analyses told that we should instrument
-    return true;
+    // no plugin told us that we should instrument
+    return false;
 }
 
 /**

@@ -34,31 +34,35 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	return plugin;
 }
 
-// we should instrument only if the condition may not hold
-bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, InstrPlugin* plugin, 
-                                const string &condition, llvm::Value* a, llvm::Value* b) {
+bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, InstrPlugin* plugin,
+                                const Condition &condition, llvm::Value* a, llvm::Value* b) {
+
+    std::string answer;
 
     // we are told to instrument only when
     // the value is null, so check if the value
     // can be null.
-    if(condition == "null") {
-        return plugin->isNull(a);
-    } else if (condition == "constant") {
-        return plugin->isConstant(a);
-    } else if (condition == "isValidPointer") {
-        return plugin->isValidPointer(a, b);
-    } else if (condition == "!isValidPointer") {
-        return !plugin->isValidPointer(a, b);
-    } else if (condition == "isRemembered") {
+    if(condition.name == "null") {
+        answer = plugin->isNull(a);
+    } else if (condition.name == "constant") {
+        answer = plugin->isConstant(a);
+    } else if (condition.name == "isValidPointer") {
+        answer = plugin->isValidPointer(a, b);
+    } else if (condition.name == "isRemembered") {
         for (auto v : rememberedValues) {
-            if (plugin->isEqual(v, a))
+            answer = plugin->isEqual(v, a);
+            for (const auto& expV : condition.expectedValues)
+            if (answer == expV)
                 return true;
         }
         return false;
-    } else if (condition == "knownSize") {
-        return plugin->knownSize(a);
-    } else if (condition == "!knownSize") {
-        return !plugin->knownSize(a);
+    } else if (condition.name == "knownSize") {
+        answer = plugin->knownSize(a);
+    }
+
+    for (const auto& expV : condition.expectedValues) {
+        if (answer == expV)
+            return true;
     }
 
     /* TODO
@@ -77,6 +81,6 @@ bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, Inst
 	}
     */
 
-	return true;
+	return false;
 }
 

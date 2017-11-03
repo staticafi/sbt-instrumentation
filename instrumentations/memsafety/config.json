@@ -13,7 +13,7 @@
                 "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
             },
             "in": "main",
-            "conditions": [{"query":["isRemembered", "<t1>"]}]
+            "conditions": [{"query":["isRemembered", "<t1>"], "expectedValues":["true"]}]
         },
         "phases":
             [
@@ -246,7 +246,7 @@
                             "operands": ["<t3>", "<t4>", "<t1>", "<t2>", "__INSTR_check_bounds"]
                         },
                         "where": "before",
-                        "conditions": [{"query":["!isValidPointer", "<t1>", "<t2>"]}, {"query":["knownSize", "<t1>"]}],
+                        "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedValues":["false"]}, {"query":["knownSize", "<t1>"], "expectedValues":["true"]}],
                         "in": "*"
                     },
                     {
@@ -265,7 +265,7 @@
                             "operands": ["<t4>", "<t5>", "<t2>", "<t3>", "__INSTR_check_bounds"]
                         },
                         "where": "before",
-                        "conditions": [{"query":["!isValidPointer", "<t2>", "<t3>"]}, {"query":["knownSize", "<t2>"]}],
+                        "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedValues":["false"]}, {"query":["knownSize", "<t2>"], "expectedValues":["true"]}],
                         "in": "*"
                     },
                     {
@@ -283,7 +283,7 @@
                             "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [{"query":["!isValidPointer", "<t1>", "<t2>"]}, {"query":["!knownSize", "<t1>"]}],
+                        "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedValues":["false"]}, {"query":["knownSize", "<t1>"], "expectedValues":["false"]}],
                         "in": "*",
                         "remember": "<t1>"
                     },
@@ -302,7 +302,7 @@
                             "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [{"query":["!isValidPointer", "<t2>", "<t3>"]}, {"query":["!knownSize", "<t2>"]}],
+                        "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedValues":["false"]}, {"query":["knownSize", "<t2>"], "expectedValues":["false"]}],
                         "in": "*",
                         "remember": "<t2>"
                     },
@@ -580,7 +580,7 @@
                     },
                     "where": "after",
                     "in": "*",
-                    "conditions": [{"query":["isRemembered", "<t1>"]}]
+                    "conditions": [{"query":["isRemembered", "<t1>"], "expectedValues":["true"]}]
                 },
                 {
                     "findInstructions": [

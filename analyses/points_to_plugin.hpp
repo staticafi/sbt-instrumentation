@@ -17,15 +17,15 @@ class PointsToPlugin : public InstrPlugin
         CallGraph cg;
 
      public:
-        bool isNull(llvm::Value* a);
-        bool isValidPointer(llvm::Value* a, llvm::Value *len);
-        bool isEqual(llvm::Value* a, llvm::Value* b);
-        bool isNotEqual(llvm::Value* a, llvm::Value* b);
-        bool greaterThan(llvm::Value* a, llvm::Value* b);
-        bool lessThan(llvm::Value* a, llvm::Value* b);
-        bool lessOrEqual(llvm::Value* a, llvm::Value* b);
-        bool greaterOrEqual(llvm::Value* a, llvm::Value* b);
-        bool knownSize(llvm::Value* a);
+        std::string isNull(llvm::Value* a);
+        std::string isValidPointer(llvm::Value* a, llvm::Value *len);
+        std::string isEqual(llvm::Value* a, llvm::Value* b);
+        std::string isNotEqual(llvm::Value* a, llvm::Value* b);
+        std::string greaterThan(llvm::Value* a, llvm::Value* b);
+        std::string lessThan(llvm::Value* a, llvm::Value* b);
+        std::string lessOrEqual(llvm::Value* a, llvm::Value* b);
+        std::string greaterOrEqual(llvm::Value* a, llvm::Value* b);
+        std::string knownSize(llvm::Value* a);
         virtual std::pair<llvm::Value*, uint64_t> getPointerInfo(llvm::Value* a);
         virtual bool isReachableFunction(const llvm::Function& from, const llvm::Function& f);
 

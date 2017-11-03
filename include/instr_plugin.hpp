@@ -14,60 +14,66 @@ class InstrPlugin
     public:
       // the default behaviour is returning true, since we have
       // no information about the value, so it may be anything
-      virtual bool isNull(llvm::Value*) {
-          return true;
+      virtual std::string isNull(llvm::Value*) {
+          return "true";
       }
 
       // XXX: we should probably rename it to isValidPointerRange
-      virtual bool isValidPointer(llvm::Value*, llvm::Value *) {
-          return true;
+      virtual std::string isValidPointer(llvm::Value*, llvm::Value *) {
+          return "true";
       }
 
-      virtual bool isEqual(llvm::Value*, llvm::Value*) {
-          return true;
+      virtual std::string isEqual(llvm::Value*, llvm::Value*) {
+          return "true";
       }
 
-      virtual bool isNotEqual(llvm::Value*, llvm::Value*) {
-          return true;
+      virtual std::string isNotEqual(llvm::Value*, llvm::Value*) {
+          return "true";
       }
 
-      virtual bool greaterThan(llvm::Value*, llvm::Value*) {
-          return true;
+      virtual std::string greaterThan(llvm::Value*, llvm::Value*) {
+          return "true";
       }
 
-      virtual bool lessThan(llvm::Value*, llvm::Value*) {
-          return true;
+      virtual std::string lessThan(llvm::Value*, llvm::Value*) {
+          return "true";
       }
 
-      virtual bool lessOrEqual(llvm::Value*, llvm::Value*) {
-          return true;
+      virtual std::string lessOrEqual(llvm::Value*, llvm::Value*) {
+          return "true";
       }
 
-      virtual bool greaterOrEqual(llvm::Value*, llvm::Value*) {
-          return true;
-      }
-	  
-      virtual bool isConstant(llvm::Value* a) {
-          return llvm::isa<llvm::Constant>(a);
+      virtual std::string greaterOrEqual(llvm::Value*, llvm::Value*) {
+          return "true";
       }
 
-      virtual bool canOverflow(llvm::Value *a) {
+      virtual std::string isConstant(llvm::Value* a) {
+          if (llvm::isa<llvm::Constant>(a))
+              return "true";
+          else
+              return "false";
+      }
+
+      virtual std::string canOverflow(llvm::Value *a) {
           if (llvm::OverflowingBinaryOperator *O
               = llvm::dyn_cast<llvm::OverflowingBinaryOperator>(a)) {
-              return !O->hasNoSignedWrap();
+              if (!O->hasNoSignedWrap())
+                  return "true";
+              else
+                  return "false";
           }
 
-          return false;
+          return "false";
       }
 
-      virtual bool knownSize(llvm::Value*) {
-          return false;
+      virtual std::string knownSize(llvm::Value*) {
+          return "false";
       }
 
       std::string getName() { return name; }
 
       InstrPlugin() {}
-      InstrPlugin(const std::string& pluginName) : name(pluginName) {}  
+      InstrPlugin(const std::string& pluginName) : name(pluginName) {}
 
       // add virtual destructor, so that child classes will
       // call their destructor
