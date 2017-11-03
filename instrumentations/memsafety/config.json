@@ -13,11 +13,11 @@
                 "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
             },
             "in": "main",
-            "conditions": [["isRemembered", "<t1>"]]
+            "conditions": [{"query":["isRemembered", "<t1>"]}]
         },
         "phases":
-            [   
-            {   
+            [
+            {
                 "instructionRules":
                     [
                     {
@@ -246,7 +246,7 @@
                             "operands": ["<t3>", "<t4>", "<t1>", "<t2>", "__INSTR_check_bounds"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t1>", "<t2>"], ["knownSize", "<t1>"]],
+                        "conditions": [{"query":["!isValidPointer", "<t1>", "<t2>"]}, {"query":["knownSize", "<t1>"]}],
                         "in": "*"
                     },
                     {
@@ -265,7 +265,7 @@
                             "operands": ["<t4>", "<t5>", "<t2>", "<t3>", "__INSTR_check_bounds"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t2>", "<t3>"], ["knownSize", "<t2>"]],
+                        "conditions": [{"query":["!isValidPointer", "<t2>", "<t3>"]}, {"query":["knownSize", "<t2>"]}],
                         "in": "*"
                     },
                     {
@@ -283,8 +283,8 @@
                             "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t1>", "<t2>"], ["!knownSize", "<t1>"]],
-                        "in": "*", 
+                        "conditions": [{"query":["!isValidPointer", "<t1>", "<t2>"]}, {"query":["!knownSize", "<t1>"]}],
+                        "in": "*",
                         "remember": "<t1>"
                     },
                     {
@@ -302,7 +302,7 @@
                             "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t2>", "<t3>"], ["!knownSize", "<t2>"]],
+                        "conditions": [{"query":["!isValidPointer", "<t2>", "<t3>"]}, {"query":["!knownSize", "<t2>"]}],
                         "in": "*",
                         "remember": "<t2>"
                     },
@@ -558,8 +558,8 @@
                 //}
                 ]
             },
-            {   "instructionRules": 
-                [    
+            {   "instructionRules":
+                [
                 {
                     "findInstructions": [
                     {
@@ -580,7 +580,7 @@
                     },
                     "where": "after",
                     "in": "*",
-                    "conditions": [["isRemembered", "<t1>"]]
+                    "conditions": [{"query":["isRemembered", "<t1>"]}]
                 },
                 {
                     "findInstructions": [
@@ -597,7 +597,7 @@
                     },
                     "where": "before",
                     "in": "main",
-                    "conditions": [["malloc", "true"]]
+                    "conditions": [{"query":["malloc"], "expectedValues": ["true"]}]
                 }
 
                 ]

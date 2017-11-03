@@ -538,7 +538,11 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& var
 **/
 bool checkFlag(Condition condition, Rewriter rewriter) {
     string value = rewriter.getFlagValue(condition.name);
-    return value == condition.arguments.front();
+    for (const auto& expV : condition.expectedValues) {
+        if(expV == value)
+            return true;
+    }
+    return false;
 }
 
 /**
