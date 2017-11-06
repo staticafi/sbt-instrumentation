@@ -14,8 +14,8 @@
             "in": "main"
         },
         "phases":
-            [   
-            {   
+            [
+            {
                 "instructionRules":
                     [
                     {
@@ -236,8 +236,8 @@
                             "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t1>", "<t2>"]],
-                        "in": "*", 
+                        "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false"]}],
+                        "in": "*",
                         "remember": "<t1>"
                     },
                     {
@@ -255,7 +255,7 @@
                             "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [["!isValidPointer", "<t2>", "<t3>"]],
+                        "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false"]}],
                         "in": "*",
                         "remember": "<t2>"
                     },
