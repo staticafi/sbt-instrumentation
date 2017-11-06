@@ -61,8 +61,8 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
             r_condition.arguments.push_back(condition["query"][i].asString());
         }
 
-        for (uint i = 0; i < condition["expectedValues"].size(); i++) {
-            r_condition.expectedValues.push_back(condition["expectedValues"][i].asString());
+        for (uint i = 0; i < condition["expectedResult"].size(); i++) {
+            r_condition.expectedValues.push_back(condition["expectedResult"][i].asString());
         }
 
         r.conditions.push_back(r_condition);
@@ -125,8 +125,8 @@ void Rewriter::parseConfig(ifstream &config_file) {
             r_condition.arguments.push_back(condition["query"][i].asString());
         }
 
-        for (uint i = 0; i < condition["expectedValues"].size(); i++) {
-            r_condition.expectedValues.push_back(condition["expectedValues"][i].asString());
+        for (uint i = 0; i < condition["expectedResult"].size(); i++) {
+            r_condition.expectedValues.push_back(condition["expectedResult"][i].asString());
         }
 
         rw_globals_rule.conditions.push_back(r_condition);
