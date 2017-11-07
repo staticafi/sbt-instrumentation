@@ -13,10 +13,10 @@ from subprocess import call, Popen, PIPE, STDOUT
 usage_msg = """
 Usage: ./instr OPTS config.json source.c
 and OPTS can be following:
-	--output=FILE		Specify output file
-	--help			Show help message
-	--bc			Given file is a bytecode
-	--ll			Generate .ll file from output .bc file.
+    --output=FILE       Specify output file
+    --help          Show help message
+    --bc            Given file is a bytecode
+    --ll            Generate .ll file from output .bc file.
 """
 
 
@@ -73,7 +73,7 @@ def dbg(msg, domain = 'all', print_nl = True):
         global debug_opts
         if domain == 'all' or domain in debug_opts:
             print_stderr(msg, 'DBG: ', print_nl)
-            
+
 # --------------------
 # Instrumentation part
 # --------------------
@@ -85,8 +85,7 @@ configFile = None
 cFile = None
 fileToLink = None
 
-
-def parse_command_line():	
+def parse_command_line():
     try:
         opts, args = getopt.getopt(sys.argv[1:], '',
                                    ['help','bc','ll','output='])
@@ -109,76 +108,62 @@ def parse_command_line():
             global generate_ll
             generate_ll = True
             dbg('Will generate .ll file')
-			         
+
     return args
-    
+
 def parseJson():
-	with open(configFile) as data_file:    
-		data = json.load(data_file)
-		
-	return data["file"]
-    
+    with open(configFile) as data_file:
+        data = json.load(data_file)
+
+    return data["file"]
+
 def run():
-	# Convert .c file from config.json
-	bcConfigFile = "config.bc"
-	ret = call(['clang -S -emit-llvm -o {0} {1}'.format(bcConfigFile, fileToLink)], shell=True)
-	if ret != 0:
-		err('Converting config source file to .bc failed!')
-		return
-	else:
-		dbg('Config source file converted to .bc.')
-	
-	linkedFile = "linked.bc"
-	bcSourceFile = "source.bc"
-	
-	if(source_is_bc):
-		ret = call(['llvm-link-3.4 {0} {1} -o {2}'.format(cFile, bcConfigFile, linkedFile)], shell=True)
-		if ret != 0:
-			err('Linking files failed!')
-			return
-		else:
-			dbg('Source files linked.')
-	else:
-		ret = call(['clang -S -emit-llvm -o {0} {1}'.format(bcSourceFile, cFile)], shell=True)
-		if ret != 0:
-			err('Converting source file to .bc failed!')
-			return
-		else:
-			dbg('Source file converted to .bc.')
-			ret = call(['llvm-link-3.4 {0} {1} -o {2}'.format(bcSourceFile,bcConfigFile, linkedFile)], shell=True)
-		if ret != 0:
-			err('Linking files failed!')
-			return
-		else:
-			dbg('Source files linked.')
-	        
-	ret = call(['./LLVMinstr {0} {1} {2}'.format(configFile, linkedFile, final_output)],
+    # Convert .c file from config.json
+    bcConfigFile = "config.bc"
+    ret = call(['clang -S -emit-llvm -o {0} {1}'.format(bcConfigFile, fileToLink)], shell=True)
+    if ret != 0:
+        err('Converting config source file to .bc failed!')
+        return
+    else:
+        dbg('Config source file converted to .bc.')
+
+    bcSourceFile = "source.bc"
+
+    if not source_is_bc:
+        ret = call(['clang -S -emit-llvm -o {0} {1}'.format(bcSourceFile, cFile)], shell=True)
+        if ret != 0:
+            err('Converting source file to .bc failed!')
+            return
+        else:
+            dbg('Source file converted to .bc.')
+
+    ret = call(['/home/xvitovs1/symbiotic/install/llvm-3.9.1/bin/LLVMinstr {0} {1} {2} {3}'.format(configFile, bcSourceFile, bcConfigFile, final_output)],
                shell=True)
-	if ret != 0:
-		err('Instrumentation failed!')
-	else:
-		dbg('Instrumentation done.')
-		if(generate_ll):
-			ret = call(['llvm-dis-3.4 {0}'.format(final_output)], shell=True)
-			if ret != 0:
-				err('Generating .ll file failed!')
-				return
-			else:
-				dbg('.ll file generated')
+    if ret != 0:
+        err('Instrumentation failed!')
+    else:
+        dbg('Instrumentation done.')
+        if(generate_ll):
+            ret = call(['llvm-dis-3.8 {0}'.format(final_output)], shell=True)
+            if ret != 0:
+                err('Generating .ll file failed!')
+                return
+            else:
+                dbg('.ll file generated')
 
 if __name__ == "__main__":
 
-	args = parse_command_line()
-	if len(args) < 1:
-		print(usage_msg)
-		sys.exit(1)
+    args = parse_command_line()
+    if len(args) < 1:
+        print(usage_msg)
+        sys.exit(1)
 
-	configFile = args[0]
-	cFile = args[1]
-	fileToLink = os.path.join(os.path.dirname(configFile), parseJson())
-	run()
+    configFile = args[0]
+    cFile = args[1]
+    fileToLink = os.path.join(os.path.dirname(configFile), parseJson())
+    run()
 
-	sys.stderr.flush()
-	sys.stdout.flush()
+    sys.stderr.flush()
+    sys.stdout.flush()
 
-	sys.exit(0)
+    sys.exit(0)
