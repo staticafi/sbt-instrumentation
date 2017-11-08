@@ -14,6 +14,11 @@ install(FILES
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/memsafety/
 )
 install(FILES
+	memsafety_one_phase/config.json
+	memsafety_one_phase/memsafety_one_phase.c
+	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/memsafety_one_phase/
+)
+install(FILES
 	null_deref/config.json
 	null_deref/null_deref.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/null_deref/
