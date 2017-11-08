@@ -90,6 +90,6 @@ It is possible to define flags in `flags` field and to set them when a rule is a
 
 Instrumentation can be used together with static analyses to make the instrumentation conditional. You can plug them in by adding the paths to .so files to `analyses` list. Plugins must be derived from `InstrPlugin` class. You can specify the conditions by adding `condition` to elements of `instructionRules`. Currently, conditions `isNull`, `isConstant`, `isValidPointer`,`knownSize`, `!knownSize` or `!isValidPointer` are supported.
 
-Example of a config file can be found [here](https://github.com/staticafi/llvm-instrumentation/blob/master/instrumentations/memsafety/config.json).
+Example of a config file can be found [here](https://github.com/staticafi/llvm-instrumentation/blob/master/share/llvm-instrumentation/memsafety/config.json).
 
 

@@ -85,6 +85,6 @@ endif()
 enable_testing()
 
 add_subdirectory(analyses)
-add_subdirectory(instrumentations)
+add_subdirectory(share/llvm-instrumentation)
 add_subdirectory(src)
 add_subdirectory(tests)
