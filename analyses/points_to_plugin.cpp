@@ -12,7 +12,7 @@ bool PointsToPlugin::isNull(llvm::Value* a) {
     assert(PTA);
     PSNode *psnode = PTA->getPointsTo(a);
     if (!psnode || psnode->pointsTo.empty()) {
-        llvm::errs() << "No points-to for " << *a << "\n";
+        // llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
         return true;
     }
@@ -143,10 +143,10 @@ bool PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
                 if(Iptr->getParent()->getParent() != F || cg.isRecursive(F))
                     return false;
             } else {
-                llvm::errs() << "In bound pointer for non-allocated memory: " << *a << "\n";
+                //llvm::errs() << "In bound pointer for non-allocated memory: " << *a << "\n";
             }
         } else {
-            llvm::errs() << "In bound pointer for non-allocated memory: " << *a << "\n";
+            //llvm::errs() << "In bound pointer for non-allocated memory: " << *a << "\n";
         }
     }
 
