@@ -109,7 +109,7 @@ bool PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
     assert(PTA);
     PSNode *psnode = PTA->getPointsTo(a);
     if (!psnode || psnode->pointsTo.empty()) {
-        llvm::errs() << "No points-to for " << *a << "\n";
+        //llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be invalid
         return false;
     }
