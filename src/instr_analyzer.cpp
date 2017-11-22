@@ -42,22 +42,22 @@ bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, Inst
     // we are told to instrument only when
     // the value is null, so check if the value
     // can be null.
-    if(condition.name == "null") {
+    if(condition.name == "isNull") {
         answer = plugin->isNull(a);
-    } else if (condition.name == "constant") {
+    } else if (condition.name == "isConstant") {
         answer = plugin->isConstant(a);
     } else if (condition.name == "isValidPointer") {
         answer = plugin->isValidPointer(a, b);
     } else if (condition.name == "isRemembered") {
         for (auto v : rememberedValues) {
-            answer = plugin->isEqual(v, a);
+            answer = plugin->pointsTo(v, a);
             for (const auto& expV : condition.expectedValues)
             if (answer == expV)
                 return true;
         }
         return false;
-    } else if (condition.name == "knownSize") {
-        answer = plugin->knownSize(a);
+    } else if (condition.name == "hasKnownSize") {
+        answer = plugin->hasKnownSize(a);
     }
 
     for (const auto& expV : condition.expectedValues) {

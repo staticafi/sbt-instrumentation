@@ -14,7 +14,7 @@ std::string PointsToPlugin::isNull(llvm::Value* a) {
     if (!psnode || psnode->pointsTo.empty()) {
         llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
-        return "true";
+        return "unknown";
     }
 
     for (const auto& ptr : psnode->pointsTo) {
@@ -27,13 +27,13 @@ std::string PointsToPlugin::isNull(llvm::Value* a) {
     return "false";
 }
 
-std::string PointsToPlugin::knownSize(llvm::Value* a) {
+std::string PointsToPlugin::hasKnownSize(llvm::Value* a) {
     // need to have the PTA
     assert(PTA);
     PSNode *psnode = PTA->getPointsTo(a);
     if (!psnode || psnode->pointsTo.size()!=1) {
         // we know nothing about the allocated size
-        return "false";
+        return "unknown";
     }
 
     const auto& ptr = *(psnode->pointsTo.begin());
@@ -95,12 +95,12 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
         // if the size cannot be expressed as an uint64_t,
         // say we do not know
         if (size == ~((uint64_t) 0))
-            return "false";
+            return "unknown";
 
         // the offset is concrete number, fall-through
     } else {
         // we do not know anything with variable length
-        return "false";
+        return "unknown";
     }
 
     assert(size > 0 && size < ~((uint64_t) 0));
@@ -111,7 +111,7 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
     if (!psnode || psnode->pointsTo.empty()) {
         llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be invalid
-        return "false";
+        return "unknown";
     }
 
     for (const auto& ptr : psnode->pointsTo) {
@@ -126,7 +126,7 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
         // if the offset is unknown, than the pointer
         // may point after the end of allocated memory
         if (ptr.offset.isUnknown())
-            return "false";
+            return "unknown";
 
         // if the offset + size > the size of allocated memory,
         // then this can be invalid operation. Check it so that
@@ -154,10 +154,10 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
     return "true";
 }
 
-std::string PointsToPlugin::isEqual(llvm::Value* a, llvm::Value* b) {
+std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
     if(PTA) {
         PSNode *psnode = PTA->getPointsTo(a);
-        if (!psnode) return "true";
+        if (!psnode) return "unknown";
         for (auto& ptr : psnode->pointsTo) {
             llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
             if(llvmVal == b) return "true";
@@ -167,56 +167,6 @@ std::string PointsToPlugin::isEqual(llvm::Value* a, llvm::Value* b) {
     }
 
     return "false";
-}
-
-std::string PointsToPlugin::isNotEqual(llvm::Value* a, llvm::Value* b) {
-    if(PTA) {
-        PSNode *psnode = PTA->getPointsTo(a);
-        for (auto& ptr : psnode->pointsTo) {
-            llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
-            if(llvmVal == b) return "false";
-        }
-    } else {
-        return "true"; // we do not know whether a points to b
-    }
-
-    return "true";
-}
-
-std::string PointsToPlugin::greaterThan(llvm::Value* a, llvm::Value* b) {
-    if(PTA) {
-        (void)a;
-        (void)b;
-        //TODO
-    }
-    return "true";
-}
-
-std::string PointsToPlugin::lessThan(llvm::Value* a, llvm::Value* b) {
-    if(PTA) {
-        (void)a;
-        (void)b;
-        //TODO
-    }
-    return "true";
-}
-
-std::string PointsToPlugin::lessOrEqual(llvm::Value* a, llvm::Value* b) {
-    if(PTA) {
-        (void)a;
-        (void)b;
-        //TODO
-    }
-    return "true";
-}
-
-std::string PointsToPlugin::greaterOrEqual(llvm::Value* a, llvm::Value* b) {
-    if(PTA) {
-        (void)a;
-        (void)b;
-        //TODO
-    }
-    return "true";
 }
 
 bool PointsToPlugin::isReachableFunction(const llvm::Function& from, const llvm::Function& f) {

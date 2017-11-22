@@ -15,36 +15,16 @@ class InstrPlugin
       // the default behaviour is returning true, since we have
       // no information about the value, so it may be anything
       virtual std::string isNull(llvm::Value*) {
-          return "true";
+          return "unknown";
       }
 
       // XXX: we should probably rename it to isValidPointerRange
       virtual std::string isValidPointer(llvm::Value*, llvm::Value *) {
-          return "true";
+          return "unknown";
       }
 
-      virtual std::string isEqual(llvm::Value*, llvm::Value*) {
-          return "true";
-      }
-
-      virtual std::string isNotEqual(llvm::Value*, llvm::Value*) {
-          return "true";
-      }
-
-      virtual std::string greaterThan(llvm::Value*, llvm::Value*) {
-          return "true";
-      }
-
-      virtual std::string lessThan(llvm::Value*, llvm::Value*) {
-          return "true";
-      }
-
-      virtual std::string lessOrEqual(llvm::Value*, llvm::Value*) {
-          return "true";
-      }
-
-      virtual std::string greaterOrEqual(llvm::Value*, llvm::Value*) {
-          return "true";
+      virtual std::string pointsTo(llvm::Value*, llvm::Value*) {
+          return "unknown";
       }
 
       virtual std::string isConstant(llvm::Value* a) {
@@ -66,8 +46,8 @@ class InstrPlugin
           return "false";
       }
 
-      virtual std::string knownSize(llvm::Value*) {
-          return "false";
+      virtual std::string hasKnownSize(llvm::Value*) {
+          return "unknown";
       }
 
       std::string getName() { return name; }
