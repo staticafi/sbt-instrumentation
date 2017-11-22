@@ -12,7 +12,7 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
     if(path.empty())
 		return nullptr;
 
-    std::string err;
+    string err;
     auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str(), &err);
 
     if (!DL.isValid()) {
@@ -35,9 +35,22 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 }
 
 bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, InstrPlugin* plugin,
-                                const Condition &condition, llvm::Value* a, llvm::Value* b) {
+                                const Condition &condition, const list<llvm::Value*>& parameters) {
 
-    std::string answer;
+    string answer;
+
+    list<llvm::Value*>::const_iterator it = parameters.begin();
+
+	// NOTE: this needs to be changed if a query with more than two parameters is added
+    // get first argument
+    llvm::Value* a = *it;
+
+    // get second argument if present
+    llvm::Value* b = NULL;
+    if(condition.arguments.size()>1){
+        it++;
+        b = *it;
+	}
 
     // we are told to instrument only when
     // the value is null, so check if the value

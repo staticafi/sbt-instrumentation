@@ -554,39 +554,24 @@ bool checkFlag(Condition condition, Rewriter rewriter) {
  * @return true if condition is ok, false otherwise
  */
 bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const Variables& variables){
-    // condition: first element is operator, other one or two elements
-    // are variables, TODO do we need more than two variables?
     if(condition.name == "")
         return true;
 
-    list<string>::const_iterator it = condition.arguments.begin();
-    string aName = *it;
-    string bName = "";
-
-    // get first argument
-    Value* aValue = NULL;
-    auto search = variables.find(aName);
-    if(search != variables.end()) {
-        aValue = search->second;
-    } else {
-        return true;
-    }
-
-    // get second argument
-    Value* bValue = NULL;
-    if(condition.arguments.size()>1){
-        it++;
-        bName = *it;
-        auto search = variables.find(bName);
+    list<Value*> parameters;
+    for (const auto& arg : condition.arguments) {
+        auto search = variables.find(arg);
         if(search != variables.end()) {
-            bValue = search->second;
-        } else {
-            return true;
+            parameters.push_back(search->second);
+        }
+        else {
+            // wrong parameters passed to the condition,
+            // condition is not satisifed, do not instrument
+            return false;
         }
     }
 
     for(auto& plugin : instr.plugins){
-        if(Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition, aValue, bValue)){
+        if(Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition, parameters)){
             // some plugin told us that we should instrument
             return true;
         }
