@@ -22,7 +22,7 @@ class PointsToPlugin : public InstrPlugin
         std::string pointsTo(llvm::Value* a, llvm::Value *b);
         std::string hasKnownSize(llvm::Value* a);
         virtual std::pair<llvm::Value*, uint64_t> getPointerInfo(llvm::Value* a);
-        virtual bool isReachableFunction(const llvm::Function& from, const llvm::Function& f);
+        virtual void getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* a);
 
         PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
             llvm::errs() << "Running points-to analysis...\n";

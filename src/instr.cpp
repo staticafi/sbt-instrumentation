@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <set>
 
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DataLayout.h>
@@ -63,6 +64,8 @@ class LLVMInstrumentation {
         list<Value*> rememberedValues;
         Variables variables;
         Rewriter rewriter;
+        set<const Function*> reachableFunctions;
+        PointsToPlugin* ppPlugin = nullptr;
 
         LLVMInstrumentation(Module& m, Module& dm)
           : module(m), definitionsModule(dm) {}
@@ -74,6 +77,18 @@ Logger logger("log.txt");
 void usage(char *name) {
 
 	cerr << "Usage: " << name << " <config.json> <IR to be instrumented> <IR with definitions> <outputFileName> <options>" << endl;
+}
+
+/**
+ * Gets points to plugin if available.
+ * @param instr LLVMInstrumentation object
+ */
+void getPointsToPlugin(LLVMInstrumentation& instr) {
+    for (auto& plugin : instr.plugins) {
+        if(plugin->getName() == "PointsTo") {
+            instr.ppPlugin = static_cast<PointsToPlugin*>(plugin.get());
+        }
+    }
 }
 
 /**
@@ -94,11 +109,8 @@ std::pair<llvm::Value*, uint64_t> getPointerInfo(Instruction *I, const LLVMInstr
         return std::make_pair(nullptr, 0);
     }
 
-    for (auto& plugin : instr.plugins) {
-        if(plugin->getName() == "PointsTo") {
-            PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
-            return pp->getPointerInfo(op);
-        }
+    if(instr.ppPlugin) {
+        return instr.ppPlugin->getPointerInfo(op);
     }
 
     return std::make_pair(nullptr, 0);
@@ -911,24 +923,29 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
 
 /**
  * Finds out whether the given function is reachable from main.
+ * @param instr LLVMInstrumentation object
+*/
+void setReachableFunctions(LLVMInstrumentation& instr) {
+    Function* main = instr.module.getFunction("main");
+    if(main) {
+        instr.ppPlugin->getReachableFunctions(instr.reachableFunctions, main);
+    }
+}
+
+/**
+ * Finds out whether the given function is reachable from main.
  * @param f function
  * @param instr LLVMInstrumentation object
  * @return true if the function is reachable from main, false otherwise
 */
 bool isReachable(const Function& f, LLVMInstrumentation& instr) {
-    for (auto& plugin : instr.plugins) {
-        if(plugin->getName() == "PointsTo") {
-            PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
-            Function* main = instr.module.getFunction("main");
-            if(main) {
-                return pp->isReachableFunction(*main, f);
-            } else {
-                return true;
-            }
+    for (auto& reachableF : instr.reachableFunctions) {
+        if(reachableF == &f) {
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 /**
@@ -954,10 +971,10 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
 
         // If we have info from points-to plugin, do not
         // instrument functions that are not reachable from main
-      /*  if (!isReachable((*Fiterator), instr) && functionName != "main") {
+        if (instr.ppPlugin && functionName != "main" && !isReachable((*Fiterator), instr)) {
             logger.write_info("Omitting function " + functionName + " from instrumentation, not reachable from main.");
             continue;
-        }*/
+        }
 
         if(!InstrumentEntryPoint(instr, (&*Fiterator), phase.config)) return false;
         if(!InstrumentReturns(instr, (&*Fiterator), phase.config)) return false;
@@ -980,6 +997,14 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
  */
 bool instrumentModule(LLVMInstrumentation& instr) {
     logger.write_info("Starting instrumentation.");
+
+    // get points-to plugin
+    getPointsToPlugin(instr);
+
+    // get reachable functions if points to plugin is available
+    if(instr.ppPlugin) {
+        setReachableFunctions(instr);
+    }
 
     Phases rw_phases = instr.rewriter.getPhases();
 

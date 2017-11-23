@@ -1,5 +1,5 @@
 #include "points_to_plugin.hpp"
-#include<iostream>
+#include <set>
 
 using dg::analysis::pta::PSNode;
 
@@ -169,8 +169,8 @@ std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
     return "false";
 }
 
-bool PointsToPlugin::isReachableFunction(const llvm::Function& from, const llvm::Function& f) {
-    return cg.containsCall(&from, &f);
+void PointsToPlugin::getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* from) {
+    cg.getReachableFunctions(reachableFunctions, from);
 }
 
 extern "C" InstrPlugin* create_object(llvm::Module* module) {

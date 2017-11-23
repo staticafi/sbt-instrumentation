@@ -63,7 +63,7 @@ void CallGraph::buildCallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysi
     }
 }
 
-int CallGraph::findNode(const Function* function) {
+int CallGraph::findNode(const Function* function) const {
     for(auto& node : nodes) {
         if(node.getCaller() == function) {
             return node.getId();
@@ -120,6 +120,30 @@ bool CallGraph::containsDirectCall(const Function* caller, const Function* calle
         }
     }
     return false;
+}
+
+void CallGraph::getReachableFunctions(std::set<const Function*>& reachableFunctions, const Function* start) {
+    reachableFunctions.insert(start);
+
+    CGNode *startNode = &nodes[findNode(start)];
+    std::vector<CGNode*> unprocessedNodes;
+    std::vector<CGNode*> newNodes;
+
+    unprocessedNodes.push_back(startNode);
+
+    while (!unprocessedNodes.empty()) {
+        for (CGNode *current : unprocessedNodes) {
+            for (int succ : current->calls) {
+                const Function *succF = nodes[succ].getCaller();
+                if (reachableFunctions.insert(succF).second){
+                    newNodes.push_back(&nodes[succ]);
+                }
+            }
+        }
+
+        unprocessedNodes.swap(newNodes);
+		newNodes.clear();
+    }
 }
 
 bool CallGraph::isRecursive(const Function* function) {
