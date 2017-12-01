@@ -522,40 +522,6 @@
                         "in": "*",
                         "remember": "<t3>"
                     }
-                //{
-                //    "findInstructions": [
-                //                {
-                //                    "returnValue": "*",
-                //                    "instruction": "call",
-                //                    "operands": ["<t3>","*", "<t4>", "strncpy"]
-                //                }
-                //               ],
-                //    "newInstruction": {
-                //                  "returnValue": "*",
-                //                  "instruction": "call",
-                //                  "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
-                //                  "stripInboundsOffsets": "<t3>"
-                //              },
-                //    "where": "before",
-                //    "in": "*",
-                //    "remember": "<t3>"
-                //},
-                //{
-                //    "findInstructions": [
-                //                {
-                //                    "returnValue": "*",
-                //                    "instruction": "call",
-                //                    "operands": ["<t3>","<t4>", "strcpy"]
-                //                }
-                //               ],
-                //    "newInstruction": {
-                //                  "returnValue": "*",
-                //                  "instruction": "call",
-                //                  "operands": ["<t3>","<t4>", "__INSTR_check_str_length"]
-                //              },
-                //    "where": "before",
-                //    "in": "*"
-                //}
                 ]
             },
             {   "instructionRules":
@@ -566,16 +532,12 @@
                         "returnValue": "<t1>",
                         "instruction": "alloca",
                         "operands": ["<t0>"],
-                        // get only size of _one_ element,
-                        // maybe rename to "getAllocatedTypeSize"
                         "getSizeTo": "<t2>"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        // __INSTR_remember takes the pointer, size of one element
-                        // and number of elements and computes total size as <t2>*<t0>
                         "operands": ["<t1>","<t2>", "<t0>", "__INSTR_remember"]
                     },
                     "where": "after",

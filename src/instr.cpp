@@ -955,6 +955,7 @@ bool isReachable(const Function& f, LLVMInstrumentation& instr) {
  * @return true if instrumentation was completed without problems, false otherwise
  */
 bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
+
     // Instrument instructions in functions
     for (Module::iterator Fiterator = instr.module.begin(), E = instr.module.end(); Fiterator != E; ++Fiterator) {
         if (Fiterator->isDeclaration())
@@ -1008,9 +1009,14 @@ bool instrumentModule(LLVMInstrumentation& instr) {
 
     Phases rw_phases = instr.rewriter.getPhases();
 
+    int i = 0;
     for (const auto& phase : rw_phases) {
+        i++;
+        logger.write_info("Start of the " + std::to_string(i) + ". phase.");
         if(!RunPhase(instr, phase))
             return false;
+
+        logger.write_info("End of the " + std::to_string(i) + ". phase.");
     }
 
     // Instrument global variables
@@ -1029,6 +1035,7 @@ bool instrumentModule(LLVMInstrumentation& instr) {
 
     // write the module
     errs() << "Saving the instrumented module to: " << instr.outputName << "\n";
+    logger.write_info("Saving the instrumented module to: " + instr.outputName);
     llvm::WriteBitcodeToFile(&instr.module, ostream);
 
     return true;
@@ -1049,6 +1056,7 @@ bool loadPlugins(LLVMInstrumentation& instr) {
     for(const string& path : instr.rewriter.analysisPaths) {
         auto plugin = Analyzer::analyze(path, &instr.module);
         if (plugin) {
+            logger.write_info("Plugin " + plugin->getName() + " loaded.");
             instr.plugins.push_back(std::move(plugin));
         }
         else {
