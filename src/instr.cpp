@@ -838,17 +838,19 @@ bool InstrumentGlobals(LLVMInstrumentation& instr) {
  * @param rw_config set of rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentEntryPoint(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config){
+bool InstrumentEntryPoints(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config){
     if(F->isDeclaration()) return true;
     for (RewriteRule& rw : rw_config) {
 
         // Check type of the rule
-        if(rw.where != InstrumentPlacement::ENTRY) continue;
+        if(rw.where != InstrumentPlacement::ENTRY)
+            continue;
         // Check if the function should be instrumented
         string functionName = F->getName().str();
-        if(rw.inFunction != "*" && rw.inFunction!=functionName) continue;
+        if(rw.inFunction != "*" && rw.inFunction != functionName)
+            continue;
 
-        // Get name of function
+        // Get name of a function to be instrumented
         const string& param = *(--rw.newInstr.parameters.end());
         Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
@@ -884,12 +886,14 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
     for (RewriteRule& rw : rw_config) {
 
         // Check type of the rule
-        if(rw.where != InstrumentPlacement::RETURN) continue;
+        if(rw.where != InstrumentPlacement::RETURN)
+            continue;
         // Check whether the function should be instrumented
         string functionName = F->getName().str();
-        if(rw.inFunction != "*" && rw.inFunction!=functionName)    continue;
+        if(rw.inFunction != "*" && rw.inFunction != functionName)
+            continue;
 
-        // Get name of function
+        // Get name of a function to be instrumented
         const string& param = *(--rw.newInstr.parameters.end());
         Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
@@ -908,7 +912,7 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
                 newInstr->insertBefore(termInst);
                 inserted = true;
                 CloneMetadata(termInst, newInstr);
-                logger.write_info("Inserting instruction at the beginning of function " + functionName);
+                logger.write_info("Inserting instruction at the end of function " + functionName);
             }
         }
 
@@ -959,7 +963,7 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
     // Instrument instructions in functions
     for (Module::iterator Fiterator = instr.module.begin(), E = instr.module.end(); Fiterator != E; ++Fiterator) {
         if (Fiterator->isDeclaration())
-          continue;
+            continue;
 
         // Do not instrument functions linked for instrumentation
         string functionName = (&*Fiterator)->getName().str();
@@ -977,7 +981,7 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
             continue;
         }
 
-        if(!InstrumentEntryPoint(instr, (&*Fiterator), phase.config)) return false;
+        if(!InstrumentEntryPoints(instr, (&*Fiterator), phase.config)) return false;
         if(!InstrumentReturns(instr, (&*Fiterator), phase.config)) return false;
 
         for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
