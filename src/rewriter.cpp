@@ -7,6 +7,23 @@
 
 using namespace std;
 
+void parseConditions(const Json::Value& conditions, std::list<Condition>& r_conditions) {
+    for (const auto& condition : conditions){
+        Condition r_condition;
+        r_condition.name = condition["query"][0].asString();
+
+        for (uint i = 1; i < condition["query"].size(); i++) {
+            r_condition.arguments.push_back(condition["query"][i].asString());
+        }
+
+        for (uint i = 0; i < condition["expectedResult"].size(); i++) {
+            r_condition.expectedValues.push_back(condition["expectedResult"][i].asString());
+        }
+
+        r_conditions.push_back(r_condition);
+    }
+}
+
 void parseRule(const Json::Value& rule, RewriteRule& r) {
     // Get findInstructions
     for (const auto& findInstruction : rule["findInstructions"]) {
@@ -33,6 +50,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
         r.newInstr.parameters.push_back(op.asString());
     }
 
+    // Get placement, in and remember field
     if (rule["where"] == "before") {
         r.where = InstrumentPlacement::BEFORE;
     }
@@ -52,21 +70,8 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     r.inFunction = rule["in"].asString();
     r.remember = rule["remember"].asString();
 
-    // TODO extract function
-    for (const auto& condition : rule["conditions"]){
-        Condition r_condition;
-        r_condition.name = condition["query"][0].asString();
-
-        for (uint i = 1; i < condition["query"].size(); i++) {
-            r_condition.arguments.push_back(condition["query"][i].asString());
-        }
-
-        for (uint i = 0; i < condition["expectedResult"].size(); i++) {
-            r_condition.expectedValues.push_back(condition["expectedResult"][i].asString());
-        }
-
-        r.conditions.push_back(r_condition);
-    }
+    // Get conditions
+    parseConditions(rule["conditions"], r.conditions);
 
     for (const auto& setFlag : rule["setFlags"]){
         r.setFlags.insert(Flag(setFlag[0].asString(), setFlag[1].asString()));
@@ -117,20 +122,8 @@ void Rewriter::parseConfig(ifstream &config_file) {
     rw_globals_rule.globalVar.globalVariable = json_rules["globalVariablesRule"]["findGlobals"]["globalVariable"].asString();
     rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getSizeTo"].asString();
 
-    for (auto condition : json_rules["globalVariablesRule"]["conditions"]){
-		Condition r_condition;
-        r_condition.name = condition["query"][0].asString();
-
-        for (uint i = 1; i < condition["query"].size(); i++) {
-            r_condition.arguments.push_back(condition["query"][i].asString());
-        }
-
-        for (uint i = 0; i < condition["expectedResult"].size(); i++) {
-            r_condition.expectedValues.push_back(condition["expectedResult"][i].asString());
-        }
-
-        rw_globals_rule.conditions.push_back(r_condition);
-    }
+    // Get conditions
+    parseConditions(json_rules["globalVariablesRule"]["conditions"], rw_globals_rule.conditions);
 
     rw_globals_rule.newInstr.returnValue = json_rules["globalVariablesRule"]["newInstruction"]["returnValue"].asString();
     rw_globals_rule.newInstr.instruction = json_rules["globalVariablesRule"]["newInstruction"]["instruction"].asString();
