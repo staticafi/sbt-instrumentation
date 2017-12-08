@@ -120,7 +120,7 @@ def parseJson():
 def run():
     # Convert .c file from config.json
     bcConfigFile = "config.bc"
-    ret = call(['clang -S -emit-llvm -o {0} {1}'.format(bcConfigFile, fileToLink)], shell=True)
+    ret = call(['clang -emit-llvm -g -o {0} {1}'.format(bcConfigFile, fileToLink)], shell=True)
     if ret != 0:
         err('Converting config source file to .bc failed!')
         return
@@ -130,21 +130,21 @@ def run():
     bcSourceFile = "source.bc"
 
     if not source_is_bc:
-        ret = call(['clang -S -emit-llvm -o {0} {1}'.format(bcSourceFile, cFile)], shell=True)
+        ret = call(['clang -emit-llvm -g -o {0} {1}'.format(bcSourceFile, cFile)], shell=True)
         if ret != 0:
             err('Converting source file to .bc failed!')
             return
         else:
             dbg('Source file converted to .bc.')
 
-    ret = call(['/home/xvitovs1/symbiotic/install/llvm-3.9.1/bin/LLVMinstr {0} {1} {2} {3}'.format(configFile, bcSourceFile, bcConfigFile, final_output)],
+    ret = call(['./LLVMinstr {0} {1} {2} {3}'.format(configFile, bcSourceFile, bcConfigFile, final_output)],
                shell=True)
     if ret != 0:
         err('Instrumentation failed!')
     else:
         dbg('Instrumentation done.')
         if(generate_ll):
-            ret = call(['llvm-dis-3.8 {0}'.format(final_output)], shell=True)
+            ret = call(['llvm-dis {0}'.format(final_output)], shell=True)
             if ret != 0:
                 err('Generating .ll file failed!')
                 return
