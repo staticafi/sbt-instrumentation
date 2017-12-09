@@ -237,7 +237,7 @@
                             "instruction": "load",
                             "operands": ["<t1>"],
                             "getTypeSize": "<t2>",
-                            "getPointerInfoTo": ["<t3>", "<t4>"]
+                            "getPointerInfo": ["<t3>", "<t4>"]
                         }
                         ],
                         "newInstruction": {
@@ -256,7 +256,7 @@
                             "instruction": "store",
                             "operands": ["<t1>", "<t2>"],
                             "getTypeSize": "<t3>",
-                            "getPointerInfoTo": ["<t4>", "<t5>"]
+                            "getPointerInfo": ["<t4>", "<t5>"]
                         }
                         ],
                         "newInstruction": {
