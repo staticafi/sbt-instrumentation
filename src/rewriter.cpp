@@ -87,6 +87,24 @@ void parsePhase(const Json::Value& phase, Phase& r_phase) {
     }
 }
 
+void parseGlobalRule(const Json::Value& globalRule, GlobalVarsRule& rw_globals_rule) {
+    // Get rule for global variables
+    rw_globals_rule.globalVar.globalVariable = globalRule["findGlobals"]["globalVariable"].asString();
+    rw_globals_rule.globalVar.getSizeTo = globalRule["findGlobals"]["getTypeSize"].asString();
+
+    // Get conditions
+    parseConditions(globalRule["conditions"], rw_globals_rule.conditions);
+
+    rw_globals_rule.newInstr.returnValue = globalRule["newInstruction"]["returnValue"].asString();
+    rw_globals_rule.newInstr.instruction = globalRule["newInstruction"]["instruction"].asString();
+
+    for (auto operand : globalRule["newInstruction"]["operands"]) {
+        rw_globals_rule.newInstr.parameters.push_back(operand.asString());
+    }
+
+    rw_globals_rule.inFunction = globalRule["in"].asString();
+}
+
 void Rewriter::parseConfig(ifstream &config_file) {
     Json::Value json_rules;
     Json::Reader reader;
@@ -116,33 +134,19 @@ void Rewriter::parseConfig(ifstream &config_file) {
         this->phases.push_back(rw_phase);
     }
 
-    GlobalVarsRule rw_globals_rule;
-
-    // Get rule for global variables
-    rw_globals_rule.globalVar.globalVariable = json_rules["globalVariablesRule"]["findGlobals"]["globalVariable"].asString();
-    rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getTypeSize"].asString();
-
-    // Get conditions
-    parseConditions(json_rules["globalVariablesRule"]["conditions"], rw_globals_rule.conditions);
-
-    rw_globals_rule.newInstr.returnValue = json_rules["globalVariablesRule"]["newInstruction"]["returnValue"].asString();
-    rw_globals_rule.newInstr.instruction = json_rules["globalVariablesRule"]["newInstruction"]["instruction"].asString();
-
-    for (auto operand : json_rules["globalVariablesRule"]["newInstruction"]["operands"]) {
-        rw_globals_rule.newInstr.parameters.push_back(operand.asString());
+    for (const auto& globalRule : json_rules["globalVariablesRules"]) {
+        GlobalVarsRule rw_globals_rule;
+        parseGlobalRule(globalRule, rw_globals_rule);
+        this->globalVarsRules.push_back(rw_globals_rule);
     }
-
-    rw_globals_rule.inFunction = json_rules["globalVariablesRule"]["in"].asString();
-
-    this->globalVarsRule = rw_globals_rule;
 }
 
 const Phases& Rewriter::getPhases() {
     return this->phases;
 }
 
-const GlobalVarsRule& Rewriter::getGlobalsConfig() {
-    return this->globalVarsRule;
+const GlobalVarsRules& Rewriter::getGlobalsConfig() {
+    return this->globalVarsRules;
 }
 
 bool Rewriter::isFlag(string name) {

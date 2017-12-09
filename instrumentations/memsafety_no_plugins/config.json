@@ -1,17 +1,19 @@
 {
     "file": "memsafety_no_plugins.c",
-        "globalVariablesRule":     {
-            "findGlobals": {
-                "globalVariable": "<t1>",
-                "getTypeSize": "<t2>"
-            },
-            "newInstruction": {
-                "returnValue": "*",
-                "instruction": "call",
-                "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
-            },
-            "in": "main"
-        },
+        "globalVariablesRule": [
+            {
+                "findGlobals": {
+                    "globalVariable": "<t1>",
+                    "getTypeSize": "<t2>"
+                },
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
+                },
+                "in": "main"
+            }
+        ],
         "phases":
             [
             {

@@ -771,17 +771,15 @@ uint64_t getGlobalVarSize(GlobalVariable* GV, const Module& M){
     return size;
 }
 
-
 /**
- * Instruments global variable if they should be instrumented.
- * @param M module.
+ * Instruments global variable if they should be instrumented according to the given rule.
+ * @param instr LLVMInstrumentation object
+ * @param g_rule a rule to be applied
  * @return true if instrumentation of global variables was done without problems, false otherwise
  */
-bool InstrumentGlobals(LLVMInstrumentation& instr) {
-    GlobalVarsRule rw_globals = instr.rewriter.getGlobalsConfig();
-
+bool InstrumentGlobal(LLVMInstrumentation& instr, const GlobalVarsRule& g_rule) {
     // If there is no rule for global variables, do not try to instrument
-    if(rw_globals.inFunction.empty() || rw_globals.globalVar.globalVariable.empty()) // TODO this is not very nice
+    if (g_rule.inFunction.empty() || g_rule.globalVar.globalVariable.empty())
         return true;
 
     // Iterate through global variables
@@ -790,26 +788,26 @@ bool InstrumentGlobals(LLVMInstrumentation& instr) {
         GlobalVariable *GV = dyn_cast<GlobalVariable>(GI);
         if (!GV) continue;
 
-        if(rw_globals.inFunction == "*"){
-            //TODO
+        if(g_rule.inFunction == "*"){
             return false;
-            logger.write_error("Rule for global variables for instrumenting to all function not supported yet.");
+            logger.write_error("Rule for global variables can be inserted only to a specific function!");
         }
         else{
-            Function* F = getOrInsertFunc(instr, rw_globals.inFunction);
+            Function* F = getOrInsertFunc(instr, g_rule.inFunction);
             // Get operands of new instruction
             map <string, Value*> variables;
 
-            if(rw_globals.globalVar.globalVariable != "*")
-                variables[rw_globals.globalVar.globalVariable] = GV;
-            if(rw_globals.globalVar.globalVariable != "*"){
-                variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getGlobalVarSize(GV, instr.module));
+            if (g_rule.globalVar.globalVariable != "*")
+                variables[g_rule.globalVar.globalVariable] = GV;
+            if (!g_rule.globalVar.getSizeTo.empty()){
+                variables[g_rule.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                             getGlobalVarSize(GV, instr.module));
             }
 
             // Check the conditions
             bool satisfied = true;
-            for (auto condition : rw_globals.conditions) {
-                if(!checkAnalysis(instr, condition, variables)) {
+            for (auto condition : g_rule.conditions) {
+                if (!checkAnalysis(instr, condition, variables)) {
                     satisfied = false;
                     break;
                 }
@@ -819,13 +817,29 @@ bool InstrumentGlobals(LLVMInstrumentation& instr) {
             if(satisfied) {
                 // Try to apply rule
                 inst_iterator IIterator = inst_begin(F);
-                Instruction *firstI = &*IIterator; //TODO
-                if(applyRule(instr, firstI, rw_globals.newInstr, variables) == 1) {
+                Instruction *firstI = &*IIterator;
+                if(applyRule(instr, firstI, g_rule.newInstr, variables) == 1) {
                     logger.write_error("Cannot apply rule.");
                     return false;
                 }
             }
         }
+    }
+
+    return true;
+}
+
+/**
+ * Instruments global variables if they should be instrumented.
+ * @param instr LLVMInstrumentation object.
+ * @return true if instrumentation of global variables was done without problems, false otherwise
+ */
+bool InstrumentGlobals(LLVMInstrumentation& instr) {
+    const GlobalVarsRules& g_rules = instr.rewriter.getGlobalsConfig();
+
+    for (const auto& g_rule : g_rules) {
+        if (!InstrumentGlobal(instr, g_rule))
+            return false;
     }
 
     return true;
