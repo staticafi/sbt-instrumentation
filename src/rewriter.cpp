@@ -33,7 +33,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
         for (const auto& operand : findInstruction["operands"]) {
             instr.parameters.push_back(operand.asString());
         }
-        instr.getSizeTo = findInstruction["getSizeTo"].asString();
+        instr.getSizeTo = findInstruction["getTypeSize"].asString();
 
         for (const auto& info : findInstruction["getPointerInfoTo"]) {
             instr.getPointerInfoTo.push_back(info.asString());
@@ -120,7 +120,7 @@ void Rewriter::parseConfig(ifstream &config_file) {
 
     // Get rule for global variables
     rw_globals_rule.globalVar.globalVariable = json_rules["globalVariablesRule"]["findGlobals"]["globalVariable"].asString();
-    rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getSizeTo"].asString();
+    rw_globals_rule.globalVar.getSizeTo = json_rules["globalVariablesRule"]["findGlobals"]["getTypeSize"].asString();
 
     // Get conditions
     parseConditions(json_rules["globalVariablesRule"]["conditions"], rw_globals_rule.conditions);

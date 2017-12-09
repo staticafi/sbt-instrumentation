@@ -4,7 +4,7 @@
         "globalVariablesRule":     {
             "findGlobals": {
                 "globalVariable": "<t1>",
-                "getSizeTo": "<t2>"
+                "getTypeSize": "<t2>"
             },
             "newInstruction": {
                 "returnValue": "*",
@@ -227,7 +227,7 @@
                             "returnValue": "*",
                             "instruction": "load",
                             "operands": ["<t1>"],
-                            "getSizeTo": "<t2>"
+                            "getTypeSize": "<t2>"
                         }
                         ],
                         "newInstruction": {
@@ -246,7 +246,7 @@
                             "returnValue": "*",
                             "instruction": "store",
                             "operands": ["<t1>", "<t2>"],
-                            "getSizeTo": "<t3>"
+                            "getTypeSize": "<t3>"
                         }
                         ],
                         "newInstruction": {
@@ -481,7 +481,7 @@
                         "returnValue": "<t1>",
                         "instruction": "alloca",
                         "operands": ["<t0>"],
-                        "getSizeTo": "<t2>"
+                        "getTypeSize": "<t2>"
                     }
                     ],
                     "newInstruction": {
