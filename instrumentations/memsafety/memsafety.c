@@ -310,9 +310,26 @@ void __INSTR_destroy_lists() {
     __INSTR_destroy_list(globals_list);
 }
 
+void __INSTR_check_realloc(rec_id old_id) {
+
+    if (old_id == 0) {
+      return;
+    }
+
+    rec_list_node *n;
+    if ((n = __INSTR_list_search(deallocated_list, old_id))) {
+        assert(0 && "realloc on freed memory");
+        __VERIFIER_error();
+    } else if ((n = __INSTR_list_search(stack_list, old_id))) {
+        assert(0 && "realloc on non-dynamically allocated memory");
+        __VERIFIER_error();
+    }
+}
+
 void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
+
     if (new_id == 0) {
-      return; //if realloc returns null, nothing happens
+      return; // if realloc returns null, nothing happens
     }
 
     if (old_id == 0) {
@@ -323,17 +340,8 @@ void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
     rec_list_node *n = __INSTR_list_search(heap_list, old_id);
 
     if (n != NULL) {
-        if(n->rec.state == REC_STATE_FREED) {
-            assert(0 && "realloc on memory that has already been freed");
-            __VERIFIER_error();
-        }
-
         __INSTR_rec_create_heap(new_id, REC_STATE_ALLOCATED, size);
         __INSTR_rec_destroy(n, heap_list);
-    }
-    else{
-        assert(0 && "realloc on not allocated memory");
-        __VERIFIER_error();
     }
 }
 
