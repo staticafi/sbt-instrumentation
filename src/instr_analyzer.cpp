@@ -7,9 +7,9 @@
 
 using namespace std;
 
-unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module){
+unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module) {
 
-    if(path.empty())
+    if (path.empty())
 		return nullptr;
 
     string err;
@@ -41,21 +41,21 @@ bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, Inst
 
     list<llvm::Value*>::const_iterator it = parameters.begin();
 
-	// NOTE: this needs to be changed if a query with more than two parameters is added
+	// NOTE: This needs to be changed if a query with more than two parameters is added
     // get first argument
     llvm::Value* a = *it;
 
-    // get second argument if present
+    // Get second argument if present
     llvm::Value* b = NULL;
-    if(condition.arguments.size()>1){
+    if (condition.arguments.size()>1){
         it++;
         b = *it;
 	}
 
-    // we are told to instrument only when
+    // We are told to instrument only when
     // the value is null, so check if the value
     // can be null.
-    if(condition.name == "isNull") {
+    if (condition.name == "isNull") {
         answer = plugin->isNull(a);
     } else if (condition.name == "isConstant") {
         answer = plugin->isConstant(a);
@@ -77,22 +77,6 @@ bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, Inst
         if (answer == expV)
             return true;
     }
-
-    /* TODO
-	if(condition.compare("!=")){
-		return !(plugin->isEqual(a,b));
-	} else if(condition.compare("==")){
-		return !(plugin->isNotEqual(a,b));
-	} else if(condition.compare("<")){
-		return !(plugin->greaterOrEqual(a,b));
-	} else if(condition.compare(">")){
-		return !(plugin->lessOrEqual(a,b));
-	} else if(condition.compare("<=")){
-		return !(plugin->greaterThan(a,b));
-	} else if(condition.compare(">=")){
-		return !(plugin->lessThan(a,b));
-	}
-    */
 
 	return false;
 }

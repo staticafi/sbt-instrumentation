@@ -12,13 +12,12 @@ class InstrPlugin
     private:
         std::string name;
     public:
-      // the default behaviour is returning true, since we have
+      // The default behaviour is returning true, since we have
       // no information about the value, so it may be anything
       virtual std::string isNull(llvm::Value*) {
           return "unknown";
       }
 
-      // XXX: we should probably rename it to isValidPointerRange
       virtual std::string isValidPointer(llvm::Value*, llvm::Value *) {
           return "unknown";
       }
@@ -55,7 +54,7 @@ class InstrPlugin
       InstrPlugin() {}
       InstrPlugin(const std::string& pluginName) : name(pluginName) {}
 
-      // add virtual destructor, so that child classes will
+      // Add virtual destructor, so that child classes will
       // call their destructor
       virtual ~InstrPlugin() {}
 };

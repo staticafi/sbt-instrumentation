@@ -18,8 +18,8 @@ void Logger::log_insertion(const string& where,
     string newCall = calledFunction->getName().str();
     string foundInstrOpName = foundInstr->getOpcodeName();
 
-    if(foundInstrOpName == "call") {
-        if (const CallInst *ci = dyn_cast<CallInst>(foundInstr)) { //TODO what if this fails
+    if (foundInstrOpName == "call") {
+        if (const CallInst *ci = dyn_cast<CallInst>(foundInstr)) {
             // get called value and strip away any bitcasts
             const llvm::Value *calledVal = ci->getCalledValue()->stripPointerCasts();
             string name;
@@ -52,7 +52,7 @@ void Logger::log_insertion(InstrumentSequence foundInstrs, string newInstr) {
     for (list<InstrumentInstruction>::iterator sit=foundInstrs.begin(); sit != foundInstrs.end(); ++sit) {
         InstrumentInstruction foundInstr = *sit;
 
-        if(i < foundInstrs.size() - 1) {
+        if (i < foundInstrs.size() - 1) {
             instructions += foundInstr.instruction + ", ";
         }
         else {

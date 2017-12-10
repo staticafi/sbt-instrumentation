@@ -73,13 +73,13 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     // Get conditions
     parseConditions(rule["conditions"], r.conditions);
 
-    for (const auto& setFlag : rule["setFlags"]){
+    for (const auto& setFlag : rule["setFlags"]) {
         r.setFlags.insert(Flag(setFlag[0].asString(), setFlag[1].asString()));
     }
 }
 
 void parsePhase(const Json::Value& phase, Phase& r_phase) {
-    // load rewrite rules for instructions
+    // Load rewrite rules for instructions
     for (const auto& rule : phase["instructionRules"]) {
         RewriteRule rw_rule;
         parseRule(rule, rw_rule);
@@ -117,17 +117,17 @@ void Rewriter::parseConfig(ifstream &config_file) {
 
     // TODO catch exceptions here
 
-    // load paths to analyses
-    for(const auto& analysis : json_rules["analyses"]){
+    // Load paths to analyses
+    for (const auto& analysis : json_rules["analyses"]) {
         this->analysisPaths.push_back(analysis.asString());
     }
 
-    // load flags
+    // Load flags
     for (const auto& flag : json_rules["flags"]) {
         this->flags.insert(Flag(flag.asString(), ""));
     }
 
-    // load phases
+    // Load phases
     for (const auto& phase : json_rules["phases"]) {
         Phase rw_phase;
         parsePhase(phase, rw_phase);
