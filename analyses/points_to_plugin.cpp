@@ -14,7 +14,7 @@ std::string PointsToPlugin::isNull(llvm::Value* a) {
     if (!psnode || psnode->pointsTo.empty()) {
         // llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
-        return "unknown";
+        return "maybe";
     }
 
     for (const auto& ptr : psnode->pointsTo) {
@@ -33,7 +33,7 @@ std::string PointsToPlugin::hasKnownSize(llvm::Value* a) {
     PSNode *psnode = PTA->getPointsTo(a);
     if (!psnode || psnode->pointsTo.size()!=1) {
         // we know nothing about the allocated size
-        return "unknown";
+        return "maybe";
     }
 
     const auto& ptr = *(psnode->pointsTo.begin());
@@ -95,12 +95,12 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
         // if the size cannot be expressed as an uint64_t,
         // say we do not know
         if (size == ~((uint64_t) 0))
-            return "unknown";
+            return "maybe";
 
         // the offset is concrete number, fall-through
     } else {
         // we do not know anything with variable length
-        return "unknown";
+        return "maybe";
     }
 
     assert(size > 0 && size < ~((uint64_t) 0));
@@ -111,7 +111,7 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
     if (!psnode || psnode->pointsTo.empty()) {
         //llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be invalid
-        return "unknown";
+        return "maybe";
     }
 
     for (const auto& ptr : psnode->pointsTo) {
@@ -126,7 +126,7 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
         // if the offset is unknown, than the pointer
         // may point after the end of allocated memory
         if (ptr.offset.isUnknown())
-            return "unknown";
+            return "maybe";
 
         // if the offset + size > the size of allocated memory,
         // then this can be invalid operation. Check it so that
@@ -157,7 +157,7 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
 std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
     if(PTA) {
         PSNode *psnode = PTA->getPointsTo(a);
-        if (!psnode) return "unknown";
+        if (!psnode) return "maybe";
         for (auto& ptr : psnode->pointsTo) {
             llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
             if(llvmVal == b) return "true";

@@ -238,7 +238,7 @@
                             "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false","unknown"]}],
+                        "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false","maybe"]}],
                         "in": "*",
                         "remember": "<t1>"
                     },
@@ -257,7 +257,7 @@
                             "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                         },
                         "where": "before",
-                        "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false","unknown"]}],
+                        "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false","maybe"]}],
                         "in": "*",
                         "remember": "<t2>"
                     },
