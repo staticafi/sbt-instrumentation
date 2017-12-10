@@ -107,13 +107,29 @@ void parseGlobalRule(const Json::Value& globalRule, GlobalVarsRule& rw_globals_r
 
 void Rewriter::parseConfig(ifstream &config_file) {
     Json::Value json_rules;
+    bool parsingSuccessful;
+
+#if (JSONCPP_VERSION_MINOR < 8 || (JSONCPP_VERSION_MINOR == 8 && JSONCPP_VERSION_PATCH < 1))
     Json::Reader reader;
-    bool parsingSuccessful = reader.parse(config_file, json_rules);
+    parsingSuccessful = reader.parse(config_file, json_rules);
     if (!parsingSuccessful) {
         cerr  << "Failed to parse configuration\n"
               << reader.getFormattedErrorMessages();
         throw runtime_error("Config parsing failure.");
     }
+
+#else
+    Json::CharReaderBuilder rbuilder;
+    rbuilder["collectComments"] = false;
+    std::string errs;
+    parsingSuccessful = Json::parseFromStream(rbuilder, config_file, &json_rules, &errs);
+    if (!parsingSuccessful) {
+        cerr  << "Failed to parse configuration\n"
+              << errs;
+        throw runtime_error("Config parsing failure.");
+    }
+
+#endif
 
     // TODO catch exceptions here
 
