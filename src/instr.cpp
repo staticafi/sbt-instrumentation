@@ -198,7 +198,7 @@ void CloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2) {
 Instruction* GetNextInstruction(Instruction* ins) {
     BasicBlock::iterator I(ins);
     if (++I == ins->getParent()->end())
-        return NULL;
+        return nullptr;
     return &*I;
 }
 
@@ -210,7 +210,7 @@ Instruction* GetNextInstruction(Instruction* ins) {
 Instruction* GetPreviousInstruction(Instruction* ins) {
     BasicBlock::iterator I(ins);
     if (--I == ins->getParent()->begin())
-        return NULL;
+        return nullptr;
     return &*I;
 }
 
@@ -665,7 +665,7 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
         bool instrument = false;
         Instruction* currentInstr = ins;
         for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
-            if (currentInstr == NULL) {
+            if (currentInstr == nullptr) {
                 break;
             }
 
@@ -883,7 +883,7 @@ bool InstrumentEntryPoints(LLVMInstrumentation& instr, Function* F, RewriterConf
 
         // Insert at the beginning of function
         Instruction* firstInstr = (&*(F->begin()))->getFirstNonPHIOrDbg();
-        if (firstInstr == NULL)
+        if (firstInstr == nullptr)
             continue;
         newInstr->insertBefore(firstInstr);
         CloneMetadata(firstInstr, newInstr);

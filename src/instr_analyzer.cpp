@@ -46,7 +46,7 @@ bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, Inst
     llvm::Value* a = *it;
 
     // Get second argument if present
-    llvm::Value* b = NULL;
+    llvm::Value* b = nullptr;
     if (condition.arguments.size()>1){
         it++;
         b = *it;

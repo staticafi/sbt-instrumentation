@@ -44,7 +44,7 @@ void CallGraph::buildCallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysi
     nodes.reserve(distance+1);
 
     // Create special node for unknown call targets
-    nodes.push_back(CGNode(NULL, 0));
+    nodes.push_back(CGNode(nullptr, 0));
 
     // Creates nodes from functions
     for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
