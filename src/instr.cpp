@@ -429,9 +429,9 @@ static llvm::Function *getOrInsertFunc(LLVMInstrumentation& I,
  * @param rw_rule rule to apply
  * @param variables map of found parameters form config
  * @param Iiterator pointer to instructions iterator
- * @return 1 if error
+ * @return false if there was an error, true otherwise
  */
-int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule rw_rule,
+bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule rw_rule,
         const Variables& variables, inst_iterator *Iiterator)
 {
     logger.write_info("Applying rule...");
@@ -439,7 +439,7 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
     // Work just with call instructions for now...
     if (rw_rule.newInstr.instruction != "call") {
         logger.write_error("Not working with this instruction: " + rw_rule.newInstr.instruction);
-        return 1;
+        return false;
     }
 
     // Get operands
@@ -450,7 +450,7 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
     Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
-        return 1;
+        return false;
     }
 
     // Insert arguments
@@ -460,7 +460,7 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
     // Insert new call instruction
     InsertCallInstruction(CalleeF, args, rw_rule, get<1>(argsTuple), Iiterator);
 
-    return 0;
+    return true;
 }
 
 /**
@@ -469,9 +469,9 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
  * @param I current instruction
  * @param rw_newInstr rule to apply - new instruction
  * @param variables map of found parameters form config
- * @return 1 if error
+ * @return false if tehre was an error, true otherwise
  */
-int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
+bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
         const Variables& variables)
 {
     logger.write_info("Applying rule for global variable...");
@@ -479,7 +479,7 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
     // Work just with call instructions for now...
     if (rw_newInstr.instruction != "call") {
         logger.write_error("Not working with this instruction: " + rw_newInstr.instruction);
-        return 1;
+        return false;
     }
 
     // Get operands
@@ -490,7 +490,7 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
     Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
-        return 1;
+        return false;
     }
 
     // Insert arguments
@@ -501,7 +501,7 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
     InsertCallInstruction(CalleeF, args, get<1>(argsTuple));
 
 
-    return 0;
+    return true;
 }
 
 /**
@@ -743,7 +743,7 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                 where = currentInstr;
             }
 
-            if (applyRule(instr, where, rw, variables, Iiterator) == 1) {
+            if (!applyRule(instr, where, rw, variables, Iiterator)) {
                 logger.write_error("Cannot apply rule.");
                 return false;
             }
@@ -822,7 +822,7 @@ bool InstrumentGlobal(LLVMInstrumentation& instr, const GlobalVarsRule& g_rule) 
                 // Try to apply rule
                 inst_iterator IIterator = inst_begin(F);
                 Instruction *firstI = &*IIterator;
-                if (applyRule(instr, firstI, g_rule.newInstr, variables) == 1) {
+                if (!applyRule(instr, firstI, g_rule.newInstr, variables)) {
                     logger.write_error("Cannot apply rule.");
                     return false;
                 }
