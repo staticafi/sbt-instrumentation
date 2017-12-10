@@ -15,5 +15,5 @@ add_executable(LLVMinstr
 target_link_libraries(LLVMinstr ${llvm_libs} ${JSON_LIBS})
 add_dependencies(LLVMinstr gitversion)
 
-install(TARGETS LLVMinstr RUNTIME DESTINATION bin)
+install(TARGETS LLVMinstr RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 

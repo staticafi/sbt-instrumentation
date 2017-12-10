@@ -1,6 +1,6 @@
 {
     "file": "memsafety_one_phase.c",
-        "analyses": ["libPoints_to_plugin.so"],
+        "analyses": ["analyses/libPoints_to_plugin.so"],
         "globalVariablesRule": [
             {
                 "findGlobals": {
