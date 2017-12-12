@@ -131,8 +131,6 @@ void Rewriter::parseConfig(ifstream &config_file) {
 
 #endif
 
-    // TODO catch exceptions here
-
     // Load paths to analyses
     for (const auto& analysis : json_rules["analyses"]) {
         this->analysisPaths.push_back(analysis.asString());
