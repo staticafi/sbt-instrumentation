@@ -1,5 +1,5 @@
 {
-    "file": "analyses/memsafety_no_plugins.c",
+    "file": "memsafety_no_plugins.c",
     "globalVariablesRules": [
         {
             "findGlobals": {
