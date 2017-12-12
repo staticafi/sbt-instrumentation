@@ -54,7 +54,6 @@ using namespace std;
 
 typedef map<string, Value*> Variables;
 
-// TODO extract this to a separate file
 class LLVMInstrumentation {
     public:
         Module& module;
@@ -263,8 +262,6 @@ void insertCallInstruction(Function* CalleeF, vector<Value *> args,
         logger.log_insertion("after", CalleeF, currentInstr);
     }
     else if (rw_rule.where == InstrumentPlacement::REPLACE) {
-        // TODO: Make the functions use the iterator instead of
-        // the instruction then check this works
         // In the end we move the iterator to the newInst position
         // so we can safely remove the sequence of instructions being
         // replaced
@@ -359,7 +356,7 @@ tuple<vector<Value *>, Instruction*> insertArgument(InstrumentInstruction rw_new
                             if (var->second->getType()->isPtrOrPtrVectorTy()) {
                                 CastI = CastInst::CreatePointerCast(var->second, argV->getType());
                             } else {
-                                CastI = CastInst::CreateIntegerCast(var->second, argV->getType(), true); //TODO do something about signed argument
+                                CastI = CastInst::CreateIntegerCast(var->second, argV->getType(), true);
                             }
 
                             if (Instruction *Inst = dyn_cast<Instruction>(var->second))
@@ -454,7 +451,8 @@ bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRul
     }
 
     // Insert arguments
-    tuple<vector<Value*>, Instruction*> argsTuple = insertArgument(rw_rule.newInstr, currentInstr, CalleeF, variables, rw_rule.where);
+    tuple<vector<Value*>, Instruction*> argsTuple = insertArgument(rw_rule.newInstr, currentInstr,
+                                                        CalleeF, variables, rw_rule.where);
     args = get<0>(argsTuple);
 
     // Insert new call instruction
@@ -476,7 +474,7 @@ bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, Instrument
 {
     logger.write_info("Applying rule for global variable...");
 
-    // Work just with call instructions for now...
+    // Work just with call instructions
     if (rw_newInstr.instruction != "call") {
         logger.write_error("Not working with this instruction: " + rw_newInstr.instruction);
         return false;
@@ -494,7 +492,8 @@ bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, Instrument
     }
 
     // Insert arguments
-    tuple<vector<Value*>, Instruction*> argsTuple = insertArgument(rw_newInstr, currentInstr, CalleeF, variables, InstrumentPlacement::BEFORE);
+    tuple<vector<Value*>, Instruction*> argsTuple = insertArgument(rw_newInstr, currentInstr,
+                                                        CalleeF, variables, InstrumentPlacement::BEFORE);
     args = get<0>(argsTuple);
 
     // Insert new call instruction
@@ -640,7 +639,6 @@ void rememberValues(string name, LLVMInstrumentation& instr, Variables variables
     if (search != variables.end()) {
         instr.rememberedValues.push_back(search->second);
     }
-    // TODO else branch?
 }
 
 /**
@@ -1107,7 +1105,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    // TODO: Check for failure
     ifstream config_file;
     config_file.open(argv[1]);
 
