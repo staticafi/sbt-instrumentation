@@ -7,17 +7,10 @@ typedef uint64_t a_size;
 
 extern void __VERIFIER_error() __attribute__((noreturn));
 
-typedef enum {
-    REC_STATE_ALLOCATED,
-    REC_STATE_FREED,
-    REC_STATE_NONE
-} rec_state;
-
 // record for a memory block
 typedef struct {
     rec_id id;
     a_size size;
-    rec_state state;
 } rec;
 
 
@@ -58,35 +51,34 @@ static void __INSTR_deallocated_list_prepend(rec_list_node *node) {
     __INSTR_list_prepend(node, &deallocated_list);
 }
 
-rec_list_node* __INSTR_node_create(rec_id id, rec_state state, a_size size) {
+rec_list_node* __INSTR_node_create(rec_id id, a_size size) {
     rec_list_node *node = (rec_list_node *) malloc(sizeof(rec_list_node));
     node->next = NULL;
     node->prev = NULL;
     node->flag = 0;
     node->rec.id = id;
-    node->rec.state = state;
     node->rec.size = size;
 
     return node;
 }
 
-void __INSTR_rec_create_stack(rec_id id, rec_state state, a_size size) {
-    rec_list_node *node = __INSTR_node_create(id, state, size);
+void __INSTR_rec_create_stack(rec_id id, a_size size) {
+    rec_list_node *node = __INSTR_node_create(id, size);
     __INSTR_stack_list_prepend(node);
 }
 
-void __INSTR_rec_create_heap(rec_id id, rec_state state, a_size size) {
-    rec_list_node *node = __INSTR_node_create(id, state, size);
+void __INSTR_rec_create_heap(rec_id id, a_size size) {
+    rec_list_node *node = __INSTR_node_create(id, size);
     __INSTR_heap_list_prepend(node);
 }
 
-void __INSTR_rec_create_deallocated(rec_id id, rec_state state, a_size size) {
-    rec_list_node *node = __INSTR_node_create(id, state, size);
+void __INSTR_rec_create_deallocated(rec_id id,  a_size size) {
+    rec_list_node *node = __INSTR_node_create(id, size);
     __INSTR_deallocated_list_prepend(node);
 }
 
-void __INSTR_rec_create_global(rec_id id, rec_state state, a_size size) {
-    rec_list_node *node = __INSTR_node_create(id, state, size);
+void __INSTR_rec_create_global(rec_id id, a_size size) {
+    rec_list_node *node = __INSTR_node_create(id, size);
     __INSTR_globals_list_prepend(node);
 }
 
@@ -144,7 +136,6 @@ void __INSTR_free(rec_id id) {
 
     if (n != NULL && n->rec.id == id) {
         __INSTR_detach_node(n, &heap_list);
-        n->rec.state = REC_STATE_FREED;
         __INSTR_deallocated_list_prepend(n);
         return;
     }
@@ -169,18 +160,16 @@ void __INSTR_remember_global(rec_id id, a_size size) {
         // automatons created by alloca instructions are not destroyed at
         // return of the function as they shoud be. This is just a temporary
         // solution.
-        n->rec.state = REC_STATE_NONE;
         n->rec.size = size;
         return;
     } else {
         n = __INSTR_list_search(deallocated_list, id);
         if (n != NULL) {
             __INSTR_detach_node(n, &deallocated_list);
-            n->rec.state = REC_STATE_NONE;
             __INSTR_globals_list_prepend(n);
         }
         else {
-            __INSTR_rec_create_global(id, REC_STATE_NONE, size);
+            __INSTR_rec_create_global(id, size);
         }
     }
 }
@@ -194,18 +183,16 @@ void __INSTR_remember(rec_id id, a_size size, int num) {
         // automatons created by alloca instructions are not destroyed at
         // return of the function as they shoud be. This is just a temporary
         // solution.
-        n->rec.state = REC_STATE_NONE;
         n->rec.size = size*num;
         return;
     } else {
         n = __INSTR_list_search(deallocated_list, id);
         if (n != NULL) {
             __INSTR_detach_node(n, &deallocated_list);
-            n->rec.state = REC_STATE_NONE;
             __INSTR_stack_list_prepend(n);
         }
         else {
-            __INSTR_rec_create_stack(id, REC_STATE_NONE, size * num);
+            __INSTR_rec_create_stack(id, size * num);
         }
     }
 }
@@ -217,17 +204,14 @@ void __INSTR_remember_malloc_calloc(rec_id id, size_t size, int num ) {
     }
 
     rec_list_node *n = __INSTR_list_search(heap_list, id);
-    if (n != NULL) {
-        n->rec.state = REC_STATE_ALLOCATED;
-    } else {
+    if (n == NULL) {
         n = __INSTR_list_search(deallocated_list, id);
         if (n != NULL) {
             __INSTR_detach_node(n, &deallocated_list);
-            n->rec.state = REC_STATE_ALLOCATED;
             __INSTR_heap_list_prepend(n);
         }
         else {
-            __INSTR_rec_create_heap(id, REC_STATE_ALLOCATED, size * num);
+            __INSTR_rec_create_heap(id, size * num);
         }
     }
 }
@@ -246,12 +230,6 @@ void __INSTR_check(rec_id id, a_size range, rec r) {
          * an overflow */
         ((a_size)(id - r.id)) > r.size - range) {
         assert(0 && "dereference out of range");
-        __VERIFIER_error();
-    }
-
-    // this memory was already freed
-    if (r.state == REC_STATE_FREED) {
-        assert(0 && "dereference on freed memory");
         __VERIFIER_error();
     }
 }
@@ -283,13 +261,9 @@ void __INSTR_check_pointer(rec_id id, a_size range) {
 void __INSTR_check_leaks() {
     rec_list_node *cur = heap_list;
 
-    while(cur) {
-        rec_list_node *tmp = cur->next;
-        if (cur->rec.state == REC_STATE_ALLOCATED) {
-            assert(0 && "memory leak detected");
-            __VERIFIER_error();
-        }
-        cur = tmp;
+    if (cur != NULL) {
+        assert(0 && "memory leak detected");
+        __VERIFIER_error();
     }
 }
 
@@ -333,14 +307,14 @@ void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
     }
 
     if (old_id == 0) {
-      __INSTR_rec_create_heap(new_id, REC_STATE_ALLOCATED, size);
+      __INSTR_rec_create_heap(new_id, size);
       return;
     }
 
     rec_list_node *n = __INSTR_list_search(heap_list, old_id);
 
     if (n != NULL) {
-        __INSTR_rec_create_heap(new_id, REC_STATE_ALLOCATED, size);
+        __INSTR_rec_create_heap(new_id, size);
         __INSTR_rec_destroy(n, heap_list);
     }
 }
