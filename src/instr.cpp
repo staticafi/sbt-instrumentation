@@ -41,6 +41,7 @@
 #include "llvm/Support/InstIterator.h"
 #endif
 
+#include "llvm_instr.hpp"
 #include "rewriter.hpp"
 #include "instr_log.hpp"
 #include "instr_analyzer.hpp"
@@ -50,26 +51,6 @@
 
 using namespace llvm;
 using namespace std;
-
-
-typedef map<string, Value*> Variables;
-
-class LLVMInstrumentation {
-    public:
-        Module& module;
-        Module& definitionsModule;
-        list<unique_ptr<InstrPlugin>> plugins;
-        string outputName;
-        list<Value*> rememberedValues;
-        Variables variables;
-        Rewriter rewriter;
-        set<const Function*> reachableFunctions;
-        PointsToPlugin* ppPlugin = nullptr;
-
-        LLVMInstrumentation(Module& m, Module& dm)
-          : module(m), definitionsModule(dm) {}
-};
-
 
 Logger logger("log.txt");
 
