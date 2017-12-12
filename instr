@@ -119,13 +119,16 @@ def parseJson():
 
 def run():
     # Convert .c file from config.json
-    bcConfigFile = "config.bc"
-    ret = call(['clang -g -c -emit-llvm -o {0} {1}'.format(bcConfigFile, fileToLink)], shell=True)
-    if ret != 0:
-        err('Converting config source file to .bc failed!')
-        return
+    if not fileToLink.endswith(".bc"):
+        bcConfigFile = "config.bc"
+        ret = call(['clang -g -c -emit-llvm -o {0} {1}'.format(bcConfigFile, fileToLink)], shell=True)
+        if ret != 0:
+            err('Converting config source file to .bc failed!')
+            return
+        else:
+            dbg('Config source file converted to .bc.')
     else:
-        dbg('Config source file converted to .bc.')
+        bcConfigFile = fileToLink
 
     bcSourceFile = "source.bc"
 
