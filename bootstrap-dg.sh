@@ -8,7 +8,7 @@ cd `dirname $`
 
 # don't do redundant work
 if [ ! -d dg ]; then
-	# checkout jsoncpp directory
+	# checkout dg directory
 	git clone https://github.com/mchalupa/dg.git
 fi
 
