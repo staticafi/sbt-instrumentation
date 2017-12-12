@@ -28,23 +28,23 @@ class Logger {
     void write_info(const std::string &text) {
         stream << "Info: " << text << "\n";
     }
-    		
-	/**
-	 * Writes log about inserting new call instruction.
-	 * @param where before/after
-	 * @param calledFunction function from inserted call
-	 * @param foundInstr found instruction for instrumentation
-	 */
-	void log_insertion(const std::string& where,
+
+    /**
+     * Writes log about inserting new call instruction.
+     * @param where before/after
+     * @param calledFunction function from inserted call
+     * @param foundInstr found instruction for instrumentation
+     */
+    void log_insertion(const std::string& where,
                        const llvm::Function* calledFunction,
                        const llvm::Instruction* foundInstr);
 
-	/**
-	 * Writes log about replacing instruction.
-	 * @param foundInstrs found instructions for instrumentation
-	 * @param newInstr name of the new instruction
-	 */
-	void log_insertion(InstrumentSequence foundInstrs, std::string newInstr);
+    /**
+     * Writes log about replacing instruction.
+     * @param foundInstrs found instructions for instrumentation
+     * @param newInstr name of the new instruction
+     */
+    void log_insertion(InstrumentSequence foundInstrs, std::string newInstr);
 };
 
 #endif

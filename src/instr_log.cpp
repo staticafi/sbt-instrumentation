@@ -15,26 +15,28 @@ using namespace llvm;
 void Logger::log_insertion(const string& where,
                            const Function* calledFunction,
                            const Instruction* foundInstr) {
-	string newCall = calledFunction->getName().str();
-	string foundInstrOpName = foundInstr->getOpcodeName();
+    string newCall = calledFunction->getName().str();
+    string foundInstrOpName = foundInstr->getOpcodeName();
 
-	if(foundInstrOpName == "call") {
-		if (const CallInst *ci = dyn_cast<CallInst>(foundInstr)) { //TODO what if this fails
-			// get called value and strip away any bitcasts
-			const llvm::Value *calledVal = ci->getCalledValue()->stripPointerCasts();
-			string name;
-			if (calledVal->hasName())
-				name = calledVal->getName().str();
-			else
-				name = "<func pointer>";
+    if (foundInstrOpName == "call") {
+        if (const CallInst *ci = dyn_cast<CallInst>(foundInstr)) {
+            // get called value and strip away any bitcasts
+            const llvm::Value *calledVal = ci->getCalledValue()->stripPointerCasts();
+            string name;
+            if (calledVal->hasName()) {
+                name = calledVal->getName().str();
+            }
+            else {
+                name = "<func pointer>";
+            }
 
-			write_info("Inserting " + newCall + " " +  where + " " +
-			                  foundInstrOpName + " " + name);
-		}
-	}
-	else {
-		write_info("Inserting " + newCall + " " +  where + " " + foundInstrOpName);
-	}
+            write_info("Inserting " + newCall + " " +  where + " " +
+                              foundInstrOpName + " " + name);
+        }
+    }
+    else {
+        write_info("Inserting " + newCall + " " +  where + " " + foundInstrOpName);
+    }
 }
 
 /**
@@ -44,21 +46,21 @@ void Logger::log_insertion(const string& where,
  */
 void Logger::log_insertion(InstrumentSequence foundInstrs, string newInstr) {
 
-	string instructions;
-	uint i = 0;
+    string instructions;
+    uint i = 0;
 
-	for (list<InstrumentInstruction>::iterator sit=foundInstrs.begin(); sit != foundInstrs.end(); ++sit) {
-		InstrumentInstruction foundInstr = *sit;
+    for (list<InstrumentInstruction>::iterator sit=foundInstrs.begin(); sit != foundInstrs.end(); ++sit) {
+        InstrumentInstruction foundInstr = *sit;
 
-		if(i < foundInstrs.size() - 1) {
-			instructions += foundInstr.instruction + ", ";
-		}
-		else {
-			instructions += foundInstr.instruction;
-		}
+        if (i < foundInstrs.size() - 1) {
+            instructions += foundInstr.instruction + ", ";
+        }
+        else {
+            instructions += foundInstr.instruction;
+        }
 
-		i++;
-	}
+        i++;
+    }
 
-	write_info("Replacing " + instructions + " with " + newInstr);
+    write_info("Replacing " + instructions + " with " + newInstr);
 }

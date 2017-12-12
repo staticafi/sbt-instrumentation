@@ -4,11 +4,6 @@ install(FILES
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/double_free/
 )
 install(FILES
-	int_overflow/int_overflow.c
-	int_overflow/config.json
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/int_overflow/
-)
-install(FILES
 	memsafety/config.json
 	memsafety/memsafety.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/memsafety/

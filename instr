@@ -13,7 +13,7 @@ from subprocess import call, Popen, PIPE, STDOUT
 usage_msg = """
 Usage: ./instr OPTS config.json source.c
 and OPTS can be following:
-    --output=FILE       Specify output file
+    --output=FILE   Specify output file
     --help          Show help message
     --bc            Given file is a bytecode
     --ll            Generate .ll file from output .bc file.
@@ -103,11 +103,11 @@ def parse_command_line():
         elif opt == '--bc':
             global source_is_bc
             source_is_bc = True
-            dbg('Given code is bytecode')
+            dbg('Given code is bytecode.')
         elif opt == '--ll':
             global generate_ll
             generate_ll = True
-            dbg('Will generate .ll file')
+            dbg('Will generate .ll file.')
 
     return args
 
@@ -119,37 +119,49 @@ def parseJson():
 
 def run():
     # Convert .c file from config.json
-    bcConfigFile = "config.bc"
-    ret = call(['clang -emit-llvm -g -o {0} {1}'.format(bcConfigFile, fileToLink)], shell=True)
-    if ret != 0:
-        err('Converting config source file to .bc failed!')
-        return
+    if not fileToLink.endswith(".bc"):
+        bcConfigFile = "config.bc"
+        ret = call(['clang -g -c -emit-llvm -o {0} {1}'.format(bcConfigFile, fileToLink)], shell=True)
+        if ret != 0:
+            err('Converting config source file to .bc failed!')
+            return
+        else:
+            dbg('Config source file converted to .bc.')
     else:
-        dbg('Config source file converted to .bc.')
+        bcConfigFile = fileToLink
 
     bcSourceFile = "source.bc"
 
     if not source_is_bc:
-        ret = call(['clang -emit-llvm -g -o {0} {1}'.format(bcSourceFile, cFile)], shell=True)
+        ret = call(['clang -g -c -emit-llvm -o {0} {1}'.format(bcSourceFile, cFile)], shell=True)
         if ret != 0:
             err('Converting source file to .bc failed!')
             return
         else:
             dbg('Source file converted to .bc.')
 
-    ret = call(['./LLVMinstr {0} {1} {2} {3}'.format(configFile, bcSourceFile, bcConfigFile, final_output)],
+    ret = call(['./bin/LLVMinstr {0} {1} {2} {3}'.format(configFile, bcSourceFile, bcConfigFile, final_output)],
                shell=True)
     if ret != 0:
         err('Instrumentation failed!')
+        return
     else:
         dbg('Instrumentation done.')
-        if(generate_ll):
-            ret = call(['llvm-dis {0}'.format(final_output)], shell=True)
-            if ret != 0:
-                err('Generating .ll file failed!')
-                return
-            else:
-                dbg('.ll file generated')
+
+    ret = call(['llvm-link {0} {1} -o {2}'.format(final_output, bcConfigFile, final_output)], shell=True)
+    if ret != 0:
+        err('Linking instrumentation functions failed!')
+        return
+    else:
+        dbg('Linked instrumentation functions to the output file.')
+
+    if(generate_ll):
+       ret = call(['llvm-dis {0}'.format(final_output)], shell=True)
+       if ret != 0:
+           err('Generating .ll file failed!')
+           return
+       else:
+           dbg('.ll file generated')
 
 if __name__ == "__main__":
 

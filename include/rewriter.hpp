@@ -9,20 +9,20 @@
 
 // Configuration
 enum class InstrumentPlacement {
-	BEFORE,
-	AFTER,
-	REPLACE,
-	RETURN,
-	ENTRY
+    BEFORE,
+    AFTER,
+    REPLACE,
+    RETURN,
+    ENTRY
 };
 
 class InstrumentInstruction {
  public:
-	std::string returnValue;
-	std::string instruction;
-	std::list<std::string> parameters;
-	std::string getSizeTo;
-	std::string stripInboundsOffsets;
+    std::string returnValue;
+    std::string instruction;
+    std::list<std::string> parameters;
+    std::string getSizeTo;
+    std::string stripInboundsOffsets;
     std::list<std::string> getPointerInfoTo;
 };
 
@@ -36,28 +36,30 @@ class Condition {
     public:
         std::string name;
         std::list<std::string> arguments;
+        std::list<std::string> expectedValues;
 };
 
 
 class GlobalVarsRule {
  public:
-	InstrumentGlobalVar globalVar;
-	InstrumentInstruction newInstr;
-	std::string inFunction;
-	std::list<Condition> conditions;
+    InstrumentGlobalVar globalVar;
+    InstrumentInstruction newInstr;
+    std::string inFunction;
+    std::list<Condition> conditions;
 };
 
 typedef std::list<InstrumentInstruction> InstrumentSequence;
+typedef std::list<GlobalVarsRule> GlobalVarsRules;
 typedef std::map<std::string, std::string> Flags;
-typedef std::pair<std::string, std::string> Flag; 
+typedef std::pair<std::string, std::string> Flag;
 
 class RewriteRule {
  public:
-	InstrumentSequence foundInstrs;
-	InstrumentInstruction newInstr;
-	InstrumentPlacement where;
-	std::string inFunction;
-	std::list<Condition> conditions;
+    InstrumentSequence foundInstrs;
+    InstrumentInstruction newInstr;
+    InstrumentPlacement where;
+    std::string inFunction;
+    std::list<Condition> conditions;
     Flags setFlags;
     std::string remember;
 };
@@ -66,21 +68,21 @@ typedef std::list<RewriteRule> RewriterConfig;
 
 class Phase {
  public:
-    RewriterConfig config; 
+    RewriterConfig config;
 };
 
 typedef std::list<Phase> Phases;
 
 // Rewriter
 class Rewriter {
-	Phases phases;
-	GlobalVarsRule globalVarsRule;
+    Phases phases;
+    GlobalVarsRules globalVarsRules;
     Flags flags;
-	public:
-		std::list<std::string> analysisPaths;
-		const Phases& getPhases();
-		const GlobalVarsRule& getGlobalsConfig();
-		void parseConfig(std::ifstream &config_file);
+    public:
+        std::list<std::string> analysisPaths;
+        const Phases& getPhases();
+        const GlobalVarsRules& getGlobalsConfig();
+        void parseConfig(std::ifstream &config_file);
         void setFlag(std::string name, std::string value);
         bool isFlag(std::string name);
         std::string getFlagValue(std::string name);

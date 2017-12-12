@@ -7,12 +7,12 @@
 
 using namespace std;
 
-unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module){
+unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module) {
 
-    if(path.empty())
+    if (path.empty())
 		return nullptr;
 
-    std::string err;
+    string err;
     auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str(), &err);
 
     if (!DL.isValid()) {
@@ -34,49 +34,50 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	return plugin;
 }
 
-// we should instrument only if the condition may not hold
-bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, InstrPlugin* plugin, 
-                                const string &condition, llvm::Value* a, llvm::Value* b) {
+bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, InstrPlugin* plugin,
+                                const Condition &condition, const list<llvm::Value*>& parameters) {
 
-    // we are told to instrument only when
+    string answer;
+
+    list<llvm::Value*>::const_iterator it = parameters.begin();
+
+	// NOTE: This needs to be changed if a query with more than two parameters is added
+    // get first argument
+    llvm::Value* a = *it;
+
+    // Get second argument if present
+    llvm::Value* b = nullptr;
+    if (condition.arguments.size()>1){
+        it++;
+        b = *it;
+	}
+
+    // We are told to instrument only when
     // the value is null, so check if the value
     // can be null.
-    if(condition == "null") {
-        return plugin->isNull(a);
-    } else if (condition == "constant") {
-        return plugin->isConstant(a);
-    } else if (condition == "isValidPointer") {
-        return plugin->isValidPointer(a, b);
-    } else if (condition == "!isValidPointer") {
-        return !plugin->isValidPointer(a, b);
-    } else if (condition == "isRemembered") {
+    if (condition.name == "isNull") {
+        answer = plugin->isNull(a);
+    } else if (condition.name == "isConstant") {
+        answer = plugin->isConstant(a);
+    } else if (condition.name == "isValidPointer") {
+        answer = plugin->isValidPointer(a, b);
+    } else if (condition.name == "isRemembered") {
         for (auto v : rememberedValues) {
-            if (plugin->isEqual(v, a))
+            answer = plugin->pointsTo(v, a);
+            for (const auto& expV : condition.expectedValues)
+            if (answer == expV)
                 return true;
         }
         return false;
-    } else if (condition == "knownSize") {
-        return plugin->knownSize(a);
-    } else if (condition == "!knownSize") {
-        return !plugin->knownSize(a);
+    } else if (condition.name == "hasKnownSize") {
+        answer = plugin->hasKnownSize(a);
     }
 
-    /* TODO
-	if(condition.compare("!=")){
-		return !(plugin->isEqual(a,b));
-	} else if(condition.compare("==")){
-		return !(plugin->isNotEqual(a,b));
-	} else if(condition.compare("<")){
-		return !(plugin->greaterOrEqual(a,b));
-	} else if(condition.compare(">")){
-		return !(plugin->lessOrEqual(a,b));
-	} else if(condition.compare("<=")){
-		return !(plugin->greaterThan(a,b));
-	} else if(condition.compare(">=")){
-		return !(plugin->lessThan(a,b));
-	}
-    */
+    for (const auto& expV : condition.expectedValues) {
+        if (answer == expV)
+            return true;
+    }
 
-	return true;
+	return false;
 }
 

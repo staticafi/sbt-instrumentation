@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <set>
 
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DataLayout.h>
@@ -40,6 +41,7 @@
 #include "llvm/Support/InstIterator.h"
 #endif
 
+#include "llvm_instr.hpp"
 #include "rewriter.hpp"
 #include "instr_log.hpp"
 #include "instr_analyzer.hpp"
@@ -50,25 +52,6 @@
 using namespace llvm;
 using namespace std;
 
-
-typedef map<string, Value*> Variables;
-
-// TODO extract this to a separate file
-class LLVMInstrumentation {
-    public:
-        Module& module;
-        Module& definitionsModule;
-        list<unique_ptr<InstrPlugin>> plugins;
-        string outputName;
-        list<Value*> rememberedValues;
-        Variables variables;
-        Rewriter rewriter;
-
-        LLVMInstrumentation(Module& m, Module& dm)
-          : module(m), definitionsModule(dm) {}
-};
-
-
 Logger logger("log.txt");
 
 void usage(char *name) {
@@ -77,28 +60,37 @@ void usage(char *name) {
 }
 
 /**
+ * Gets points to plugin if available.
+ * @param instr LLVMInstrumentation object
+ */
+void getPointsToPlugin(LLVMInstrumentation& instr) {
+    for (auto& plugin : instr.plugins) {
+        if (plugin->getName() == "PointsTo") {
+            instr.ppPlugin = static_cast<PointsToPlugin*>(plugin.get());
+        }
+    }
+}
+
+/**
  * Get info about allocated memory to which given pointer points to.
  * @param I instruction.
  * @param ins LLVMInstrumentation object.
  * @return address and size of allocated memory to which pointer points to.
  */
-std::pair<llvm::Value*, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr){
+std::pair<llvm::Value*, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr) {
     Value* op;
-    if(const StoreInst *SI = dyn_cast<StoreInst>(I)){
+    if (const StoreInst *SI = dyn_cast<StoreInst>(I)) {
         op = SI->getOperand(1);
     }
-    else if(const LoadInst *LI = dyn_cast<LoadInst>(I)){
+    else if (const LoadInst *LI = dyn_cast<LoadInst>(I)) {
         op = LI->getOperand(0);
     }
     else {
         return std::make_pair(nullptr, 0);
     }
 
-    for (auto& plugin : instr.plugins) {
-        if(plugin->getName() == "PointsTo") {
-            PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
-            return pp->getPointerInfo(op);
-        }
+    if (instr.ppPlugin) {
+        return instr.ppPlugin->getPointerInfo(op);
     }
 
     return std::make_pair(nullptr, 0);
@@ -110,21 +102,21 @@ std::pair<llvm::Value*, uint64_t> getPointerInfo(Instruction *I, const LLVMInstr
  * @param M module.
  * @return size of allocated type.
  */
-uint64_t getAllocatedSize(Instruction *I, const Module& M){
+uint64_t getAllocatedSize(Instruction *I, const Module& M) {
     DataLayout* DL = new DataLayout(&M);
 
     Type* Ty;
 
-    if(const AllocaInst *AI = dyn_cast<AllocaInst>(I)){
+    if (const AllocaInst *AI = dyn_cast<AllocaInst>(I)) {
         Ty = AI->getAllocatedType();
     }
-    else if(const StoreInst *SI = dyn_cast<StoreInst>(I)){
+    else if (const StoreInst *SI = dyn_cast<StoreInst>(I)) {
         Ty = SI->getOperand(0)->getType();
     }
-    else if(const LoadInst *LI = dyn_cast<LoadInst>(I)){
+    else if (const LoadInst *LI = dyn_cast<LoadInst>(I)) {
         Ty = LI->getType();
     }
-    else{
+    else {
         delete DL;
         return 0;
     }
@@ -149,8 +141,7 @@ uint64_t getAllocatedSize(Instruction *I, const Module& M){
  * @param i1 the first instruction
  * @param i2 the second instruction without any metadata
  */
-void CloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2)
-{
+void cloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2) {
     if (i1->hasMetadata()) {
         i2->setDebugLoc(i1->getDebugLoc());
         return;
@@ -184,10 +175,10 @@ void CloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2)
  * @param ins specified instruction
  * @return next instruction or null, if ins is the last one.
  */
-Instruction* GetNextInstruction(Instruction* ins) {
+Instruction* getNextInstruction(Instruction* ins) {
     BasicBlock::iterator I(ins);
     if (++I == ins->getParent()->end())
-        return NULL;
+        return nullptr;
     return &*I;
 }
 
@@ -196,10 +187,10 @@ Instruction* GetNextInstruction(Instruction* ins) {
  * @param ins specified instruction
  * @return previous instruction or null, if ins is the first one.
  */
-Instruction* GetPreviousInstruction(Instruction* ins) {
+Instruction* getPreviousInstruction(Instruction* ins) {
     BasicBlock::iterator I(ins);
     if (--I == ins->getParent()->begin())
-        return NULL;
+        return nullptr;
     return &*I;
 }
 
@@ -208,13 +199,13 @@ Instruction* GetPreviousInstruction(Instruction* ins) {
  * @param I first instruction to be removed
  * @param count number of instructions to be removed
  */
-void EraseInstructions(Instruction* I, int count) {
+void eraseInstructions(Instruction* I, int count) {
     Instruction* currentInstr = I;
     for (int i = 0; i < count; i++) {
-        if (!currentInstr){
+        if (!currentInstr) {
             return;
         }
-        Instruction* prevInstr = GetPreviousInstruction(currentInstr);
+        Instruction* prevInstr = getPreviousInstruction(currentInstr);
         currentInstr->eraseFromParent();
         currentInstr = prevInstr;
     }
@@ -229,7 +220,7 @@ void EraseInstructions(Instruction* I, int count) {
  * @param currentInstr current instruction
  * @param Iiterator pointer to instructions iterator
  */
-void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
+void insertCallInstruction(Function* CalleeF, vector<Value *> args,
         RewriteRule rw_rule, Instruction *currentInstr,
         inst_iterator *Iiterator) {
     // Create new call instruction
@@ -239,28 +230,26 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
     // instrument the code because some passes (e.g. inliner) can
     // break the code when there's an instruction without metadata
     // when all other instructions have metadata
-    CloneMetadata(currentInstr, newInstr);
+    cloneMetadata(currentInstr, newInstr);
 
-    if(rw_rule.where == InstrumentPlacement::BEFORE) {
+    if (rw_rule.where == InstrumentPlacement::BEFORE) {
         // Insert before
         newInstr->insertBefore(currentInstr);
         logger.log_insertion("before", CalleeF, currentInstr);
     }
-    else if(rw_rule.where == InstrumentPlacement::AFTER) {
+    else if (rw_rule.where == InstrumentPlacement::AFTER) {
         // Insert after
         newInstr->insertAfter(currentInstr);
         logger.log_insertion("after", CalleeF, currentInstr);
     }
-    else if(rw_rule.where == InstrumentPlacement::REPLACE) {
-        // TODO: Make the functions use the iterator instead of
-        // the instruction then check this works
+    else if (rw_rule.where == InstrumentPlacement::REPLACE) {
         // In the end we move the iterator to the newInst position
         // so we can safely remove the sequence of instructions being
         // replaced
         newInstr->insertAfter(currentInstr);
         inst_iterator helper(*Iiterator);
         *Iiterator = ++helper;
-        EraseInstructions(currentInstr, rw_rule.foundInstrs.size());
+        eraseInstructions(currentInstr, rw_rule.foundInstrs.size());
         logger.log_insertion(rw_rule.foundInstrs, rw_rule.newInstr.instruction);
     } else {
         assert("Invalid position for inserting");
@@ -274,19 +263,20 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
  * @param args arguments of the function to be called
  * @param currentInstr current instruction
  */
-void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
-        Instruction *currentInstr) {
+void insertCallInstruction(Function* CalleeF, vector<Value *> args,
+                           Instruction *currentInstr)
+{
     // Create new call instruction
     CallInst *newInstr = CallInst::Create(CalleeF, args);
 
-    // duplicate the metadata of the instruction for which we
+    // Duplicate the metadata of the instruction for which we
     // instrument the code, some passes (e.g. inliner) can
     // break the code when there's an instruction without metadata
     // when all other instructions have metadata
     if (currentInstr->hasMetadata()) {
-        CloneMetadata(currentInstr, newInstr);
+        cloneMetadata(currentInstr, newInstr);
     } else if (const DISubprogram *DS = currentInstr->getParent()->getParent()->getSubprogram()) {
-        // no metadata? then it is going to be the instrumentation
+        // No metadata? Then it is going to be the instrumentation
         // of alloca or such at the beggining of function,
         // so just add debug loc of the beginning of the function
         newInstr->setDebugLoc(DebugLoc::get(DS->getLine(), 0, DS));
@@ -309,8 +299,9 @@ void InsertCallInstruction(Function* CalleeF, vector<Value *> args,
  *         is going to be inserted (it is either I or some newly added
  *         argument)
  */
-tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_newInstr, Instruction *I,
-        Function* CalleeF, const Variables& variables, InstrumentPlacement where) {
+tuple<vector<Value *>, Instruction*> insertArgument(InstrumentInstruction rw_newInstr, Instruction *I,
+        Function* CalleeF, const Variables& variables, InstrumentPlacement where)
+{
     std::vector<Value *> args;
     unsigned i = 0;
     Instruction* nI = I;
@@ -322,7 +313,6 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 
         auto var = variables.find(arg);
         if (var == variables.end()) {
-            // NOTE: in future think also about other types than ConstantInt
             int argInt;
             try {
                 argInt = stoi(arg);
@@ -340,7 +330,6 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 
                 if (i == argIndex) {
                     if (argV->getType() != var->second->getType()) {
-                        //TODO other types?
                         if (!var->second->getType()->isPtrOrPtrVectorTy() && !var->second->getType()->isIntegerTy()) {
                             args.push_back(var->second);
                         } else {
@@ -348,14 +337,14 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
                             if (var->second->getType()->isPtrOrPtrVectorTy()) {
                                 CastI = CastInst::CreatePointerCast(var->second, argV->getType());
                             } else {
-                                CastI = CastInst::CreateIntegerCast(var->second, argV->getType(), true); //TODO do something about signed argument
+                                CastI = CastInst::CreateIntegerCast(var->second, argV->getType(), true);
                             }
 
                             if (Instruction *Inst = dyn_cast<Instruction>(var->second))
-                                CloneMetadata(Inst, CastI);
+                                cloneMetadata(Inst, CastI);
 
                             if (where == InstrumentPlacement::BEFORE) {
-                                // we want to insert before I, that is:
+                                // We want to insert before I, that is:
                                 // %c = cast ...
                                 // newInstr
                                 // I
@@ -366,7 +355,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
                                 // we added here)
                                 CastI->insertBefore(I);
                             } else {
-                                // we want to insert after I, that is:
+                                // We want to insert after I, that is:
                                 // I
                                 // %c = cast ...
                                 // newInstr
@@ -378,7 +367,7 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
                             }
                             args.push_back(CastI);
                         }
-                    } else{
+                    } else {
                         args.push_back(var->second);
                     }
                     break;
@@ -394,10 +383,11 @@ tuple<vector<Value *>, Instruction*> InsertArgument(InstrumentInstruction rw_new
 }
 
 static llvm::Function *getOrInsertFunc(LLVMInstrumentation& I,
-                                       const std::string& name) {
+                                       const std::string& name)
+{
     llvm::Constant *cF = I.module.getFunction(name);
     if (!cF) {
-        // get the function from the module with definitions
+        // Get the function from the module with definitions
         // so that we can copy it
         Function *defF = I.definitionsModule.getFunction(name);
         if (!defF) {
@@ -417,16 +407,17 @@ static llvm::Function *getOrInsertFunc(LLVMInstrumentation& I,
  * @param rw_rule rule to apply
  * @param variables map of found parameters form config
  * @param Iiterator pointer to instructions iterator
- * @return 1 if error
+ * @return false if there was an error, true otherwise
  */
-int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule rw_rule,
-        const Variables& variables, inst_iterator *Iiterator) {
+bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule rw_rule,
+        const Variables& variables, inst_iterator *Iiterator)
+{
     logger.write_info("Applying rule...");
 
     // Work just with call instructions for now...
-    if(rw_rule.newInstr.instruction != "call") {
+    if (rw_rule.newInstr.instruction != "call") {
         logger.write_error("Not working with this instruction: " + rw_rule.newInstr.instruction);
-        return 1;
+        return false;
     }
 
     // Get operands
@@ -437,17 +428,18 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
     Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
-        return 1;
+        return false;
     }
 
     // Insert arguments
-    tuple<vector<Value*>, Instruction*> argsTuple = InsertArgument(rw_rule.newInstr, currentInstr, CalleeF, variables, rw_rule.where);
+    tuple<vector<Value*>, Instruction*> argsTuple = insertArgument(rw_rule.newInstr, currentInstr,
+                                                        CalleeF, variables, rw_rule.where);
     args = get<0>(argsTuple);
 
     // Insert new call instruction
-    InsertCallInstruction(CalleeF, args, rw_rule, get<1>(argsTuple), Iiterator);
+    insertCallInstruction(CalleeF, args, rw_rule, get<1>(argsTuple), Iiterator);
 
-    return 0;
+    return true;
 }
 
 /**
@@ -456,16 +448,17 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRule
  * @param I current instruction
  * @param rw_newInstr rule to apply - new instruction
  * @param variables map of found parameters form config
- * @return 1 if error
+ * @return false if tehre was an error, true otherwise
  */
-int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
-        const Variables& variables) {
+bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
+        const Variables& variables)
+{
     logger.write_info("Applying rule for global variable...");
 
-    // Work just with call instructions for now...
-    if(rw_newInstr.instruction != "call") {
+    // Work just with call instructions
+    if (rw_newInstr.instruction != "call") {
         logger.write_error("Not working with this instruction: " + rw_newInstr.instruction);
-        return 1;
+        return false;
     }
 
     // Get operands
@@ -476,18 +469,19 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
     Function *CalleeF = getOrInsertFunc(instr, param);
     if (!CalleeF) {
         logger.write_error("Unknown function: " + param);
-        return 1;
+        return false;
     }
 
     // Insert arguments
-    tuple<vector<Value*>, Instruction*> argsTuple = InsertArgument(rw_newInstr, currentInstr, CalleeF, variables, InstrumentPlacement::BEFORE);
+    tuple<vector<Value*>, Instruction*> argsTuple = insertArgument(rw_newInstr, currentInstr,
+                                                        CalleeF, variables, InstrumentPlacement::BEFORE);
     args = get<0>(argsTuple);
 
     // Insert new call instruction
-    InsertCallInstruction(CalleeF, args, get<1>(argsTuple));
+    insertCallInstruction(CalleeF, args, get<1>(argsTuple));
 
 
-    return 0;
+    return true;
 }
 
 /**
@@ -497,11 +491,11 @@ int applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentI
  * @param variables map for remembering some parameters.
  * @return true if OK, false otherwise
  */
-bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& variables) {
+bool checkOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& variables) {
     unsigned opIndex = 0;
 
-    for(const string& param : rwIns.parameters){
-        if(rwIns.parameters.size() == 1 && param=="*"){
+    for(const string& param : rwIns.parameters) {
+        if (rwIns.parameters.size() == 1 && param=="*") {
             return true;
         }
 
@@ -510,13 +504,13 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& var
         }
 
         llvm::Value *op = ins->getOperand(opIndex);
-        if(param[0] == '<' && param[param.size() - 1] == '>') {
-            if(rwIns.stripInboundsOffsets != param){
+        if (param[0] == '<' && param[param.size() - 1] == '>') {
+            if (rwIns.stripInboundsOffsets != param) {
                 variables[param] = op;
             } else {
                 variables[param] = op->stripInBoundsOffsets();
             }
-        } else if(param != "*"
+        } else if (param != "*"
                 && param != (op->stripPointerCasts()->getName()).str()) {
             // NOTE: we're comparing a name of the value, but the name
             // is set only sometimes. Since we're now matching just CallInst
@@ -538,7 +532,11 @@ bool CheckOperands(InstrumentInstruction rwIns, Instruction* ins, Variables& var
 **/
 bool checkFlag(Condition condition, Rewriter rewriter) {
     string value = rewriter.getFlagValue(condition.name);
-    return value == condition.arguments.front();
+    for (const auto& expV : condition.expectedValues) {
+        if (expV == value)
+            return true;
+    }
+    return false;
 }
 
 /**
@@ -549,47 +547,32 @@ bool checkFlag(Condition condition, Rewriter rewriter) {
  * @param variables
  * @return true if condition is ok, false otherwise
  */
-bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const Variables& variables){
-    // condition: first element is operator, other one or two elements
-    // are variables, TODO do we need more than two variables?
-    if(condition.name == "")
+bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const Variables& variables) {
+    if (condition.name == "")
         return true;
 
-    list<string>::const_iterator it = condition.arguments.begin();
-    string aName = *it;
-    string bName = "";
-
-    // get first argument
-    Value* aValue = NULL;
-    auto search = variables.find(aName);
-    if(search != variables.end()) {
-        aValue = search->second;
-    } else {
-        return true;
-    }
-
-    // get second argument
-    Value* bValue = NULL;
-    if(condition.arguments.size()>1){
-        it++;
-        bName = *it;
-        auto search = variables.find(bName);
-        if(search != variables.end()) {
-            bValue = search->second;
-        } else {
-            return true;
+    list<Value*> parameters;
+    for (const auto& arg : condition.arguments) {
+        auto search = variables.find(arg);
+        if (search != variables.end()) {
+            parameters.push_back(search->second);
         }
-    }
-
-    for(auto& plugin : instr.plugins){
-        if(!Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition.name, aValue, bValue)){
-            // some plugin told us that we should not instrument
+        else {
+            // Wrong parameters passed to the condition,
+            // condition is not satisifed, do not instrument
             return false;
         }
     }
 
-    // all analyses told that we should instrument
-    return true;
+    for (auto& plugin : instr.plugins) {
+        if (Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition, parameters)) {
+            // Some plugin told us that we should instrument
+            return true;
+        }
+    }
+
+    // no plugin told us that we should instrument
+    return false;
 }
 
 /**
@@ -602,12 +585,12 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
 bool checkConditions(const std::list<Condition>& conditions, LLVMInstrumentation& instr, const Variables& variables) {
     // check the conditions
     for (const auto& condition : conditions) {
-        if(instr.rewriter.isFlag(condition.name)) {
-            if(!checkFlag(condition, instr.rewriter)) {
+        if (instr.rewriter.isFlag(condition.name)) {
+            if (!checkFlag(condition, instr.rewriter)) {
                 return false;
             }
         }
-        else if(!checkAnalysis(instr, condition, variables)) {
+        else if (!checkAnalysis(instr, condition, variables)) {
             return false;
         }
     }
@@ -634,10 +617,9 @@ void setFlags(const RewriteRule& rule, Rewriter& rewriter) {
 **/
 void rememberValues(string name, LLVMInstrumentation& instr, Variables variables) {
     auto search = variables.find(name);
-    if(search != variables.end()) {
+    if (search != variables.end()) {
         instr.rememberedValues.push_back(search->second);
     }
-    // TODO else branch?
 }
 
 /**
@@ -648,46 +630,46 @@ void rememberValues(string name, LLVMInstrumentation& instr, Variables variables
  * @param instr instrumentation object
  * @return true if OK, false otherwise
  */
-bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator, LLVMInstrumentation& instr) {
-    // iterate through rewrite rules
-    for (RewriteRule& rw : rw_config){
-        // check if this rule should be applied in this function
+bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, inst_iterator *Iiterator, LLVMInstrumentation& instr) {
+    // Iterate through rewrite rules
+    for (RewriteRule& rw : rw_config) {
+        // Check if this rule should be applied in this function
         string functionName = F->getName().str();
 
-        if(rw.inFunction != "*" && rw.inFunction != functionName)
+        if (rw.inFunction != "*" && rw.inFunction != functionName)
             continue;
 
-        // check sequence of instructions
+        // Check sequence of instructions
         Variables variables;
         bool instrument = false;
         Instruction* currentInstr = ins;
         for (list<InstrumentInstruction>::iterator iit=rw.foundInstrs.begin(); iit != rw.foundInstrs.end(); ++iit) {
-            if(currentInstr == NULL) {
+            if (currentInstr == nullptr) {
                 break;
             }
 
             InstrumentInstruction checkInstr = *iit;
 
-            // check the name
-            if(currentInstr->getOpcodeName() == checkInstr.instruction) {
-                // check operands
-                if(!CheckOperands(checkInstr, currentInstr, variables)) {
+            // Check the name
+            if (currentInstr->getOpcodeName() == checkInstr.instruction) {
+                // Check operands
+                if (!checkOperands(checkInstr, currentInstr, variables)) {
                     break;
                 }
 
-                // check return value
-                if(checkInstr.returnValue != "*") {
-                    if(checkInstr.returnValue[0] == '<'
+                // Check return value
+                if (checkInstr.returnValue != "*") {
+                    if (checkInstr.returnValue[0] == '<'
                             && checkInstr.returnValue[checkInstr.returnValue.size() - 1] == '>') {
                         variables[checkInstr.returnValue] = currentInstr;
                     }
                 }
 
-                // load next instruction to be checked
+                // Load next instruction to be checked
                 list<InstrumentInstruction>::iterator final_iter = rw.foundInstrs.end();
                 --final_iter;
                 if (iit != final_iter) {
-                    currentInstr = GetNextInstruction(ins);
+                    currentInstr = getNextInstruction(ins);
                 }
                 else {
                     instrument = true;
@@ -698,17 +680,18 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             }
         }
 
-        if(rw.foundInstrs.size() == 1){
+        if (rw.foundInstrs.size() == 1) {
             InstrumentInstruction iIns = rw.foundInstrs.front();
-            if(!iIns.getSizeTo.empty()){
+            if (!iIns.getSizeTo.empty()) {
                 variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
                                                                      getAllocatedSize(ins, instr.module));
             }
 
-            if(iIns.getPointerInfoTo.size() == 2) {
+            if (iIns.getPointerInfoTo.size() == 2) {
                 std::pair<llvm::Value*, uint64_t> pointerInfo = getPointerInfo(ins, instr);
                 // Do not apply this rule, if there was no relevant answer from pointer analysis
-                if(!pointerInfo.first) instrument = false;
+                if (!pointerInfo.first)
+                    instrument = false;
                 variables[iIns.getPointerInfoTo.front()] = pointerInfo.first,
                 variables[iIns.getPointerInfoTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
                                                                             pointerInfo.second);
@@ -716,20 +699,20 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             }
         }
 
-        // if all instructions match and conditions are satisfied
+        // If all instructions match and conditions are satisfied
         // try to instrument the code
-        if(instrument && checkConditions(rw.conditions, instr, variables)) {
+        if (instrument && checkConditions(rw.conditions, instr, variables)) {
             InstrumentInstruction iIns = rw.foundInstrs.front();
 
-            // set flags
+            // Set flags
             setFlags(rw, instr.rewriter);
 
-            // remember values that should be remembered
+            // Remember values that should be remembered
             rememberValues(rw.remember, instr, variables);
 
-            // try to apply rule
+            // Try to apply rule
             Instruction *where;
-            if(rw.where == InstrumentPlacement::BEFORE){
+            if (rw.where == InstrumentPlacement::BEFORE) {
                 where = ins;
             }
             else {
@@ -739,7 +722,7 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                 where = currentInstr;
             }
 
-            if(applyRule(instr, where, rw, variables, Iiterator) == 1) {
+            if (!applyRule(instr, where, rw, variables, Iiterator)) {
                 logger.write_error("Cannot apply rule.");
                 return false;
             }
@@ -754,13 +737,13 @@ bool CheckInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
  * @param M module.
  * @return size of global variable.
  */
-uint64_t getGlobalVarSize(GlobalVariable* GV, const Module& M){
+uint64_t getGlobalVarSize(GlobalVariable* GV, const Module& M) {
 
     DataLayout* DL = new DataLayout(&M);
 
     Type* Ty = GV->getType()->getElementType();
 
-    if(!Ty->isSized())
+    if (!Ty->isSized())
         return 0;
 
     uint64_t size = DL->getTypeAllocSize(Ty);
@@ -770,61 +753,76 @@ uint64_t getGlobalVarSize(GlobalVariable* GV, const Module& M){
     return size;
 }
 
-
 /**
- * Instruments global variable if they should be instrumented.
- * @param M module.
+ * Instruments global variable if they should be instrumented according to the given rule.
+ * @param instr LLVMInstrumentation object
+ * @param g_rule a rule to be applied
  * @return true if instrumentation of global variables was done without problems, false otherwise
  */
-bool InstrumentGlobals(LLVMInstrumentation& instr) {
-    GlobalVarsRule rw_globals = instr.rewriter.getGlobalsConfig();
-
+bool instrumentGlobal(LLVMInstrumentation& instr, const GlobalVarsRule& g_rule) {
     // If there is no rule for global variables, do not try to instrument
-    if(rw_globals.inFunction.empty() || rw_globals.globalVar.globalVariable.empty()) // TODO this is not very nice
+    if (g_rule.inFunction.empty() || g_rule.globalVar.globalVariable.empty())
         return true;
 
     // Iterate through global variables
     Module::global_iterator GI = instr.module.global_begin(), GE = instr.module.global_end();
     for ( ; GI != GE; ++GI) {
         GlobalVariable *GV = dyn_cast<GlobalVariable>(GI);
-        if (!GV) continue;
+        if (!GV)
+            continue;
 
-        if(rw_globals.inFunction == "*"){
-            //TODO
+        if (g_rule.inFunction == "*") {
             return false;
-            logger.write_error("Rule for global variables for instrumenting to all function not supported yet.");
+            logger.write_error("Rule for global variables can be inserted only to a specific function!");
         }
-        else{
-            Function* F = getOrInsertFunc(instr, rw_globals.inFunction);
+        else {
+            Function* F = getOrInsertFunc(instr, g_rule.inFunction);
             // Get operands of new instruction
             map <string, Value*> variables;
 
-            if(rw_globals.globalVar.globalVariable != "*")
-                variables[rw_globals.globalVar.globalVariable] = GV;
-            if(rw_globals.globalVar.globalVariable != "*"){
-                variables[rw_globals.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getGlobalVarSize(GV, instr.module));
+            if (g_rule.globalVar.globalVariable != "*")
+                variables[g_rule.globalVar.globalVariable] = GV;
+            if (!g_rule.globalVar.getSizeTo.empty()) {
+                variables[g_rule.globalVar.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                             getGlobalVarSize(GV, instr.module));
             }
 
             // Check the conditions
             bool satisfied = true;
-            for (auto condition : rw_globals.conditions) {
-                if(!checkAnalysis(instr, condition, variables)) {
+            for (auto condition : g_rule.conditions) {
+                if (!checkAnalysis(instr, condition, variables)) {
                     satisfied = false;
                     break;
                 }
             }
 
             // Try to instrument the code
-            if(satisfied) {
+            if (satisfied) {
                 // Try to apply rule
                 inst_iterator IIterator = inst_begin(F);
-                Instruction *firstI = &*IIterator; //TODO
-                if(applyRule(instr, firstI, rw_globals.newInstr, variables) == 1) {
+                Instruction *firstI = &*IIterator;
+                if (!applyRule(instr, firstI, g_rule.newInstr, variables)) {
                     logger.write_error("Cannot apply rule.");
                     return false;
                 }
             }
         }
+    }
+
+    return true;
+}
+
+/**
+ * Instruments global variables if they should be instrumented.
+ * @param instr LLVMInstrumentation object.
+ * @return true if instrumentation of global variables was done without problems, false otherwise
+ */
+bool instrumentGlobals(LLVMInstrumentation& instr) {
+    const GlobalVarsRules& g_rules = instr.rewriter.getGlobalsConfig();
+
+    for (const auto& g_rule : g_rules) {
+        if (!instrumentGlobal(instr, g_rule))
+            return false;
     }
 
     return true;
@@ -837,17 +835,20 @@ bool InstrumentGlobals(LLVMInstrumentation& instr) {
  * @param rw_config set of rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentEntryPoint(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config){
-    if(F->isDeclaration()) return true;
+bool instrumentEntryPoints(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config) {
+    if (F->isDeclaration())
+        return true;
     for (RewriteRule& rw : rw_config) {
 
         // Check type of the rule
-        if(rw.where != InstrumentPlacement::ENTRY) continue;
+        if (rw.where != InstrumentPlacement::ENTRY)
+            continue;
         // Check if the function should be instrumented
         string functionName = F->getName().str();
-        if(rw.inFunction != "*" && rw.inFunction!=functionName) continue;
+        if (rw.inFunction != "*" && rw.inFunction != functionName)
+            continue;
 
-        // Get name of function
+        // Get name of a function to be instrumented
         const string& param = *(--rw.newInstr.parameters.end());
         Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
@@ -859,11 +860,12 @@ bool InstrumentEntryPoint(LLVMInstrumentation& instr, Function* F, RewriterConfi
         std::vector<Value *> args;
         CallInst *newInstr = CallInst::Create(CalleeF, args);
 
-        //Insert at the beginning of function
+        // Insert at the beginning of function
         Instruction* firstInstr = (&*(F->begin()))->getFirstNonPHIOrDbg();
-        if(firstInstr == NULL) continue; // TODO check this properly
+        if (firstInstr == nullptr)
+            continue;
         newInstr->insertBefore(firstInstr);
-        CloneMetadata(firstInstr, newInstr);
+        cloneMetadata(firstInstr, newInstr);
 
         logger.write_info("Inserting instruction at the beginning of function " + functionName);
     }
@@ -879,16 +881,18 @@ bool InstrumentEntryPoint(LLVMInstrumentation& instr, Function* F, RewriterConfi
  * @param rw_config set fo rules
  * @return true if instrumented, false otherwise
  */
-bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config){
+bool instrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig rw_config) {
     for (RewriteRule& rw : rw_config) {
 
         // Check type of the rule
-        if(rw.where != InstrumentPlacement::RETURN) continue;
+        if (rw.where != InstrumentPlacement::RETURN)
+            continue;
         // Check whether the function should be instrumented
         string functionName = F->getName().str();
-        if(rw.inFunction != "*" && rw.inFunction!=functionName)    continue;
+        if (rw.inFunction != "*" && rw.inFunction != functionName)
+            continue;
 
-        // Get name of function
+        // Get name of a function to be instrumented
         const string& param = *(--rw.newInstr.parameters.end());
         Function *CalleeF = getOrInsertFunc(instr, param);
         if (!CalleeF) {
@@ -906,8 +910,8 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
                 llvm::Instruction *termInst = block.getTerminator();
                 newInstr->insertBefore(termInst);
                 inserted = true;
-                CloneMetadata(termInst, newInstr);
-                logger.write_info("Inserting instruction at the beginning of function " + functionName);
+                cloneMetadata(termInst, newInstr);
+                logger.write_info("Inserting instruction at the end of function " + functionName);
             }
         }
 
@@ -922,24 +926,29 @@ bool InstrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
 
 /**
  * Finds out whether the given function is reachable from main.
+ * @param instr LLVMInstrumentation object
+*/
+void setReachableFunctions(LLVMInstrumentation& instr) {
+    Function* main = instr.module.getFunction("main");
+    if (main) {
+        instr.ppPlugin->getReachableFunctions(instr.reachableFunctions, main);
+    }
+}
+
+/**
+ * Finds out whether the given function is reachable from main.
  * @param f function
  * @param instr LLVMInstrumentation object
  * @return true if the function is reachable from main, false otherwise
 */
 bool isReachable(const Function& f, LLVMInstrumentation& instr) {
-    for (auto& plugin : instr.plugins) {
-        if(plugin->getName() == "PointsTo") {
-            PointsToPlugin *pp = static_cast<PointsToPlugin*>(plugin.get());
-            Function* main = instr.module.getFunction("main");
-            if(main) {
-                return pp->isReachableFunction(*main, f);
-            } else {
-                return true;
-            }
+    for (auto& reachableF : instr.reachableFunctions) {
+        if (reachableF == &f) {
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 /**
@@ -948,37 +957,40 @@ bool isReachable(const Function& f, LLVMInstrumentation& instr) {
  * @param phase current phase of instrumentation.
  * @return true if instrumentation was completed without problems, false otherwise
  */
-bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
+bool runPhase(LLVMInstrumentation& instr, const Phase& phase) {
 
     // Instrument instructions in functions
     for (Module::iterator Fiterator = instr.module.begin(), E = instr.module.end(); Fiterator != E; ++Fiterator) {
         if (Fiterator->isDeclaration())
-          continue;
+            continue;
 
         // Do not instrument functions linked for instrumentation
-        string functionName = (&*Fiterator)->getName().str();
+        string functionName = Fiterator->getName().str();
 
-        if(functionName.find("__INSTR_")!=string::npos ||
-                functionName.find("__VERIFIER_")!=string::npos) { //TODO just starts with
+        if (Fiterator->getName().startswith("__INSTR_") ||
+                Fiterator->getName().startswith("__VERIFIER_")) {
             logger.write_info("Omitting function " + functionName + " from instrumentation.");
             continue;
         }
 
         // If we have info from points-to plugin, do not
         // instrument functions that are not reachable from main
-      /*  if (!isReachable((*Fiterator), instr) && functionName != "main") {
+        if (instr.ppPlugin && functionName != "main" && !isReachable((*Fiterator), instr)) {
             logger.write_info("Omitting function " + functionName + " from instrumentation, not reachable from main.");
             continue;
-        }*/
+        }
 
-        if(!InstrumentEntryPoint(instr, (&*Fiterator), phase.config)) return false;
-        if(!InstrumentReturns(instr, (&*Fiterator), phase.config)) return false;
+        if (!instrumentEntryPoints(instr, (&*Fiterator), phase.config))
+            return false;
+        if (!instrumentReturns(instr, (&*Fiterator), phase.config))
+            return false;
 
         for (inst_iterator Iiterator = inst_begin(&*Fiterator), End = inst_end(&*Fiterator); Iiterator != End; ++Iiterator) {
             // This iterator may be replaced (by an iterator to the following
-            // instruction) in the InsertCallInstruction function
+            // instruction) in the insertCallInstruction function
             // Check if the instruction is relevant
-            if(!CheckInstruction(&*Iiterator, (&*Fiterator), phase.config, &Iiterator, instr)) return false;
+            if (!checkInstruction(&*Iiterator, (&*Fiterator), phase.config, &Iiterator, instr))
+                return false;
         }
     }
 
@@ -993,20 +1005,29 @@ bool RunPhase(LLVMInstrumentation& instr, const Phase& phase) {
 bool instrumentModule(LLVMInstrumentation& instr) {
     logger.write_info("Starting instrumentation.");
 
+    // Get points-to plugin
+    getPointsToPlugin(instr);
+
+    // Get reachable functions if points to plugin is available
+    if (instr.ppPlugin) {
+        setReachableFunctions(instr);
+    }
+
     Phases rw_phases = instr.rewriter.getPhases();
 
     int i = 0;
     for (const auto& phase : rw_phases) {
         i++;
         logger.write_info("Start of the " + std::to_string(i) + ". phase.");
-        if(!RunPhase(instr, phase))
+        if (!runPhase(instr, phase))
             return false;
 
         logger.write_info("End of the " + std::to_string(i) + ". phase.");
     }
 
     // Instrument global variables
-    if(!InstrumentGlobals(instr)) return false;
+    if (!instrumentGlobals(instr))
+        return false;
 
 #if ((LLVM_VERSION_MAJOR >= 4) || (LLVM_VERSION_MINOR >= 5))
     if (llvm::verifyModule(instr.module, &llvm::errs()))
@@ -1019,7 +1040,7 @@ bool instrumentModule(LLVMInstrumentation& instr) {
     std::ofstream ofs(instr.outputName);
     llvm::raw_os_ostream ostream(ofs);
 
-    // write the module
+    // Write the module
     errs() << "Saving the instrumented module to: " << instr.outputName << "\n";
     logger.write_info("Saving the instrumented module to: " + instr.outputName);
     llvm::WriteBitcodeToFile(&instr.module, ostream);
@@ -1030,22 +1051,32 @@ bool instrumentModule(LLVMInstrumentation& instr) {
 /**
  * Loads all plugins.
  * @param instr instrumentation object
+ * @return true if plugins were succesfully loaded,
+ * false, otherwise
  */
-void loadPlugins(LLVMInstrumentation& instr) {
-    for(const string& path : instr.rewriter.analysisPaths) {
+bool loadPlugins(LLVMInstrumentation& instr) {
+    if (instr.rewriter.analysisPaths.size() == 0) {
+        logger.write_info("No plugin specified.");
+        return true;
+    }
+
+    for (const string& path : instr.rewriter.analysisPaths) {
         auto plugin = Analyzer::analyze(path, &instr.module);
         if (plugin) {
             logger.write_info("Plugin " + plugin->getName() + " loaded.");
             instr.plugins.push_back(std::move(plugin));
         }
         else {
+            logger.write_error("Failed loading plugin " + path);
             cout <<"Failed loading plugin: " << path << endl;
+            return false;
         }
     }
+    return true;
 }
 
 int main(int argc, char *argv[]) {
-    if(argc == 2 && strcmp(argv[1], "--version") == 0) {
+    if (argc == 2 && strcmp(argv[1], "--version") == 0) {
         printf("%s\n", GIT_VERSION);
         return 0;
     }
@@ -1055,7 +1086,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    // TODO: Check for failure
     ifstream config_file;
     config_file.open(argv[1]);
 
@@ -1107,13 +1137,9 @@ int main(int argc, char *argv[]) {
     instr.rewriter = std::move(rw);
     instr.outputName = argv[4];
 
-    if(argc <= 5 || (strcmp(argv[5], "--disable-plugins") != 0)){
-        logger.write_info("Loading plugins...");
-        loadPlugins(instr);
-    }
-    else{
-        logger.write_info("Plugins disabled.");
-    }
+    logger.write_info("Loading plugins...");
+    if (!loadPlugins(instr))
+        return 1;
 
     // Instrument
     bool resultOK = instrumentModule(instr);
@@ -1121,7 +1147,7 @@ int main(int argc, char *argv[]) {
     config_file.close();
     llvmir_file.close();
 
-    if(resultOK) {
+    if (resultOK) {
         logger.write_info("DONE.");
         return 0;
     }
