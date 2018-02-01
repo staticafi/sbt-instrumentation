@@ -2,6 +2,7 @@
 #define LOGGER_H
 
 #include <ostream>
+#include <iostream>
 #include <string>
 
 #include <llvm/IR/Function.h>
@@ -21,12 +22,18 @@ class Logger {
         stream.close();
     }
 
-    void write_error(const std::string &text) {
+    void write_error(const std::string &text, bool totty = false) {
         stream << "Error: " << text << "\n";
+        if (totty) {
+            std::cerr << "Error: " << text << "\n";
+        }
     }
 
-    void write_info(const std::string &text) {
+    void write_info(const std::string &text, bool totty = false) {
         stream << "Info: " << text << "\n";
+        if (totty) {
+            std::cout << "Info: " << text << "\n";
+        }
     }
 
     /**
