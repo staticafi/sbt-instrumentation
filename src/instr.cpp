@@ -52,6 +52,11 @@
 using namespace llvm;
 using namespace std;
 
+/* Gather statistics about instrumentation. */
+struct Statistics {
+    std::map<const llvm::Function *, unsigned> inserted_calls;
+} statistics;
+
 Logger logger("log.txt");
 
 void usage(char *name) {
@@ -223,6 +228,9 @@ void eraseInstructions(Instruction* I, int count) {
 void insertCallInstruction(Function* CalleeF, vector<Value *> args,
         RewriteRule rw_rule, Instruction *currentInstr,
         inst_iterator *Iiterator) {
+    // update statistics
+    ++statistics.inserted_calls[CalleeF];
+
     // Create new call instruction
     CallInst *newInstr = CallInst::Create(CalleeF, args);
 
@@ -266,6 +274,8 @@ void insertCallInstruction(Function* CalleeF, vector<Value *> args,
 void insertCallInstruction(Function* CalleeF, vector<Value *> args,
                            Instruction *currentInstr)
 {
+    // update statistics
+    ++statistics.inserted_calls[CalleeF];
     // Create new call instruction
     CallInst *newInstr = CallInst::Create(CalleeF, args);
 
@@ -1143,6 +1153,14 @@ int main(int argc, char *argv[]) {
 
     // Instrument
     bool resultOK = instrumentModule(instr);
+
+    // dump statistics about instrumented module
+    logger.write_info("Number of inserted calls:", true /* stdout */);
+    for (auto& it : statistics.inserted_calls) {
+        std::string msg = "  " + std::to_string(it.second) +
+                          " of " + it.first->getName().str();
+        logger.write_info(msg, true /* stdout */);
+    }
 
     config_file.close();
     llvmir_file.close();
