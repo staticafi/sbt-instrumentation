@@ -52,6 +52,12 @@
 using namespace llvm;
 using namespace std;
 
+/* Gather statistics about instrumentation. */
+struct Statistics {
+    std::map<const llvm::Function *, unsigned> inserted_calls;
+    std::map<const std::string, unsigned> suppresed_instr;
+} statistics;
+
 Logger logger("log.txt");
 
 void usage(char *name) {
@@ -223,6 +229,9 @@ void eraseInstructions(Instruction* I, int count) {
 void insertCallInstruction(Function* CalleeF, vector<Value *> args,
         RewriteRule rw_rule, Instruction *currentInstr,
         inst_iterator *Iiterator) {
+    // update statistics
+    ++statistics.inserted_calls[CalleeF];
+
     // Create new call instruction
     CallInst *newInstr = CallInst::Create(CalleeF, args);
 
@@ -266,6 +275,8 @@ void insertCallInstruction(Function* CalleeF, vector<Value *> args,
 void insertCallInstruction(Function* CalleeF, vector<Value *> args,
                            Instruction *currentInstr)
 {
+    // update statistics
+    ++statistics.inserted_calls[CalleeF];
     // Create new call instruction
     CallInst *newInstr = CallInst::Create(CalleeF, args);
 
@@ -701,7 +712,13 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
 
         // If all instructions match and conditions are satisfied
         // try to instrument the code
-        if (instrument && checkConditions(rw.conditions, instr, variables)) {
+        if (instrument) {
+            if (!checkConditions(rw.conditions, instr, variables)) {
+                const string& func = *(--rw.newInstr.parameters.end());
+                ++statistics.suppresed_instr[func];
+                continue;
+            }
+
             InstrumentInstruction iIns = rw.foundInstrs.front();
 
             // Set flags
@@ -1075,6 +1092,28 @@ bool loadPlugins(LLVMInstrumentation& instr) {
     return true;
 }
 
+static void dumpStatistics() {
+    // dump statistics about instrumented module
+    logger.write_info("Number of inserted calls:", true /* stdout */);
+    for (auto& it : statistics.inserted_calls) {
+        std::string funcName = it.first->getName().str();
+        std::string msg = "  " + std::to_string(it.second) +
+                          " of " + funcName;
+        auto supp = statistics.suppresed_instr.find(funcName);
+        if (supp != statistics.suppresed_instr.end()) {
+            msg += " (blocked " + std::to_string(supp->second) + ")";
+            statistics.suppresed_instr.erase(supp);
+        }
+        logger.write_info(msg, true /* stdout */);
+    }
+    // dump even the calls that were completely suppressed
+    for (auto& it : statistics.suppresed_instr) {
+        std::string msg = "  0 of " + it.first +
+                          " (blocked " + std::to_string(it.second) + ")";
+        logger.write_info(msg, true /* stdout */);
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc == 2 && strcmp(argv[1], "--version") == 0) {
         printf("%s\n", GIT_VERSION);
@@ -1143,6 +1182,8 @@ int main(int argc, char *argv[]) {
 
     // Instrument
     bool resultOK = instrumentModule(instr);
+
+    dumpStatistics();
 
     config_file.close();
     llvmir_file.close();
