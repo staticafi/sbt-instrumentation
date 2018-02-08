@@ -1,3 +1,5 @@
+// Instrument the program in one phase
+// and do not use constant-time checks
 {
     "file": "memsafety_one_phase.c",
     "analyses": ["libPoints_to_plugin.so"],
