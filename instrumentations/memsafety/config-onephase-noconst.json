@@ -1,20 +1,24 @@
+// Instrument the program in one phase
+// and do not use constant-time checks
 {
-    "file": "memsafety_no_plugins.c",
+    "file": "memsafety.c",
+    "analyses": ["libPoints_to_plugin.so"],
     "globalVariablesRules": [
-        {
-            "findGlobals": {
-                "globalVariable": "<t1>",
-                "getTypeSize": "<t2>"
-            },
-            "newInstruction": {
-                "returnValue": "*",
-                "instruction": "call",
-                "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
-            },
-            "in": "main"
-        }
-     ],
-     "phases": [
+    {
+        "findGlobals": {
+            "globalVariable": "<t1>",
+            "getTypeSize": "<t2>"
+        },
+        "newInstruction": {
+            "returnValue": "*",
+            "instruction": "call",
+            "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
+        },
+        "in": "main"
+    }
+    ],
+    "phases":
+        [
         {
             "instructionRules":
                 [
@@ -99,7 +103,7 @@
                     },
                     "where": "after",
                     "in": "*"
-
+    
                 },
                 {
                     "findInstructions": [
@@ -148,7 +152,7 @@
                     },
                     "where": "after",
                     "in": "*"
-
+    
                 },
                 {
                     "findInstructions": [
@@ -166,7 +170,7 @@
                     "where": "after",
                     "in": "*"
                 },
-
+    
                 {
                     "findInstructions": [
                     {
@@ -252,6 +256,7 @@
                         "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                     },
                     "where": "before",
+                    "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false","maybe"]}],
                     "in": "*",
                     "remember": "<t1>"
                 },
@@ -270,6 +275,7 @@
                         "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                     },
                     "where": "before",
+                    "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false","maybe"]}],
                     "in": "*",
                     "remember": "<t2>"
                 },
@@ -523,6 +529,6 @@
                     "in": "main"
                 }
             ]
-       }
+        }
     ]
 }

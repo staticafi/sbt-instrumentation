@@ -1,25 +1,15 @@
 install(FILES
-	double_free/double_free.c
-	double_free/config.json
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/double_free/
-)
-install(FILES
 	memsafety/config.json
+	memsafety/config-noconst.json
+	memsafety/config-simple.json
+	memsafety/config-onephase.json
+	memsafety/config-onephase-noconst.json
 	memsafety/memsafety.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/memsafety/
-)
-install(FILES
-	memsafety_one_phase/config.json
-	memsafety_one_phase/memsafety_one_phase.c
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/memsafety_one_phase/
 )
 install(FILES
 	null_deref/config.json
 	null_deref/null_deref.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/null_deref/
 )
-install(FILES
-	valid_deref/valid_deref.c
-	valid_deref/config.json
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/valid_deref/
-)
+

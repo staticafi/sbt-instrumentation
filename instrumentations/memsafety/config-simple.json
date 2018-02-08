@@ -1,0 +1,530 @@
+// blindly instrument every load/store
+// without any optimization
+{
+    "file": "memsafety.c",
+    "globalVariablesRules": [
+        {
+            "findGlobals": {
+                "globalVariable": "<t1>",
+                "getTypeSize": "<t2>"
+            },
+            "newInstruction": {
+                "returnValue": "*",
+                "instruction": "call",
+                "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
+            },
+            "in": "main"
+        }
+     ],
+     "phases": [
+        {
+            "instructionRules":
+                [
+                {
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["__INSTR_set_flag"]
+                    },
+                    "where": "entry",
+                    "in": "*"
+                },
+                {
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["__INSTR_destroy_allocas"]
+                    },
+                    "where": "return",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<t1>",
+                        "instruction": "call",
+                        "operands": ["<t2>","malloc"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>","<t2>","1", "__INSTR_remember_malloc_calloc"]
+                    },
+                    "where": "after",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t2>","*","realloc"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t2>", "__INSTR_check_realloc"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<t1>",
+                        "instruction": "call",
+                        "operands": ["<t2>","<t3>","realloc"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t2>","<t1>","<t3>", "__INSTR_realloc"]
+                    },
+                    "where": "after",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<t1>",
+                        "instruction": "call",
+                        "operands": ["<t2>","__VERIFIER_malloc"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>","<t2>","1", "__INSTR_remember_malloc_calloc"]
+                    },
+                    "where": "after",
+                    "in": "*"
+
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<t1>",
+                        "instruction": "call",
+                        "operands": ["<t2>","__VERIFIER_malloc0"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>","<t2>","1", "__INSTR_remember_malloc_calloc"]
+                    },
+                    "where": "after",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<t1>",
+                        "instruction": "call",
+                        "operands": ["<t2>","<t3>","calloc"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_malloc_calloc"]
+                    },
+                    "where": "after",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<t1>",
+                        "instruction": "call",
+                        "operands": ["<t2>","<t3>","__VERIFIER_calloc"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_malloc_calloc"]
+                    },
+                    "where": "after",
+                    "in": "*"
+
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<t1>",
+                        "instruction": "call",
+                        "operands": ["<t2>","<t3>","__VERIFIER_calloc0"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>","<t3>","<t2>", "__INSTR_remember_malloc_calloc"]
+                    },
+                    "where": "after",
+                    "in": "*"
+                },
+
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "free"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "__INSTR_free"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i32"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i64"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>", "*", "<t4>", "memset"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "load",
+                        "operands": ["<t1>"],
+                        "getTypeSize": "<t2>"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t1>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "store",
+                        "operands": ["<t1>", "<t2>"],
+                        "getTypeSize": "<t3>"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t2>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","*", "<t4>","memcpy"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["*","<t3>", "<t4>","memcpy"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","*", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i32"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["*","<t3>", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i32"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","*", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i64"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["*","<t3>", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i64"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","*", "<t4>","memmove"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["*","<t3>", "<t4>","memmove"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","*", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i32"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["*","<t3>", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i32"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","*", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i64"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["*","<t3>", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i64"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t3>","<t4>", "__INSTR_check_pointer"],
+                        "stripInboundsOffsets": "<t3>"
+                    },
+                    "where": "before",
+                    "in": "*",
+                    "remember": "<t3>"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<t1>",
+                        "instruction": "alloca",
+                        "operands": ["<t0>"],
+                        "getTypeSize": "<t2>"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>","<t2>", "<t0>", "__INSTR_remember"]
+                    },
+                    "where": "after",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "*",
+                        "instruction": "ret",
+                        "operands": ["*"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["__INSTR_check_leaks"]
+                    },
+                    "where": "before",
+                    "in": "main"
+                }
+            ]
+       }
+    ]
+}
