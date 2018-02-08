@@ -1,7 +1,7 @@
 // blindly instrument every load/store
 // without any optimization
 {
-    "file": "memsafety_no_plugins.c",
+    "file": "memsafety.c",
     "globalVariablesRules": [
         {
             "findGlobals": {
