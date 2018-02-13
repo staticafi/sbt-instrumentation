@@ -140,7 +140,7 @@ def run():
         else:
             dbg('Source file converted to .bc.')
 
-    ret = call(['./bin/LLVMinstr {0} {1} {2} {3}'.format(configFile, bcSourceFile, bcConfigFile, final_output)],
+    ret = call(['./bin/sbt-instr {0} {1} {2} {3}'.format(configFile, bcSourceFile, bcConfigFile, final_output)],
                shell=True)
     if ret != 0:
         err('Instrumentation failed!')

@@ -14,7 +14,7 @@ tests/sources/*.ll
 CMakeCache.txt
 CMakeFiles/
 Testing/
-LLVMinstr
+sbt-instr
 Makefile
 cmake_install.cmake
 tags

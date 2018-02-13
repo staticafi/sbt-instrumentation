@@ -5,15 +5,15 @@ add_custom_target(
 )
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(LLVMinstr
+add_executable(sbt-instr
 	rewriter.cpp
 	instr_log.cpp
 	instr_analyzer.cpp
 	instr.cpp
 	${JSON_FILES}
 )
-target_link_libraries(LLVMinstr ${llvm_libs} ${JSON_LIBS})
-add_dependencies(LLVMinstr gitversion)
+target_link_libraries(sbt-instr ${llvm_libs} ${JSON_LIBS})
+add_dependencies(sbt-instr gitversion)
 
-install(TARGETS LLVMinstr RUNTIME DESTINATION bin)
+install(TARGETS sbt-instr RUNTIME DESTINATION bin)
 

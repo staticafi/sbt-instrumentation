@@ -5,11 +5,11 @@ install(FILES
 	memsafety/config-onephase.json
 	memsafety/config-onephase-noconst.json
 	memsafety/memsafety.c
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/memsafety/
+	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/
 )
 install(FILES
 	null_deref/config.json
 	null_deref/null_deref.c
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/llvm-instrumentation/null_deref/
+	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/null_deref/
 )
 
