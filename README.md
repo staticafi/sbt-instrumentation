@@ -16,11 +16,11 @@ make install
 
 ### Running
 
-Run script `instr`. This script takes a C file, generates .bc file using clang
-and then instruments the file according to given config.json. You may use --bc
+To instrument programs in C, run script `sbt-instr-c`. This script takes a C file, generates .bc file using clang
+and then instruments the file according to the given config.json. You may use --bc
 switch to indicate that the input file is .bc file
 
-Usage: `./instr OPTS config.json source.c` where `OPTS` can be following:
+Usage: `./sbt-instr-c OPTS config.json source.c` where `OPTS` can be following:
 * `--output=FILE` 	- specify output file
 * `--help	`	- show help message
 * `--bc`		- given file is a bytecode
