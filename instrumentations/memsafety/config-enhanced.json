@@ -67,7 +67,6 @@
                 "instruction": "call",
                 "operands": ["<t2>", "__INSTR_check_realloc"]
             },
-            "remember": "<t2>",
             "where": "before",
             "in": "*"
         },
@@ -84,7 +83,6 @@
                 "instruction": "call",
                 "operands": ["<t2>","<t1>","<t3>", "__INSTR_realloc"]
             },
-            "remember": "<t2>",
             "where": "after",
             "in": "*"
         },
@@ -151,7 +149,6 @@
             },
             "where": "after",
             "in": "*"
-    
         },
         {
             "findInstructions": [

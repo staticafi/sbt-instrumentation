@@ -103,7 +103,6 @@
                     },
                     "where": "after",
                     "in": "*"
-    
                 },
                 {
                     "findInstructions": [
@@ -152,7 +151,6 @@
                     },
                     "where": "after",
                     "in": "*"
-    
                 },
                 {
                     "findInstructions": [
@@ -202,8 +200,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -220,8 +217,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -238,8 +234,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -257,8 +252,7 @@
                     },
                     "where": "before",
                     "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false","maybe"]}],
-                    "in": "*",
-                    "remember": "<t1>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -276,8 +270,7 @@
                     },
                     "where": "before",
                     "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false","maybe"]}],
-                    "in": "*",
-                    "remember": "<t2>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -294,8 +287,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -312,8 +304,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -330,8 +321,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -348,8 +338,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -366,8 +355,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -384,8 +372,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -402,8 +389,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -420,8 +406,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -438,8 +423,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -456,8 +440,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -474,8 +457,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -492,8 +474,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
