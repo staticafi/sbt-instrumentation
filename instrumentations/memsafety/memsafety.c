@@ -216,8 +216,9 @@ void __INSTR_remember_malloc_calloc(rec_id id, size_t size, int num ) {
     }
 }
 
-void __INSTR_check_bounds(rec_id addr, a_size size, rec_id id, a_size range) {
-    if (range > size || ((a_size) (id - addr)) > size - range) {
+void __INSTR_check_bounds(rec_id addr_a, a_size offa, a_size size, rec_id addr_b, a_size range) {
+    a_size offb = addr_b - addr_a + offa;
+    if (offb < 0 || offb + range > size) {
         assert(0 && "dereference out of range");
         __VERIFIER_error();
     }

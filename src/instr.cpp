@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <tuple>
 
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DataLayout.h>
@@ -81,9 +82,9 @@ void getPointsToPlugin(LLVMInstrumentation& instr) {
  * Get info about allocated memory to which given pointer points to.
  * @param I instruction.
  * @param ins LLVMInstrumentation object.
- * @return address and size of allocated memory to which pointer points to.
+ * @return pointer, offset and size of allocated memory to which pointer points to.
  */
-std::pair<llvm::Value*, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr) {
+std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr) {
     Value* op;
     if (const StoreInst *SI = dyn_cast<StoreInst>(I)) {
         op = SI->getOperand(1);
@@ -92,14 +93,14 @@ std::pair<llvm::Value*, uint64_t> getPointerInfo(Instruction *I, const LLVMInstr
         op = LI->getOperand(0);
     }
     else {
-        return std::make_pair(nullptr, 0);
+        return std::make_tuple(nullptr, 0, 0);
     }
 
     if (instr.ppPlugin) {
         return instr.ppPlugin->getPointerInfo(op);
     }
 
-    return std::make_pair(nullptr, 0);
+    return std::make_tuple(nullptr, 0, 0);
 }
 
 /**
@@ -698,15 +699,17 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                                                                      getAllocatedSize(ins, instr.module));
             }
 
-            if (iIns.getPointerInfoTo.size() == 2) {
-                std::pair<llvm::Value*, uint64_t> pointerInfo = getPointerInfo(ins, instr);
+            if (iIns.getPointerInfoTo.size() == 3) {
+                std::tuple<llvm::Value*, uint64_t, uint64_t> pointerInfo = getPointerInfo(ins, instr);
                 // Do not apply this rule, if there was no relevant answer from pointer analysis
-                if (!pointerInfo.first)
+                if (!std::get<0>(pointerInfo))
                     instrument = false;
-                variables[iIns.getPointerInfoTo.front()] = pointerInfo.first,
-                variables[iIns.getPointerInfoTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                            pointerInfo.second);
+                variables[iIns.getPointerInfoTo.front()] = std::get<0>(pointerInfo);
+                variables[*(std::next(iIns.getPointerInfoTo.begin(), 1))] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                            std::get<1>(pointerInfo));
 
+                variables[iIns.getPointerInfoTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                            std::get<2>(pointerInfo));
             }
         }
 

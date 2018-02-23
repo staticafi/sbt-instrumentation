@@ -28,59 +28,52 @@ std::string PointsToPlugin::isNull(llvm::Value* a) {
 }
 
 std::string PointsToPlugin::hasKnownSize(llvm::Value* a) {
-    // need to have the PTA
-    assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
-    if (!psnode || psnode->pointsTo.size()!=1) {
-        // we know nothing about the allocated size
-        return "maybe";
-    }
+    // check is a is getelementptr
+    if (const llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
+        // need to have the PTA
+        assert(PTA);
+        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        if (!psnode || psnode->pointsTo.empty()) {
+            // we know nothing about the allocated size
+            return "maybe";
+        }
 
-    const auto& ptr = *(psnode->pointsTo.begin());
-
-    if (!ptr.target->getUserData<llvm::Value>())
-        return "false";
-
-    if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(ptr.target->getUserData<llvm::Value>())) {
-        if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) {
-            if (llvm::Instruction *I = llvm::dyn_cast<llvm::Instruction>(a)) {
-                if (AI->getFunction() == I->getFunction()) {
-                    return "true";
-                }
+        const auto& first = *(psnode->pointsTo.begin());
+        for (const auto& ptr : psnode->pointsTo) {
+            // ptset cannot contain null, unknown or invalidated pointer
+            if (ptr.isNull() || ptr.isUnknown() || ptr.isInvalidated()){
+                return "false";}
+            // the sizes and offsets need to be the same
+            if (ptr.offset.isUnknown() || *(ptr.offset) != *(first.offset) ||
+                     ptr.target->getSize() != first.target->getSize()) {
+                return "false";
             }
         }
+        return "true";
     }
-
-    return "false";
+    else {
+        return "false";
+    }
 }
 
-std::pair<llvm::Value*, uint64_t> PointsToPlugin::getPointerInfo(llvm::Value* a) {
-    // need to have the PTA
-    assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
-    if (!psnode || psnode->pointsTo.size()!=1) {
-        // we know nothing about the allocated size
-        return std::make_pair(nullptr, 0);
-    }
-
-    const auto& ptr = *(psnode->pointsTo.begin());
-
-    llvm::Value* node = ptr.target->getUserData<llvm::Value>();
-    if (!node){
-        return std::make_pair(nullptr, 0);}
-
-    if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(node)) {
-        if (llvm::ConstantInt *C = llvm::dyn_cast<llvm::ConstantInt>(AI->getOperand(0))) {
-            llvm::DataLayout* DL = new llvm::DataLayout(AI->getModule());
-            llvm::Type* Ty = AI->getAllocatedType();
-            if(!Ty->isSized()) {
-                delete DL;
-                return std::make_pair(nullptr, 0);
-            }
-            return std::make_pair(node, DL->getTypeAllocSize(Ty) * C->getZExtValue());
+std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPointerInfo(llvm::Value* a) {
+    // check is a is getelementptr
+    if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
+        // need to have the PTA
+        assert(PTA);
+        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        if (!psnode || psnode->pointsTo.empty()) {
+            return std::make_tuple(nullptr, 0, 0);
         }
+
+        const auto& first = *(psnode->pointsTo.begin());
+        return std::make_tuple(GI->getPointerOperand(), *(first.offset),
+                                first.target->getSize());
+
     }
-    return std::make_pair(nullptr, 0);
+    else {
+        return std::make_tuple(nullptr, 0, 0);
+    }
 }
 
 

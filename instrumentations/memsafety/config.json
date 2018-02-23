@@ -253,13 +253,13 @@
                     "instruction": "load",
                     "operands": ["<t1>"],
                     "getTypeSize": "<t2>",
-                    "getPointerInfo": ["<t3>", "<t4>"]
+                    "getPointerInfo": ["<t3>", "<t4>", "<t5>"]
                 }
                 ],
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "<t4>", "<t1>", "<t2>", "__INSTR_check_bounds"]
+                    "operands": ["<t3>", "<t4>", "<t5>", "<t1>", "<t2>", "__INSTR_check_bounds"]
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false", "maybe"]}, {"query":["hasKnownSize", "<t1>"], "expectedResult":["true"]}],
@@ -272,13 +272,13 @@
                     "instruction": "store",
                     "operands": ["<t1>", "<t2>"],
                     "getTypeSize": "<t3>",
-                    "getPointerInfo": ["<t4>", "<t5>"]
+                    "getPointerInfo": ["<t4>", "<t5>", "<t6>"]
                 }
                 ],
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t4>", "<t5>", "<t2>", "<t3>", "__INSTR_check_bounds"]
+                    "operands": ["<t4>", "<t5>", "<t6>", "<t2>", "<t3>", "__INSTR_check_bounds"]
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false","maybe"]}, {"query":["hasKnownSize", "<t2>"], "expectedResult":["true"]}],

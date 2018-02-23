@@ -4,6 +4,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Constants.h>
+#include <tuple>
 #include "instr_plugin.hpp"
 #include "llvm/analysis/PointsTo/PointsTo.h"
 #include "analysis/PointsTo/PointsToWithInvalidate.h"
@@ -21,7 +22,7 @@ class PointsToPlugin : public InstrPlugin
         std::string isValidPointer(llvm::Value* a, llvm::Value *len);
         std::string pointsTo(llvm::Value* a, llvm::Value *b);
         std::string hasKnownSize(llvm::Value* a);
-        virtual std::pair<llvm::Value*, uint64_t> getPointerInfo(llvm::Value* a);
+        virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(llvm::Value* a);
         virtual void getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* a);
 
         PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
