@@ -29,7 +29,9 @@ class PointsToPlugin : public InstrPlugin
             llvm::errs() << "Running points-to analysis...\n";
             PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(module));
             PTA->run<dg::analysis::pta::PointsToWithInvalidate>();
+            llvm::errs() << "Building call-graph...\n";
             cg.buildCallGraph(*module, PTA);
+            llvm::errs() << "PT plugin done.\n";
         }
 };
 

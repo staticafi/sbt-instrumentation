@@ -29,31 +29,42 @@ std::string PointsToPlugin::isNull(llvm::Value* a) {
 
 std::string PointsToPlugin::hasKnownSize(llvm::Value* a) {
     // check is a is getelementptr
-    if (const llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
+    if (const llvm::GetElementPtrInst *GI
+            = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
         assert(PTA);
         PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
             // we know nothing about the allocated size
-            return "maybe";
+            return "false";
         }
 
         const auto& first = *(psnode->pointsTo.begin());
+        // we must have concrete offset and concrete size
+        if (first.isNull() || first.isUnknown() || first.isInvalidated())
+            return "false";
+        if (first.offset.isUnknown())
+            return "false";
+        if (first.target->getSize() == 0)
+            return "false";
+
+        // check that all the objects has the same size and the
+        // same offset (and are know, but that follows from
+        // the non-zero size
         for (const auto& ptr : psnode->pointsTo) {
-            // ptset cannot contain null, unknown or invalidated pointer
-            if (ptr.isNull() || ptr.isUnknown() || ptr.isInvalidated()){
-                return "false";}
             // the sizes and offsets need to be the same
-            if (ptr.offset.isUnknown() || *(ptr.offset) != *(first.offset) ||
-                     ptr.target->getSize() != first.target->getSize()) {
+            if (*(ptr.offset) != *(first.offset) ||
+                ptr.target->getSize() != first.target->getSize()) {
                 return "false";
             }
+            // ptset cannot contain null, unknown or invalidated pointer
+            assert(!(ptr.isNull() || ptr.isUnknown() || ptr.isInvalidated()));
         }
+
         return "true";
     }
-    else {
-        return "false";
-    }
+
+    return "false";
 }
 
 std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPointerInfo(llvm::Value* a) {
