@@ -2,6 +2,11 @@
 // without any optimization
 {
     "file": "memsafety.c",
+    // load the plugin so that we can create
+    // the call-graph and instrument only reachable functions.
+    // (it is important when we want to compare the numbers with
+    //  other configurations)
+    "analyses": ["libPoints_to_plugin.so"],
     "globalVariablesRules": [
         {
             "findGlobals": {
