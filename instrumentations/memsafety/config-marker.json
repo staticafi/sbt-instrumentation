@@ -1,0 +1,288 @@
+{
+    "file": "marker.c",
+    "analyses": ["libPoints_to_plugin.so"],
+    "phases": [
+        {
+            "instructionRules": [
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "load",
+                    "operands": ["<t1>"],
+                    "getTypeSize": "<t2>"
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t1>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"],
+		                "expectedResult":["false", "maybe"]}],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "store",
+                    "operands": ["<t1>", "<t2>"],
+                    "getTypeSize": "<t3>"
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t2>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"],
+		                "expectedResult":["false","maybe"]}],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i32"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i64"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "*", "<t4>", "memset"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>","*", "<t4>","memcpy"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*","<t3>", "<t4>","memcpy"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i32"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*","<t3>", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i32"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i64"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*","<t3>", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i64"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>","*", "<t4>","memmove"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*","<t3>", "<t4>","memmove"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i32"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*","<t3>", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i32"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i64"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*","<t3>", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i64"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            }
+	]
+        }
+    ]
+}

@@ -4,7 +4,9 @@ install(FILES
 	memsafety/config-basic.json
 	memsafety/config-enhanced.json
 	memsafety/config-enhanced-noconst.json
+	memsafety/config-marker.json
 	memsafety/memsafety.c
+	memsafety/marker.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/
 )
 install(FILES
