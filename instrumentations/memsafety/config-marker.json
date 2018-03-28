@@ -281,6 +281,22 @@
                 },
                 "where": "before",
                 "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "free"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
             }
 	]
         }
