@@ -337,8 +337,8 @@ tuple<vector<Value *>, Instruction*> insertArgument(InstrumentInstruction rw_new
             }
         } else {
             unsigned argIndex = 0;
-            for (Function::ArgumentListType::iterator sit=CalleeF->getArgumentList().begin(); sit != CalleeF->getArgumentList().end(); ++sit) {
-                Value *argV = &*sit;
+            for (auto& arg : CalleeF->args()) {
+                Value *argV = &arg;
 
                 if (i == argIndex) {
                     if (argV->getType() != var->second->getType()) {
