@@ -936,7 +936,7 @@ bool instrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
         }
 
         if (!inserted) {
-            F->dump();
+            llvm::errs() << *F << "\n";
             assert(0 && "Did not find any return");
             abort();
         }
