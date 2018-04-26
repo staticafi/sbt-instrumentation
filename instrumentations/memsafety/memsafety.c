@@ -325,6 +325,13 @@ void __INSTR_set_flag() {
         stack_list->flag++;
 }
 
+void __INSTR_destroy(rec_id id) {
+    rec_list_node *n = __INSTR_list_search(stack_list, id);
+    if (n != NULL) {
+        __INSTR_rec_destroy(n, stack_list);
+    }
+}
+
 void __INSTR_destroy_allocas() {
     rec_list_node *cur = stack_list;
 
