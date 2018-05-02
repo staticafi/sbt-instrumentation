@@ -285,14 +285,7 @@ void insertCallInstruction(Function* CalleeF, vector<Value *> args,
     // instrument the code, some passes (e.g. inliner) can
     // break the code when there's an instruction without metadata
     // when all other instructions have metadata
-    if (currentInstr->hasMetadata()) {
-        cloneMetadata(currentInstr, newInstr);
-    } else if (const DISubprogram *DS = currentInstr->getParent()->getParent()->getSubprogram()) {
-        // No metadata? Then it is going to be the instrumentation
-        // of alloca or such at the beggining of function,
-        // so just add debug loc of the beginning of the function
-        newInstr->setDebugLoc(DebugLoc::get(DS->getLine(), 0, DS));
-    }
+    cloneMetadata(currentInstr, newInstr);
 
     // Insert before
     newInstr->insertBefore(currentInstr);
