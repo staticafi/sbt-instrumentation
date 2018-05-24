@@ -140,6 +140,25 @@ uint64_t getAllocatedSize(Instruction *I, const Module& M) {
     return size;
 }
 
+/**
+ * Compare type from config with type of instruction.
+ * @param I instruction to check
+ * @param type type of binary operation
+ * @return true if types match, false otherwise
+*/
+bool compareType(const llvm::Instruction *I, BinOpType type) {
+    const Type* t = I->getType();
+
+    if (type == BinOpType::INT16 && t->isIntegerTy(16))
+        return true;
+    if (type == BinOpType::INT32 && t->isIntegerTy(32))
+        return true;
+    if (type == BinOpType::INT64 && t->isIntegerTy(64))
+        return true;
+
+    return false;
+}
+
 /** Clone metadata from one instruction to another.
  * If i1 does not contain any metadata, then the instruction
  * that is closest to i1 is picked (we prefer the one that is after
@@ -666,6 +685,11 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             if (currentInstr->getOpcodeName() == checkInstr.instruction) {
                 // Check operands
                 if (!checkOperands(checkInstr, currentInstr, variables)) {
+                    break;
+                }
+
+                if (checkInstr.type != BinOpType::NBOP &&
+                      !compareType(currentInstr, checkInstr.type)) {
                     break;
                 }
 

@@ -16,6 +16,13 @@ enum class InstrumentPlacement {
     ENTRY
 };
 
+enum class BinOpType {
+    NBOP,
+    INT32,
+    INT64,
+    INT16
+};
+
 class InstrumentInstruction {
  public:
     std::string returnValue;
@@ -24,6 +31,7 @@ class InstrumentInstruction {
     std::string getSizeTo;
     std::string stripInboundsOffsets;
     std::list<std::string> getPointerInfoTo;
+    BinOpType type;
 };
 
 class InstrumentGlobalVar {
