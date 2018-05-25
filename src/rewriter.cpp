@@ -31,6 +31,9 @@ BinOpType getType(const std::string& type) {
         return BinOpType::INT32;
     if (type == "int64")
         return BinOpType::INT64;
+    if (type == "int8")
+        return BinOpType::INT8;
+
 
     return BinOpType::NBOP;
 }

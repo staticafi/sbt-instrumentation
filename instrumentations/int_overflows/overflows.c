@@ -141,3 +141,50 @@ int __INSTR_check_div_short(short op1, short op2) {
     }
   #endif
 }
+
+void __INSTR_check_add_char(char x, char y) {
+      if((x > 0) && (y > 0) && (x > SCHAR_MAX - y)) {
+	      assert(0 && "Addition: char overflow!");
+      }
+
+      if((x < 0) && (y < 0) && (x < SCHAR_MIN - y)) {
+	      assert(0 && "Addition: char underflow!");
+      }
+}
+
+void __INSTR_check_sub_char(char x, char y) {
+      if((y > 0) && (x < SCHAR_MIN +  y)) {
+	      assert(0 && "Substraction: char underflow!");
+      }
+
+      if((y < 0) && (x > SCHAR_MAX + y)) {
+	      assert(0 && "Substraction: char overflow!");
+      }
+}
+
+void __INSTR_check_mul_char(char x, char y) {
+    if (x > SCHAR_MAX / y) {
+	    assert(0 && "Multiplication: char overflow!");
+    }
+    if ((x < SCHAR_MIN / y)) {
+        assert(0 && "Multiplication: char underflow!");
+    }
+
+    // 2's complement detection
+    #if (SCHAR_MIN != -SCHAR_MAX)
+      if ((x == -1) && (y == SCHAR_MIN))
+      if ((y == -1) && (x == SCHAR_MIN))
+    #endif
+}
+
+int __INSTR_check_div_char(char op1, char op2) {
+  if (op2 == 0) {
+    assert(0 && "Division by zero!");
+  }
+  // 2's complement detection
+  #if (SCHAR_MIN != -SCHAR_MAX)
+    if (op1 == SCHAR_MIN && op2 == -1)  {
+      assert(0 && "Division: char overflow!");
+    }
+  #endif
+}

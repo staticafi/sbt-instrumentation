@@ -20,7 +20,8 @@ enum class BinOpType {
     NBOP,
     INT32,
     INT64,
-    INT16
+    INT16,
+    INT8
 };
 
 class InstrumentInstruction {
