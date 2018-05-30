@@ -10,13 +10,13 @@
                         "returnValue": "<op>",
                         "instruction": "add",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int32"
+                        "type": "i32"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_add"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_i32"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -28,13 +28,13 @@
                         "returnValue": "<op>",
                         "instruction": "add",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int64"
+                        "type": "i64"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_long"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_i64"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -46,13 +46,13 @@
                         "returnValue": "<op>",
                         "instruction": "add",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int16"
+                        "type": "i16"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_short"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_i16"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -64,13 +64,13 @@
                         "returnValue": "<op>",
                         "instruction": "add",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int8"
+                        "type": "i8"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_char"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_i8"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -82,13 +82,13 @@
                         "returnValue": "<op>",
                         "instruction": "sub",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int32"
+                        "type": "i32"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i32"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -100,13 +100,13 @@
                         "returnValue": "<op>",
                         "instruction": "sub",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int64"
+                        "type": "i64"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_long"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i64"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<t1>"], "expectedResult":["true"]}],
@@ -118,13 +118,13 @@
                         "returnValue": "<op>",
                         "instruction": "sub",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int16"
+                        "type": "i16"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_short"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i16"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -136,13 +136,13 @@
                         "returnValue": "<op>",
                         "instruction": "sub",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int8"
+                        "type": "i8"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_char"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i8"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -154,13 +154,13 @@
                         "returnValue": "<op>",
                         "instruction": "mul",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int32"
+                        "type": "i32"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i32"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -172,13 +172,13 @@
                         "returnValue": "<op>",
                         "instruction": "mul",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int64"
+                        "type": "i64"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_long"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i64"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -190,13 +190,13 @@
                         "returnValue": "<op>",
                         "instruction": "mul",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int16"
+                        "type": "i16"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_short"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i16"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -208,13 +208,13 @@
                         "returnValue": "<op>",
                         "instruction": "mul",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int8"
+                        "type": "i8"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_char"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i8"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -226,13 +226,13 @@
                         "returnValue": "<op>",
                         "instruction": "div",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int32"
+                        "type": "i32"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_div"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_i32"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -244,13 +244,13 @@
                         "returnValue": "<op>",
                         "instruction": "div",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int64"
+                        "type": "i64"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_long"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_i64"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -262,13 +262,13 @@
                         "returnValue": "<op>",
                         "instruction": "div",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int16"
+                        "type": "i16"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_short"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_i16"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
@@ -280,13 +280,13 @@
                         "returnValue": "<op>",
                         "instruction": "div",
                         "operands": ["<t1>", "<t2>"],
-                        "type": "int8"
+                        "type": "i8"
                     }
                     ],
                     "newInstruction": {
                         "returnValue": "*",
                         "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_char"]
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_i8"]
                     },
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
