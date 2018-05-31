@@ -59,6 +59,8 @@ bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, Inst
         answer = plugin->isNull(a);
     } else if (condition.name == "isConstant") {
         answer = plugin->isConstant(a);
+    } else if (condition.name == "canOverflow") {
+        answer = plugin->canOverflow(a);
     } else if (condition.name == "isValidPointer") {
         answer = plugin->isValidPointer(a, b);
     } else if (condition.name == "isRemembered") {

@@ -19,12 +19,12 @@ class RangeAnalysisPlugin : public InstrPlugin
         std::string canOverflowDiv(const Range&, const Range&, const llvm::IntegerType&);
 
      public:
-        std::string canOverflow(llvm::Instruction*);
+        std::string canOverflow(llvm::Value*);
 
         RangeAnalysisPlugin(llvm::Module* module) : InstrPlugin("RangeAnalysis") {
             llvm::errs() << "Running range analysis...\n";
+            IntraProceduralRA ra;
             for (auto& f : *module) {
-                IntraProceduralRA ra;
                 RA.emplace(&f, ra.run(f));
             }
             llvm::errs() << "RA plugin done.\n";

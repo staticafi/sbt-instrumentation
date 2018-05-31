@@ -5,15 +5,20 @@
 using namespace llvm;
 
 bool checkUnknown(const Range& a, const Range& b) {
-    if (!a.isRegular() || !b.isRegular())
-        return true;
+    if (a.isRegular() && b.isRegular())
+        return false;
 
-    if (a.isMaxRange() || b.isMaxRange())
-        return true;
+    return true;
 }
 
 
-std::string RangeAnalysisPlugin::canOverflow(Instruction* inst) {
+std::string RangeAnalysisPlugin::canOverflow(Value* value) {
+    // Support only instructions
+    auto* inst = dyn_cast<Instruction>(value);
+    if (!inst)
+        return "unknown";
+
+    // Support only instruction of integer type
     const auto* intT = dyn_cast<IntegerType>(inst->getType());
     if (!intT)
         return "unknown";
@@ -73,7 +78,7 @@ Range RangeAnalysisPlugin::getRange(ConstraintGraph& CG,
                         llvm::Value* val)
 {
     Range r = CG.getRange(val);
-    if (r.isMaxRange() || r.isUnknown()) {
+    if (r.isUnknown()) {
         if (auto* loadInst = llvm::dyn_cast<llvm::LoadInst>(val)) {
             return CG.getRange(loadInst->getOperand(0));
         }
@@ -93,6 +98,8 @@ bool checkOverflowAdd(APInt ax, APInt ay, const IntegerType& t) {
     if((x < 0) && (y < 0) && (x < (-std::pow(2, t.getBitWidth() - 1)) - y)) {
         return true;
     }
+
+    return false;
 }
 
 std::string RangeAnalysisPlugin::canOverflowAdd(const Range& a,
@@ -105,6 +112,8 @@ std::string RangeAnalysisPlugin::canOverflowAdd(const Range& a,
     if (checkOverflowAdd(a.getLower(), b.getLower(), t)) {
         return "true";
     }
+
+    return "false";
 }
 
 bool checkOverflowSub(APInt ax, APInt ay, const IntegerType& t) {
@@ -118,6 +127,8 @@ bool checkOverflowSub(APInt ax, APInt ay, const IntegerType& t) {
     if((y < 0) && (x > (std::pow(2, t.getBitWidth() - 1) - 1) + y)) {
         return true;
     }
+
+    return false;
 }
 
 std::string RangeAnalysisPlugin::canOverflowSub(const Range& a,
@@ -138,6 +149,8 @@ std::string RangeAnalysisPlugin::canOverflowSub(const Range& a,
     if (checkOverflowSub(a.getLower(), b.getUpper(), t)) {
         return "true";
     }
+
+    return "false";
 }
 
 bool checkOverflowMul(APInt ax, APInt ay, const IntegerType& t) {
@@ -150,6 +163,8 @@ bool checkOverflowMul(APInt ax, APInt ay, const IntegerType& t) {
     if ((x < (-std::pow(2, t.getBitWidth() - 1)) / y)) {
         return true;
     }
+
+    return false;
 }
 
 std::string RangeAnalysisPlugin::canOverflowMul(const Range& a,
@@ -181,6 +196,7 @@ std::string RangeAnalysisPlugin::canOverflowMul(const Range& a,
          && a.getUpper().signedRoundToDouble() >= -1)
         return "true";
 
+    return "false";
 }
 
 std::string RangeAnalysisPlugin::canOverflowDiv(const Range& a,
@@ -194,6 +210,8 @@ std::string RangeAnalysisPlugin::canOverflowDiv(const Range& a,
          && b.getLower().signedRoundToDouble() <= -1
          && b.getUpper().signedRoundToDouble() >= -1)
         return "true";
+
+    return "false";
 }
 
 extern "C" InstrPlugin* create_object(llvm::Module* module) {
