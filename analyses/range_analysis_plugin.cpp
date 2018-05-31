@@ -40,7 +40,7 @@ std::string RangeAnalysisPlugin::canOverflow(Value* value) {
 
         // check for unknown ranges
         if (checkUnknown(a, b))
-            return "true";
+            return "unknown";
 
         // check addition
         if (const auto* binOp
@@ -71,7 +71,38 @@ std::string RangeAnalysisPlugin::canOverflow(Value* value) {
         return canOverflowDiv(a, b, *intT);
     }
 
+    // check trunc
+    if (const auto* truncOp
+        = dyn_cast<TruncInst>(inst)) {
+        Range a = getRange(CG, truncOp->getOperand(0));
+        return canOverflowTrunc(a, *truncOp);
+    }
+
     return "unknown";
+}
+
+std::string RangeAnalysisPlugin::canOverflowTrunc(const Range& a,
+        const TruncInst& truncOp)
+{
+    if (!a.isRegular())
+        return "unknown";
+
+    double x = a.getLower().signedRoundToDouble();
+    double y = a.getUpper().signedRoundToDouble();
+
+    const auto* t = dyn_cast<IntegerType>(truncOp.getDestTy());
+    if (!t)
+        return "unknown";
+
+    if (y > 0 && y > (std::pow(2, t->getBitWidth() - 1) - 1)) {
+        return "true";
+    }
+
+    if (x < 0 && x < (-std::pow(2, t->getBitWidth() - 1))) {
+        return "true";
+    }
+
+    return "false";
 }
 
 Range RangeAnalysisPlugin::getRange(ConstraintGraph& CG,

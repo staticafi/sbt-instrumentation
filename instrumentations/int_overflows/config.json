@@ -8,6 +8,24 @@
                     "findInstructions": [
                     {
                         "returnValue": "<op>",
+                        "instruction": "trunc",
+                        "operands": ["<t1>"],
+                        "getDestType": "<t2>"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_trunc"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
                         "instruction": "add",
                         "operands": ["<t1>", "<t2>"],
                         "type": "i32"
@@ -19,7 +37,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_add_i32"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -37,7 +55,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_add_i64"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -55,7 +73,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_add_i16"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -73,7 +91,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_add_i8"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -91,7 +109,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i32"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -109,7 +127,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i64"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<t1>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<t1>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -127,7 +145,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i16"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -145,7 +163,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i8"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -163,7 +181,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i32"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -181,7 +199,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i64"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -199,7 +217,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i16"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -217,7 +235,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i8"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -235,7 +253,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_div_i32"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -253,7 +271,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_div_i64"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -271,7 +289,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_div_i16"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -289,7 +307,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_div_i8"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
                     "in": "*"
                 }
 

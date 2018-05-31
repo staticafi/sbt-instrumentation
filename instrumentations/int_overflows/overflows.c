@@ -2,6 +2,17 @@
 #include <stdint.h>
 #include <math.h>
 
+// TODO for larger ints
+void __INSTR_check_trunc(int64_t from, int toSize) {
+    if (from > 0 && from > (pow(2, toSize - 1) - 1)) {
+	      assert(0 && "Integer overflow!");
+    }
+
+    if (from < 0 && from < (-pow(2, toSize - 1))) {
+	      assert(0 && "Integer overflow!");
+    }
+}
+
 void __INSTR_check_add_i32(int32_t x, int32_t y) {
       if((x > 0) && (y > 0) && (x > (pow(2, 31) - 1) - y)) {
 	      assert(0 && "Addition: integer overflow!");

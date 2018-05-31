@@ -141,6 +141,29 @@ uint64_t getAllocatedSize(Instruction *I, const Module& M) {
 }
 
 /**
+ * Gets destination integer type of cast instruction.
+ * @param I cast instruction
+ * @return integer type
+*/
+int getDestType(const llvm::Instruction *I) {
+    auto* castInst = dyn_cast<CastInst>(I);
+    if (!castInst)
+        return -1;
+
+    const Type* t = castInst->getDestTy();
+
+    if (t->isIntegerTy(16))
+        return 16;
+    if (t->isIntegerTy(32))
+        return 32;
+    if (t->isIntegerTy(64))
+        return 64;
+    if (t->isIntegerTy(8))
+        return 8;
+
+    return -1;
+}
+/**
  * Compare type from config with type of instruction.
  * @param I instruction to check
  * @param type type of binary operation
@@ -690,6 +713,15 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                     break;
                 }
 
+                if (!checkInstr.getDestType.empty() &&
+                      !checkInstr.getDestType.empty()) {
+                    int size = getDestType(currentInstr);
+                    if (size == -1)
+                        break;
+                    variables[checkInstr.getDestType] = ConstantInt::get(
+                                        Type::getInt32Ty(instr.module.getContext()), size);
+                }
+
                 if (checkInstr.type != BinOpType::NBOP &&
                       !compareType(currentInstr, checkInstr.type)) {
                     break;
@@ -721,8 +753,7 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
         if (rw.foundInstrs.size() == 1) {
             InstrumentInstruction iIns = rw.foundInstrs.front();
             if (!iIns.getSizeTo.empty()) {
-                variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                     getAllocatedSize(ins, instr.module));
+                variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
             }
 
             if (iIns.getPointerInfoTo.size() == 3) {

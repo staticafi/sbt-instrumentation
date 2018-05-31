@@ -13,6 +13,7 @@ class RangeAnalysisPlugin : public InstrPlugin
      private:
         std::map<llvm::Function*, Cousot> RA;
         Range getRange(ConstraintGraph&, llvm::Value*);
+        std::string canOverflowTrunc(const Range&, const llvm::TruncInst&);
         std::string canOverflowAdd(const Range&, const Range&, const llvm::IntegerType&);
         std::string canOverflowMul(const Range&, const Range&, const llvm::IntegerType&);
         std::string canOverflowSub(const Range&, const Range&, const llvm::IntegerType&);

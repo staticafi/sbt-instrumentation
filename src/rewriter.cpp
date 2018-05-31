@@ -48,6 +48,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
         }
         instr.getSizeTo = findInstruction["getTypeSize"].asString();
         instr.type = getType(findInstruction["type"].asString());
+        instr.getDestType = findInstruction["getDestType"].asString();
 
         for (const auto& info : findInstruction["getPointerInfo"]) {
             instr.getPointerInfoTo.push_back(info.asString());
