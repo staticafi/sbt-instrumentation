@@ -155,6 +155,8 @@ bool compareType(const llvm::Instruction *I, BinOpType type) {
         return true;
     if (type == BinOpType::INT64 && t->isIntegerTy(64))
         return true;
+    if (type == BinOpType::INT8 && t->isIntegerTy(8))
+        return true;
 
     return false;
 }
