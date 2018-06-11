@@ -184,14 +184,22 @@ std::string RangeAnalysisPlugin::canOverflowSub(const Range& a,
     return "false";
 }
 
+bool isPositive(double x, double y) {
+    if (x >= 0 && y >= 0)
+        return true;
+    if (x < 0 && y < 0)
+        return true;
+    return false;
+}
+
 bool checkOverflowMul(APInt ax, APInt ay, const IntegerType& t) {
     double x = ax.signedRoundToDouble();
     double y = ay.signedRoundToDouble();
 
-    if (x > (std::pow(2, t.getBitWidth() - 1) - 1) / y) {
+    if (isPositive(x, y) && x > (std::pow(2, t.getBitWidth() - 1) - 1) / y) {
         return true;
     }
-    if ((x < (-std::pow(2, t.getBitWidth() - 1)) / y)) {
+    if (isPositive(x, y) && (x < (-std::pow(2, t.getBitWidth() - 1)) / y)) {
         return true;
     }
 

@@ -2,17 +2,6 @@
 #include <stdint.h>
 #include <math.h>
 
-// TODO for larger ints
-void __INSTR_check_trunc(int64_t from, int toSize) {
-    if (from > 0 && from > (pow(2, toSize - 1) - 1)) {
-	      assert(0 && "Integer overflow!");
-    }
-
-    if (from < 0 && from < (-pow(2, toSize - 1))) {
-	      assert(0 && "Integer overflow!");
-    }
-}
-
 void __INSTR_check_add_i32(int32_t x, int32_t y) {
       if((x > 0) && (y > 0) && (x > (pow(2, 31) - 1) - y)) {
 	      assert(0 && "Addition: integer overflow!");
@@ -33,11 +22,19 @@ void __INSTR_check_sub_i32(int32_t x, int32_t y) {
       }
 }
 
+int isPositive(int64_t x, int64_t y) {
+    if (x >= 0 && y >= 0)
+        return 1;
+    if (x < 0 && y < 0)
+        return 1;
+    return 0;
+}
+
 void __INSTR_check_mul_i32(int32_t x, int32_t y) {
-    if (x > (pow(2, 31) - 1) / y) {
+    if (isPositive(x, y) && x > (pow(2, 31) - 1) / y) {
 	    assert(0 && "Multiplication: integer overflow!");
     }
-    if ((x < (-pow(2, 31)) / y)) {
+    if (!isPositive(x, y) && (x < (-pow(2, 31)) / y)) {
         assert(0 && "Multiplication: integer underflow!");
     }
 
@@ -78,10 +75,10 @@ void __INSTR_check_sub_i64(int64_t x, int64_t y) {
 }
 
 void __INSTR_check_mul_i64(int64_t x, int64_t y) {
-    if (x > (pow(2, 63) - 1) / y) {
+    if (isPositive(x, y) && x > (pow(2, 63) - 1) / y) {
 	    assert(0 && "Multiplication: integer overflow!");
     }
-    if ((x < (-pow(2, 63)) / y)) {
+    if (!isPositive(x, y) && (x < (-pow(2, 63)) / y)) {
         assert(0 && "Multiplication: integer underflow!");
     }
 
@@ -122,10 +119,10 @@ void __INSTR_check_sub_i16(int16_t x, int16_t y) {
 }
 
 void __INSTR_check_mul_i16(int16_t x, int16_t y) {
-    if (x > (pow(2, 15) - 1) / y) {
+    if (isPositive(x, y) && x > (pow(2, 15) - 1) / y) {
 	    assert(0 && "Multiplication: integer overflow!");
     }
-    if ((x < (-pow(2, 15)) / y)) {
+    if (!isPositive(x, y) && (x < (-pow(2, 15)) / y)) {
         assert(0 && "Multiplication: integer underflow!");
     }
 

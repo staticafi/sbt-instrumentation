@@ -8,24 +8,6 @@
                     "findInstructions": [
                     {
                         "returnValue": "<op>",
-                        "instruction": "trunc",
-                        "operands": ["<t1>"],
-                        "getDestType": "<t2>"
-                    }
-                    ],
-                    "newInstruction": {
-                        "returnValue": "*",
-                        "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_trunc"]
-                    },
-                    "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResult":["true", "unknown"]}],
-                    "in": "*"
-                },
-                {
-                    "findInstructions": [
-                    {
-                        "returnValue": "<op>",
                         "instruction": "add",
                         "operands": ["<t1>", "<t2>"],
                         "type": "i32"
