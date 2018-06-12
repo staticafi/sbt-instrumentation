@@ -21,19 +21,19 @@ void __INSTR_check_sub_i32(int32_t x, int32_t y) {
       }
 }
 
-int isPositive(int64_t x, int64_t y) {
-    if (x >= 0 && y >= 0)
-        return 1;
-    if (x < 0 && y < 0)
-        return 1;
-    return 0;
-}
-
 void __INSTR_check_mul_i32(int32_t x, int32_t y) {
-    if (x == 0 || y == 0)
-        return;
+   // if (x == 0 || y == 0)
+   //     return;
 
-    if (x > INT32_MAX / y) {
+    int64_t result = (int64_t)x * (int64_t)y;
+
+    if (result > INT32_MAX)
+	    assert(0 && "Multiplication: integer overflow!");
+
+    if (result < INT32_MIN)
+	    assert(0 && "Multiplication: integer underflow!");
+
+    /*if (x > INT32_MAX / y) {
 	    assert(0 && "Multiplication: integer overflow!");
     }
     if (x < INT32_MIN / y) {
@@ -43,7 +43,7 @@ void __INSTR_check_mul_i32(int32_t x, int32_t y) {
     if ((x == -1) && (y == INT32_MIN))
         assert(0 && "Multiplication: integer overflow!");
     if ((y == -1) && (x == INT32_MIN))
-        assert(0 && "Multiplication: integer overflow!");
+        assert(0 && "Multiplication: integer overflow!");*/
 }
 
 void __INSTR_check_div_i32(int32_t op1, int32_t op2) {
