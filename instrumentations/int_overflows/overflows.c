@@ -31,10 +31,13 @@ int isPositive(int64_t x, int64_t y) {
 }
 
 void __INSTR_check_mul_i32(int32_t x, int32_t y) {
-    if (isPositive(x, y) && x > (pow(2, 31) - 1) / y) {
+    if (x == 0 || y == 0)
+        return;
+
+    if (x > (pow(2, 31) - 1) / y) {
 	    assert(0 && "Multiplication: integer overflow!");
     }
-    if (!isPositive(x, y) && (x < (-pow(2, 31)) / y)) {
+    if (x < (-pow(2, 31)) / y) {
         assert(0 && "Multiplication: integer underflow!");
     }
 
@@ -75,10 +78,13 @@ void __INSTR_check_sub_i64(int64_t x, int64_t y) {
 }
 
 void __INSTR_check_mul_i64(int64_t x, int64_t y) {
-    if (isPositive(x, y) && x > (pow(2, 63) - 1) / y) {
+    if (x == 0 || y == 0)
+        return;
+
+    if (x > (pow(2, 63) - 1) / y) {
 	    assert(0 && "Multiplication: integer overflow!");
     }
-    if (!isPositive(x, y) && (x < (-pow(2, 63)) / y)) {
+    if (x < (-pow(2, 63)) / y) {
         assert(0 && "Multiplication: integer underflow!");
     }
 
@@ -119,10 +125,13 @@ void __INSTR_check_sub_i16(int16_t x, int16_t y) {
 }
 
 void __INSTR_check_mul_i16(int16_t x, int16_t y) {
-    if (isPositive(x, y) && x > (pow(2, 15) - 1) / y) {
+    if (x == 0 || y == 0)
+        return;
+
+    if (x > (pow(2, 15) - 1) / y) {
 	    assert(0 && "Multiplication: integer overflow!");
     }
-    if (!isPositive(x, y) && (x < (-pow(2, 15)) / y)) {
+    if (x < (-pow(2, 15)) / y) {
         assert(0 && "Multiplication: integer underflow!");
     }
 
@@ -163,6 +172,9 @@ void __INSTR_check_sub_i8(int8_t x, int8_t y) {
 }
 
 void __INSTR_check_mul_i8(int8_t x, int8_t y) {
+    if (x == 0 || y == 0)
+        return;
+
     if (x > (pow(2, 7) - 1) / y) {
 	    assert(0 && "Multiplication: int8_t overflow!");
     }
