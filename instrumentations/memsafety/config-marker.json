@@ -293,7 +293,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<p>", "__INSTR_mark_pointer"]
+                    "operands": ["<p>", "__INSTR_mark_free"]
                 },
                 "where": "before",
                 "in": "*"
