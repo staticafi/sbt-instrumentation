@@ -170,7 +170,7 @@ void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, co
             return;
         }
 
-        for (auto& ptr : psnode->pointsTo) {
+        for (const auto& ptr : psnode->pointsTo) {
             // skip invalid pointers
             if (!ptr.isValid() || ptr.isInvalidated())
                 continue;

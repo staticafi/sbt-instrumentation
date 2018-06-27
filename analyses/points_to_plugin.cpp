@@ -162,7 +162,7 @@ std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
     if(PTA) {
         PSNode *psnode = PTA->getPointsTo(a);
         if (!psnode) return "maybe";
-        for (auto& ptr : psnode->pointsTo) {
+        for (const auto& ptr : psnode->pointsTo) {
             llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
             if(llvmVal == b) return "true";
         }
