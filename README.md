@@ -8,7 +8,7 @@ The user needs to supply the tool with instrumentation rules in JSON format and 
  
 ### Building
 
-To compile and run *sbt-instrumentation*, it is necessary to have CMake (minimal version 2.8.8) and the LLVM 3.9.1 together with Clang 3.9.1 installed.
+To compile and run *sbt-instrumentation*, it is necessary to have CMake (minimal version 2.8.8) and the LLVM minimum 3.9.1 together with Clang installed.
 
 Before configuring the project, the json libraries and [dg library](https://github.com/mchalupa/dg) must be bootstrapped:
 ```
@@ -119,10 +119,8 @@ It is possible to define flags in `flags` field and to set them when a rule is a
 
 Instrumentation can be used together with static analyses to make the instrumentation conditional. You can plug them in by adding the paths to .so files to `analyses` list. Plugins must be derived from `InstrPlugin` class. You can specify the conditions by adding `condition` to elements of `instructionRules`.
 
-Example of a config file can be found [here](https://github.com/staticafi/llvm-instrumentation/blob/master/instrumentations/memsafety/config.json).
+For more detailed description of configuration in JSON see https://is.muni.cz/th/409920/fi_m/thesis.pdf. Example of a real config file can be found [here](https://github.com/staticafi/llvm-instrumentation/blob/master/instrumentations/memsafety/config.json).
 
 ___
 
-For more information about sbt-instrumentation please read https://is.muni.cz/th/409920/fi_m/thesis.pdf or contact us at statica@fi.muni.cz
-
-
+For more information about sbt-instrumentation please read https://is.muni.cz/th/409920/fi_m/thesis.pdf or contact us at statica@fi.muni.cz or vitovskamartina@gmail.com
