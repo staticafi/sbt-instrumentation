@@ -24,6 +24,19 @@ void parseConditions(const Json::Value& conditions, std::list<Condition>& r_cond
     }
 }
 
+BinOpType getType(const std::string& type) {
+    if (type == "i16")
+        return BinOpType::INT16;
+    if (type == "i32")
+        return BinOpType::INT32;
+    if (type == "i64")
+        return BinOpType::INT64;
+    if (type == "i8")
+        return BinOpType::INT8;
+
+    return BinOpType::NBOP;
+}
+
 void parseRule(const Json::Value& rule, RewriteRule& r) {
     // Get findInstructions
     for (const auto& findInstruction : rule["findInstructions"]) {
@@ -34,6 +47,8 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
             instr.parameters.push_back(operand.asString());
         }
         instr.getSizeTo = findInstruction["getTypeSize"].asString();
+        instr.type = getType(findInstruction["type"].asString());
+        instr.getDestType = findInstruction["getDestType"].asString();
 
         for (const auto& info : findInstruction["getPointerInfo"]) {
             instr.getPointerInfoTo.push_back(info.asString());

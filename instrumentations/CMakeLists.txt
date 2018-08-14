@@ -9,9 +9,15 @@ install(FILES
 	memsafety/marker.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/
 )
+
 install(FILES
 	null_deref/config.json
 	null_deref/null_deref.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/null_deref/
 )
 
+install(FILES
+    int_overflows/config.json
+    int_overflows/overflows.c
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/int_overflows/
+)

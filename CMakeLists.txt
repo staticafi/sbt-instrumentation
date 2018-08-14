@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.8)
 project(instr)
 
 # Compiler Options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g  -std=c++11 -Wall -Wextra -Wno-unused-variable")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g  -std=c++11 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable")
 
 find_package(LLVM REQUIRED CONFIG)
 if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
@@ -48,6 +48,22 @@ if (DG_PATH)
 	include_directories(${DG_PATH}/src/)
 else()
 	include_directories(${CMAKE_SOURCE_DIR}/dg/src)
+endif()
+
+if (RA_PATH)
+	include_directories(${RA_PATH})
+else()
+	include_directories(${CMAKE_SOURCE_DIR}/ra)
+endif()
+
+find_library(LIBRA RA PATHS ${RA_PATH})
+if (LIBRA)
+	message(STATUS "Range analysis libraries found: ${LIBRA}")
+	# those libraries we'll use. We need to use whole LLVMdg,
+	# since we'll use the LLVM points-to analysis
+	set(ra_libs ${LIBRA})
+else()
+	message(FATAL_ERROR "Range analysis not found! Try specifying -DRA_PATH=<path>.")
 endif()
 
 find_library(LIBLP LLVMpta PATHS ${DG_PATH}/src/)
