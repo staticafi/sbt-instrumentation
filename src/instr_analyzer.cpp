@@ -37,45 +37,31 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, InstrPlugin* plugin,
                                 const Condition &condition, const list<llvm::Value*>& parameters) {
 
+
     string answer;
 
-    list<llvm::Value*>::const_iterator it = parameters.begin();
+    if (condition.name == "isRemembered") {
+        assert(parameters.size() == 1);
+        if (!plugin->supports("pointsTo"))
+            return false;
 
-	// NOTE: This needs to be changed if a query with more than two parameters is added
-    // get first argument
-    llvm::Value* a = *it;
-
-    // Get second argument if present
-    llvm::Value* b = nullptr;
-    if (condition.arguments.size()>1){
-        it++;
-        b = *it;
-	}
-
-    // We are told to instrument only when
-    // the value is null, so check if the value
-    // can be null.
-    if (condition.name == "isNull") {
-        answer = plugin->isNull(a);
-    } else if (condition.name == "isConstant") {
-        answer = plugin->isConstant(a);
-    } else if (condition.name == "isValidPointer") {
-        answer = plugin->isValidPointer(a, b);
-    } else if (condition.name == "isRemembered") {
         for (auto v : rememberedValues) {
-            answer = plugin->pointsTo(v, a);
+            answer = plugin->query("pointsTo", {v, *(parameters.begin())});
             for (const auto& expV : condition.expectedValues)
             if (answer == expV)
                 return true;
         }
         return false;
-    } else if (condition.name == "hasKnownSize") {
-        answer = plugin->hasKnownSize(a);
     }
 
-    for (const auto& expV : condition.expectedValues) {
-        if (answer == expV)
-            return true;
+    std::vector<llvm::Value *> operands(parameters.begin(), parameters.end());
+
+    if (plugin->supports(condition.name)) {
+        answer =  plugin->query(condition.name, operands);
+        for (const auto& expV : condition.expectedValues) {
+            if (answer == expV)
+                return true;
+        }
     }
 
 	return false;

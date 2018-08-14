@@ -1,5 +1,6 @@
 #include "points_to_plugin.hpp"
 #include <set>
+#include <string>
 
 using dg::analysis::pta::PSNode;
 
@@ -176,6 +177,25 @@ std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
 void PointsToPlugin::getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* from) {
     cg.getReachableFunctions(reachableFunctions, from);
 }
+
+static const std::string supportedQueries[] = {
+    "isValidPointer",
+    "pointsTo",
+    "hasKnownSize",
+    "getPointerInfo",
+    "isNull"
+};
+
+bool PointsToPlugin::supports(const std::string& query) {
+    for (unsigned idx = 0; idx < sizeof(supportedQueries)/sizeof(*supportedQueries); ++idx) {
+        if (query == supportedQueries[idx])
+            return true;
+    }
+
+    return false;
+}
+
+
 
 extern "C" InstrPlugin* create_object(llvm::Module* module) {
         return new PointsToPlugin(module);
