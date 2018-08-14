@@ -20,7 +20,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"],
-		                "expectedResult":["false", "maybe"]}],
+		                "expectedResults":["false", "maybe"]}],
                 "in": "*"
             },
             {
@@ -39,7 +39,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"],
-		                "expectedResult":["false","maybe"]}],
+		                "expectedResults":["false","maybe"]}],
                 "in": "*"
             },
             {

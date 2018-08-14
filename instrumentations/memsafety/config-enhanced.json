@@ -249,7 +249,7 @@
                 "operands": ["<t3>", "<t4>", "<t5>", "<t1>", "<t2>", "__INSTR_check_bounds"]
             },
             "where": "before",
-            "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false", "maybe"]}, {"query":["hasKnownSize", "<t1>"], "expectedResult":["true"]}],
+            "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]}, {"query":["hasKnownSize", "<t1>"], "expectedResults":["true"]}],
             "in": "*"
         },
         {
@@ -268,7 +268,7 @@
                 "operands": ["<t4>", "<t5>", "<t6>", "<t2>", "<t3>", "__INSTR_check_bounds"]
             },
             "where": "before",
-            "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false","maybe"]}, {"query":["hasKnownSize", "<t2>"], "expectedResult":["true"]}],
+            "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]}, {"query":["hasKnownSize", "<t2>"], "expectedResults":["true"]}],
             "in": "*"
         },
         {
@@ -286,7 +286,7 @@
                 "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
             },
             "where": "before",
-            "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false", "maybe"]}, {"query":["hasKnownSize", "<t1>"], "expectedResult":["false", "maybe"]}],
+            "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]}, {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]}],
             "in": "*"
         },
         {
@@ -304,7 +304,7 @@
                 "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
             },
             "where": "before",
-            "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false","maybe"]}, {"query":["hasKnownSize", "<t2>"], "expectedResult":["false", "maybe"]}],
+            "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]}, {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]}],
             "in": "*"
         },
         {

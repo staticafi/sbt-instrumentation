@@ -16,8 +16,8 @@ void parseConditions(const Json::Value& conditions, std::list<Condition>& r_cond
             r_condition.arguments.push_back(condition["query"][i].asString());
         }
 
-        for (uint i = 0; i < condition["expectedResult"].size(); i++) {
-            r_condition.expectedValues.push_back(condition["expectedResult"][i].asString());
+        for (uint i = 0; i < condition["expectedResults"].size(); i++) {
+            r_condition.expectedValues.push_back(condition["expectedResults"][i].asString());
         }
 
         r_conditions.push_back(r_condition);

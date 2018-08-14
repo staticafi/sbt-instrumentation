@@ -15,7 +15,7 @@
                 "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
             },
             "in": "main",
-            "conditions": [{"query":["isRemembered", "<t1>"], "expectedResult":["true","maybe"]}]
+            "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
         }
      ],
      "phases": [
@@ -262,7 +262,7 @@
                     "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                 },
                 "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResult":["false", "maybe"]}],
+                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]}],
                 "in": "*",
                 "remember": "<t1>"
             },
@@ -281,7 +281,7 @@
                     "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                 },
                 "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResult":["false","maybe"]}],
+                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]}],
                 "in": "*",
                 "remember": "<t2>"
             },
@@ -521,7 +521,7 @@
                 },
                 "where": "after",
                 "in": "*",
-                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResult":["true","maybe"]}]
+                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
             },
             {
                 "findInstructions": [
@@ -538,7 +538,7 @@
                 },
                 "where": "before",
                 "in": "main",
-                "conditions": [{"query":["malloc"], "expectedResult": ["true"]}]
+                "conditions": [{"query":["malloc"], "expectedResults": ["true"]}]
             }
             ]
        }
