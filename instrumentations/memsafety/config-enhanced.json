@@ -19,7 +19,7 @@
     ],
     "phases":[
     {
-        "instructionRules": [
+        "instructionsRules": [
         {
             "newInstruction": {
                 "returnValue": "*",

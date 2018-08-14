@@ -3,7 +3,7 @@
     "analyses": ["libRange_analysis_plugin.so"],
     "phases": [
         {
-            "instructionRules": [
+            "instructionsRules": [
                 {
                     "findInstructions": [
                     {

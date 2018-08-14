@@ -20,7 +20,7 @@
     "phases":
         [
         {
-            "instructionRules":
+            "instructionsRules":
                 [
                 {
                     "newInstruction": {

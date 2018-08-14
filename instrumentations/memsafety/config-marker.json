@@ -3,7 +3,7 @@
     "analyses": ["libPoints_to_plugin.so"],
     "phases": [
         {
-            "instructionRules": [
+            "instructionsRules": [
             {
                 "findInstructions": [
                 {

@@ -16,7 +16,7 @@
      ],
      "phases": [
         {
-            "instructionRules": [
+            "instructionsRules": [
              {
                 "findInstructions": [
                 {

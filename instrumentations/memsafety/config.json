@@ -19,7 +19,7 @@
      ],
      "phases": [
         {
-            "instructionRules": [
+            "instructionsRules": [
             {
                 "newInstruction": {
                     "returnValue": "*",
@@ -540,7 +540,7 @@
             }
             ]
         },
-        {   "instructionRules":
+        {   "instructionsRules":
             [
             {
                 "findInstructions": [

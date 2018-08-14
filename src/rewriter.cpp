@@ -99,7 +99,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
 
 void parsePhase(const Json::Value& phase, Phase& r_phase) {
     // Load rewrite rules for instructions
-    for (const auto& rule : phase["instructionRules"]) {
+    for (const auto& rule : phase["instructionsRules"]) {
         RewriteRule rw_rule;
         parseRule(rule, rw_rule);
         r_phase.config.push_back(rw_rule);
