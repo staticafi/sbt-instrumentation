@@ -21,6 +21,7 @@ class RangeAnalysisPlugin : public InstrPlugin
 
      public:
         std::string canOverflow(llvm::Value*);
+        std::string canBeZero(llvm::Value*);
 
         RangeAnalysisPlugin(llvm::Module* module) : InstrPlugin("RangeAnalysis") {
             llvm::errs() << "Running range analysis...\n";

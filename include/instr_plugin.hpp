@@ -33,6 +33,10 @@ class InstrPlugin
               return "false";
       }
 
+      virtual std::string canBeZero(llvm::Value *a) {
+          return "unknown";
+      }
+
       virtual std::string canOverflow(llvm::Value *a) {
           if (llvm::OverflowingBinaryOperator *O
               = llvm::dyn_cast<llvm::OverflowingBinaryOperator>(a)) {

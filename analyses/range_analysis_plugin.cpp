@@ -11,6 +11,30 @@ bool checkUnknown(const Range& a, const Range& b) {
     return true;
 }
 
+std::string RangeAnalysisPlugin::canBeZero(Value* value) {
+    // Support only instructions
+    auto* inst = dyn_cast<Instruction>(value);
+    if (!inst)
+        return "maybe";
+
+    auto result = RA.find(inst->getFunction());
+    ConstraintGraph& CG = result->second;
+    Range r = getRange(CG, value);
+
+    if (!r.isRegular())
+        return "maybe";
+
+    double x = r.getLower().signedRoundToDouble();
+    double y = r.getUpper().signedRoundToDouble();
+
+    if (x > 0)
+        return "false";
+
+    if (y < 0)
+        return "false";
+
+    return "true";
+}
 
 std::string RangeAnalysisPlugin::canOverflow(Value* value) {
     // Support only instructions
