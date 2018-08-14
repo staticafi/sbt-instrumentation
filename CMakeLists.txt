@@ -53,14 +53,12 @@ endif()
 if (RA_PATH)
 	include_directories(${RA_PATH})
 else()
-	include_directories(${CMAKE_SOURCE_DIR}/ra)
+	include_directories(${CMAKE_SOURCE_DIR}/range_analysis_plugin)
 endif()
 
 find_library(LIBRA RA PATHS ${RA_PATH})
 if (LIBRA)
 	message(STATUS "Range analysis libraries found: ${LIBRA}")
-	# those libraries we'll use. We need to use whole LLVMdg,
-	# since we'll use the LLVM points-to analysis
 	set(ra_libs ${LIBRA})
 else()
 	message(FATAL_ERROR "Range analysis not found! Try specifying -DRA_PATH=<path>.")
