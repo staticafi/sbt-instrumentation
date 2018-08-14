@@ -36,7 +36,7 @@ Usage: `./sbt-instr-c OPTS config.json source.c` where `OPTS` can be following:
 * `--bc`		- given file is a bytecode
 * `--ll`		- generate .ll file from output .bc file.
 
-If you want to instrument a code in LLVM, you can run directly the compiled tool `sbt-instr` from the `bin` directory.
+If you want to instrument a code in LLVM, you can run directly the compiled tool `sbt-instr` from the `bin` directory. Note that after the successfull instrumentation, the definitions of instrumentatios functions need to be linked!
 
 Usage: `./sbt-instr config.json <IR to be instrumented> <IR with definitions> <outputFileName>`
 
