@@ -10,50 +10,14 @@
 class InstrPlugin
 {
     private:
-        std::string name;
+      std::string name{};
+
     public:
-      // The default behaviour is returning true, since we have
-      // no information about the value, so it may be anything
-      virtual std::string isNull(llvm::Value*) {
-          return "unknown";
-      }
+      virtual bool supports(const std::string& query) = 0;
+      virtual std::string query(const std::string& query,
+                                const std::vector<llvm::Value *>& operands) = 0;
 
-      virtual std::string isValidPointer(llvm::Value*, llvm::Value *) {
-          return "unknown";
-      }
-
-      virtual std::string pointsTo(llvm::Value*, llvm::Value*) {
-          return "unknown";
-      }
-
-      virtual std::string isConstant(llvm::Value* a) {
-          if (llvm::isa<llvm::Constant>(a))
-              return "true";
-          else
-              return "false";
-      }
-
-      virtual std::string canBeZero(llvm::Value *a) {
-          return "unknown";
-      }
-
-      virtual std::string canOverflow(llvm::Value *a) {
-          if (llvm::OverflowingBinaryOperator *O
-              = llvm::dyn_cast<llvm::OverflowingBinaryOperator>(a)) {
-              if (!O->hasNoSignedWrap())
-                  return "true";
-              else
-                  return "false";
-          }
-
-          return "false";
-      }
-
-      virtual std::string hasKnownSize(llvm::Value*) {
-          return "unknown";
-      }
-
-      std::string getName() { return name; }
+      const std::string& getName() { return name; }
 
       InstrPlugin() {}
       InstrPlugin(const std::string& pluginName) : name(pluginName) {}

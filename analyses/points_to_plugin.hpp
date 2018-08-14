@@ -10,18 +10,40 @@
 #include "analysis/PointsTo/PointsToWithInvalidate.h"
 #include "call_graph.hpp"
 
+
 using dg::analysis::pta::PSNode;
 class PointsToPlugin : public InstrPlugin
 {
-     private:
+    private:
         std::unique_ptr<dg::LLVMPointerAnalysis> PTA;
         CallGraph cg;
 
-     public:
         std::string isNull(llvm::Value* a);
         std::string isValidPointer(llvm::Value* a, llvm::Value *len);
         std::string pointsTo(llvm::Value* a, llvm::Value *b);
         std::string hasKnownSize(llvm::Value* a);
+
+    public:
+        bool supports(const std::string& query) override;
+        std::string query(const std::string& query,
+                const std::vector<llvm::Value *>& operands) {
+            if (query == "isValidPointer") {
+                assert(operands.size() == 2 && "Wrong number of operands");
+                return isValidPointer(operands[0], operands[1]);
+            } else if (query == "pointsTo") {
+                assert(operands.size() == 2 && "Wrong number of operands");
+                return pointsTo(operands[0], operands[1]);
+            } else if (query == "hasKnownSize") {
+                assert(operands.size() == 1 && "Wrong number of operands");
+                return hasKnownSize(operands[0]);
+            } else if (query == "isNull") {
+                assert(operands.size() == 1 && "Wrong number of operands");
+                return isNull(operands[0]);
+            } else {
+                return "unsupported query";
+            }
+        }
+
         virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(llvm::Value* a);
         virtual void getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* a);
 
