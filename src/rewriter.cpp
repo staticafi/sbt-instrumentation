@@ -42,6 +42,10 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     for (const auto& findInstruction : rule["findInstructions"]) {
         InstrumentInstruction instr;
         instr.returnValue = findInstruction["returnValue"].asString();
+        if (instr.returnValue == "") {
+            instr.returnValue = "*";
+        }
+
         instr.instruction = findInstruction["instruction"].asString();
         for (const auto& operand : findInstruction["operands"]) {
             instr.parameters.push_back(operand.asString());
