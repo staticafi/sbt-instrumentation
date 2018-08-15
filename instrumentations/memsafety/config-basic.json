@@ -6,7 +6,6 @@
     // the call-graph and instrument only reachable functions.
     // (it is important when we want to compare the numbers with
     //  other configurations)
-    "analyses": ["libPoints_to_plugin.so"],
     "globalVariablesRules": [
         {
             "findGlobals": {
@@ -205,8 +204,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -223,8 +221,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -241,8 +238,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -259,8 +255,7 @@
                         "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t1>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -277,8 +272,7 @@
                         "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t2>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -295,8 +289,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -313,8 +306,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -331,8 +323,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -349,8 +340,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -367,8 +357,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -385,8 +374,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -403,8 +391,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -421,8 +408,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -439,8 +425,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -457,8 +442,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -475,8 +459,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
@@ -493,8 +476,7 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*",
-                    "remember": "<t3>"
+                    "in": "*"
                 },
                 {
                     "findInstructions": [
