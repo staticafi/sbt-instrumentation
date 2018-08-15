@@ -91,9 +91,9 @@ endif()
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
 if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
-  llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter)
+  llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter linker)
 else()
-  llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter)
+  llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter linker)
 endif()
 
 enable_testing()

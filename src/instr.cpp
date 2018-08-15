@@ -7,6 +7,7 @@
 #include <tuple>
 
 #include <llvm/IR/Constants.h>
+#include "llvm/Linker/Linker.h"
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/Function.h>
@@ -1106,6 +1107,10 @@ bool instrumentModule(LLVMInstrumentation& instr) {
 #endif
         return false;
 
+    return true;
+}
+
+void saveModule(LLVMInstrumentation& instr) {
     // Write instrumented module into the output file
     std::ofstream ofs(instr.outputName);
     llvm::raw_os_ostream ostream(ofs);
@@ -1114,8 +1119,6 @@ bool instrumentModule(LLVMInstrumentation& instr) {
     errs() << "Saving the instrumented module to: " << instr.outputName << "\n";
     logger.write_info("Saving the instrumented module to: " + instr.outputName);
     llvm::WriteBitcodeToFile(&instr.module, ostream);
-
-    return true;
 }
 
 /**
@@ -1242,6 +1245,18 @@ int main(int argc, char *argv[]) {
     llvmir_file.close();
 
     if (resultOK) {
+        logger.write_info("DONE.");
+
+        // Link instrumentation functions
+        logger.write_info("Linking instrumentation functions...");
+        bool linkNOK = Linker::linkModules(*module.get(), std::move(defModule));
+
+        if (linkNOK) {
+            logger.write_error("LINKING FAILED.");
+            return 1;
+        }
+
+        saveModule(instr);
         logger.write_info("DONE.");
         return 0;
     }
