@@ -7,12 +7,12 @@ set -e
 cd `dirname $`
 
 # don't do redundant work
-if [ ! -d range_analysis_plugin ]; then
+if [ ! -d ra ]; then
 	# checkout dg directory
-	git clone https://github.com/xvitovs1/range_analysis_plugin
+	git clone https://github.com/xvitovs1/ra
 fi
 
-cd range_analysis_plugin
+cd ra
 if [ ! -d CMakeFiles ]; then
 	cmake .
 fi

@@ -53,7 +53,7 @@ endif()
 if (RA_PATH)
 	include_directories(${RA_PATH})
 else()
-	include_directories(${CMAKE_SOURCE_DIR}/range_analysis_plugin)
+	include_directories(${CMAKE_SOURCE_DIR}/ra)
 endif()
 
 find_library(LIBRA RA PATHS ${RA_PATH})
