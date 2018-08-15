@@ -63,8 +63,10 @@ struct Statistics {
 Logger logger("log.txt");
 
 void usage(char *name) {
-
-	cerr << "Usage: " << name << " <config.json> <IR to be instrumented> <IR with definitions> <outputFileName> <options>" << endl;
+    cerr << "Usage: " << name << " <config.json> <IR to be instrumented> <IR with definitions> <outputFileName> <options>" << endl;
+    cerr << "Options:" << endl;
+    cerr << "--version     Prints the git version." << endl;
+    cerr << "--no-linking  Disables linking of definitions of instrumentation functions." << endl;
 }
 
 /**
@@ -1243,6 +1245,14 @@ int main(int argc, char *argv[]) {
 
     config_file.close();
     llvmir_file.close();
+
+    // If option --no-linking is present, do not link definitions
+    // of instrumentation functions
+    if (argc > 5 && strcmp(argv[5], "--no-linking") == 0 && resultOK) {
+        saveModule(instr);
+        logger.write_info("DONE.");
+        return 0;
+    }
 
     if (resultOK) {
         logger.write_info("DONE.");
