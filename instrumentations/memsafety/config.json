@@ -2,22 +2,7 @@
     "file": "memsafety.c",
     "analyses": ["libPoints_to_plugin.so"],
     "flags": ["malloc"],
-    "globalVariablesRules": [
-        {
-            "findGlobals": {
-                "globalVariable": "<t1>",
-                "getTypeSize": "<t2>"
-            },
-            "newInstruction": {
-                "returnValue": "*",
-                "instruction": "call",
-                "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
-            },
-            "in": "main",
-            "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
-        }
-     ],
-     "phases": [
+    "phases": [
         {
             "instructionsRules": [
             {
@@ -577,7 +562,22 @@
                 "in": "main",
                 "conditions": [{"query":["malloc"], "expectedResults": ["true"]}]
             }
-            ]
-       }
-    ]
+            ],
+            "globalVariablesRules": [
+            {
+                "findGlobals": {
+                    "globalVariable": "<t1>",
+                    "getTypeSize": "<t2>"
+                },
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
+                },
+                "in": "main",
+                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+           }
+           ]
+         }
+       ]
 }

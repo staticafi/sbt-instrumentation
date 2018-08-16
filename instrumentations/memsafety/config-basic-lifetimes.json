@@ -1,20 +1,6 @@
 {
     "file": "memsafety.c",
-    "globalVariablesRules": [
-        {
-            "findGlobals": {
-                "globalVariable": "<t1>",
-                "getTypeSize": "<t2>"
-            },
-            "newInstruction": {
-                "returnValue": "*",
-                "instruction": "call",
-                "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
-            },
-            "in": "main"
-        }
-     ],
-     "phases": [
+    "phases": [
         {
             "instructionsRules": [
              {
@@ -531,7 +517,21 @@
                     "where": "before",
                     "in": "main"
                 }
+            ],
+            "globalVariablesRules": [
+            {
+                "findGlobals": {
+                    "globalVariable": "<t1>",
+                    "getTypeSize": "<t2>"
+                },
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
+                },
+                "in": "main"
+            }
             ]
-       }
+        }
     ]
 }

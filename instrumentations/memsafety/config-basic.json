@@ -6,21 +6,7 @@
     // the call-graph and instrument only reachable functions.
     // (it is important when we want to compare the numbers with
     //  other configurations)
-    "globalVariablesRules": [
-        {
-            "findGlobals": {
-                "globalVariable": "<t1>",
-                "getTypeSize": "<t2>"
-            },
-            "newInstruction": {
-                "returnValue": "*",
-                "instruction": "call",
-                "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
-            },
-            "in": "main"
-        }
-     ],
-     "phases": [
+    "phases": [
         {
             "instructionsRules":
                 [
@@ -511,7 +497,21 @@
                     "where": "before",
                     "in": "main"
                 }
+            ],
+            "globalVariablesRules": [
+            {
+                "findGlobals": {
+                    "globalVariable": "<t1>",
+                    "getTypeSize": "<t2>"
+                },
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
+                },
+                "in": "main"
+            }
             ]
-       }
+        }
     ]
 }
