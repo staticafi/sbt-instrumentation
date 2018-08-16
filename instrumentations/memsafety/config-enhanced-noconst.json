@@ -2,7 +2,7 @@
 // and do not use constant-time checks
 {
     "file": "memsafety.c",
-    "analyses": ["libPoints_to_plugin.so"],
+    "analyses": ["libPointsToPlugin.so"],
     "phases":
         [
         {

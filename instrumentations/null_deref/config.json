@@ -1,6 +1,6 @@
 {
 	"file": "null_deref.c",
-	"analyses": ["libPoints_to_plugin.so"],
+	"analyses": ["libPointsToPlugin.so"],
 	"instructionsRules":
 	[
 		{

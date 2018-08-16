@@ -1,6 +1,6 @@
 {
     "file": "overflows.c",
-    "analyses": ["libRange_analysis_plugin.so"],
+    "analyses": ["libRangeAnalysisPlugin.so"],
     "phases": [
         {
             "instructionsRules": [
