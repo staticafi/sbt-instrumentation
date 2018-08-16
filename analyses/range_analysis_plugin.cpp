@@ -272,6 +272,20 @@ std::string RangeAnalysisPlugin::canOverflowDiv(const Range& a,
     return "false";
 }
 
+static const std::string supportedQueries[] = {
+    "canOverflow",
+    "canBeZero",
+};
+
+bool RangeAnalysisPlugin::supports(const std::string& query) {
+    for (unsigned idx = 0; idx < sizeof(supportedQueries)/sizeof(*supportedQueries); ++idx) {
+        if (query == supportedQueries[idx])
+            return true;
+    }
+
+    return false;
+}
+
 extern "C" InstrPlugin* create_object(llvm::Module* module) {
     return new RangeAnalysisPlugin(module);
 }
