@@ -1064,12 +1064,11 @@ bool runPhase(LLVMInstrumentation& instr, const Phase& phase) {
             if (!checkInstruction(&*Iiterator, (&*Fiterator), phase.config, &Iiterator, instr))
                 return false;
         }
-
-        // Instrument global variables
-        if (!instrumentGlobals(instr, phase))
-            return false;
-
     }
+
+    // Instrument global variables
+    if (!instrumentGlobals(instr, phase))
+        return false;
 
     return true;
 }
@@ -1228,7 +1227,6 @@ int main(int argc, char *argv[]) {
         llvmir_file.close();
         return 1;
     }
-
 
     LLVMInstrumentation instr(*module.get(), *defModule.get());
     instr.rewriter = std::move(rw);
