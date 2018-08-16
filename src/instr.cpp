@@ -500,7 +500,7 @@ bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, RewriteRul
  * @param I current instruction
  * @param rw_newInstr rule to apply - new instruction
  * @param variables map of found parameters form config
- * @return false if tehre was an error, true otherwise
+ * @return false if there was an error, true otherwise
  */
 bool applyRule(LLVMInstrumentation& instr, Instruction *currentInstr, InstrumentInstruction rw_newInstr,
         const Variables& variables)
@@ -888,12 +888,11 @@ bool instrumentGlobal(LLVMInstrumentation& instr, const GlobalVarsRule& g_rule) 
 /**
  * Instruments global variables if they should be instrumented.
  * @param instr LLVMInstrumentation object.
+ * @param phase current phase.
  * @return true if instrumentation of global variables was done without problems, false otherwise
  */
-bool instrumentGlobals(LLVMInstrumentation& instr) {
-    const GlobalVarsRules& g_rules = instr.rewriter.getGlobalsConfig();
-
-    for (const auto& g_rule : g_rules) {
+bool instrumentGlobals(LLVMInstrumentation& instr, const Phase& phase) {
+    for (const auto& g_rule : phase.gconfig) {
         if (!instrumentGlobal(instr, g_rule))
             return false;
     }
@@ -1065,6 +1064,11 @@ bool runPhase(LLVMInstrumentation& instr, const Phase& phase) {
             if (!checkInstruction(&*Iiterator, (&*Fiterator), phase.config, &Iiterator, instr))
                 return false;
         }
+
+        // Instrument global variables
+        if (!instrumentGlobals(instr, phase))
+            return false;
+
     }
 
     return true;
@@ -1097,10 +1101,6 @@ bool instrumentModule(LLVMInstrumentation& instr) {
 
         logger.write_info("End of the " + std::to_string(i) + ". phase.");
     }
-
-    // Instrument global variables
-    if (!instrumentGlobals(instr))
-        return false;
 
 #if ((LLVM_VERSION_MAJOR >= 4) || (LLVM_VERSION_MINOR >= 5))
     if (llvm::verifyModule(instr.module, &llvm::errs()))
