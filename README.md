@@ -56,18 +56,6 @@ Json config files should look like this:
   "file": path to a file with function definitions,
   "analyses": list of paths to analyses,
   "flags": list of strings,
-  "globalVariablesRules": optional, list of rules to instrument global variables,
-     [{
-          "findGlobals": {
-             "globalVariable": string,
-             "getSizeTo": string
-           },
-           "newInstruction": {
-              "instruction": string(call, alloca),
-              "operands": list of strings
-            },
-           "in": string (name of function, where new instruction should be inserted to)
-     }],
   "phases":
      [{
           "instructionRules":
@@ -105,7 +93,20 @@ Json config files should look like this:
               },
               ...
             ]
-     }, ... ]
+          "globalVariablesRules": optional, list of rules to instrument global variables,
+             [{
+                 "findGlobals": {
+                    "globalVariable": string,
+                    "getSizeTo": string
+                 },
+                 "newInstruction": {
+                    "instruction": string(call, alloca),
+                    "operands": list of strings
+                 },
+                 "in": string (name of function, where new instruction should be inserted to)
+             }]
+     },     
+     ... ]
 }
 ```
 
