@@ -4,6 +4,25 @@
 
 using dg::analysis::pta::PSNode;
 
+std::string PointsToPlugin::isInvalid(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (!ptr.isNull() && !ptr.isInvalidated())
+            return "false";
+    }
+
+    // a is null or invalidated
+    return "true";
+}
+
 std::string PointsToPlugin::isNull(llvm::Value* a) {
     if (!a->getType()->isPointerTy())
         // null must be a pointer
@@ -183,7 +202,8 @@ static const std::string supportedQueries[] = {
     "pointsTo",
     "hasKnownSize",
     "getPointerInfo",
-    "isNull"
+    "isNull",
+    "isInvalid"
 };
 
 bool PointsToPlugin::supports(const std::string& query) {

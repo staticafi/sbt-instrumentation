@@ -22,6 +22,7 @@ class PointsToPlugin : public InstrPlugin
         std::string isValidPointer(llvm::Value* a, llvm::Value *len);
         std::string pointsTo(llvm::Value* a, llvm::Value *b);
         std::string hasKnownSize(llvm::Value* a);
+        std::string isInvalid(llvm::Value* a);
 
     public:
         bool supports(const std::string& query) override;
@@ -38,7 +39,10 @@ class PointsToPlugin : public InstrPlugin
                 return hasKnownSize(operands[0]);
             } else if (query == "isNull") {
                 assert(operands.size() == 1 && "Wrong number of operands");
-                return isNull(operands[0]);
+                return isNull(operands[0]);}
+            else if (query == "isInvalid") {
+                assert(operands.size() == 1 && "Wrong number of operands");
+                return isInvalid(operands[0]);
             } else {
                 return "unsupported query";
             }
