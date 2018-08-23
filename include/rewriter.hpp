@@ -32,6 +32,7 @@ class InstrumentInstruction {
     std::string getSizeTo;
     std::string stripInboundsOffsets;
     std::list<std::string> getPointerInfoTo;
+    std::list<std::string> getPointerInfoMinTo;
     BinOpType type;
     std::string getDestType;
 };

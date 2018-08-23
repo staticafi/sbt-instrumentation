@@ -259,6 +259,13 @@ void __INSTR_check_pointer(rec_id id, a_size range) {
     }
 }
 
+void __INSTR_check_bounds_min(rec_id addr_a, a_size offa, a_size size, rec_id addr_b, a_size range) {
+    int64_t offb = addr_b - addr_a + offa;
+    if (offb < 0 || offb + range > size) {
+        __INSTR_check_pointer(addr_b, range);
+    }
+}
+
 void __INSTR_check_leaks() {
     rec_list_node *cur = heap_list;
 

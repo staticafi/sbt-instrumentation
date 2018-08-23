@@ -1,6 +1,7 @@
 #include "points_to_plugin.hpp"
 #include <set>
 #include <string>
+#include <iostream>
 
 using dg::analysis::pta::PSNode;
 
@@ -44,6 +45,38 @@ std::string PointsToPlugin::isNull(llvm::Value* a) {
     }
 
     // a can not be null
+    return "false";
+}
+
+std::string PointsToPlugin::hasKnownSizes(llvm::Value* a) {
+    // check is a is getelementptr
+    if (const llvm::GetElementPtrInst *GI
+            = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
+        // need to have the PTA
+        assert(PTA);
+        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        if (!psnode || psnode->pointsTo.empty()) {
+            // we know nothing about the allocated size
+            return "false";
+        }
+
+        // check that all the objects has known sizes and
+        // offsets
+        for (const auto& ptr : psnode->pointsTo) {
+            // ptset cannot contain null, unknown or invalidated pointer
+            if(ptr.isNull() || ptr.isUnknown() || ptr.isInvalidated())
+                return "false";
+
+            // the sizes and offsets need to be known
+            if (ptr.offset.isUnknown() ||
+                ptr.target->getSize() == 0) {
+                return "false";
+            }
+        }
+
+        return "true";
+    }
+
     return "false";
 }
 
@@ -107,6 +140,33 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPointerInfo(llvm
     }
 }
 
+std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPointerInfoMin(llvm::Value* a) {
+    // check is a is getelementptr
+    if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
+        // need to have the PTA
+        assert(PTA);
+        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        if (!psnode || psnode->pointsTo.empty()) {
+            return std::make_tuple(nullptr, 0, 0);
+        }
+
+        uint64_t min_offset = *((*psnode->pointsTo.begin()).offset);
+        uint64_t min_size = (*psnode->pointsTo.begin()).target->getSize();
+        for (const auto& ptr : psnode->pointsTo) {
+            if ((ptr.target->getSize() - *(ptr.offset))
+                < (min_size - min_offset)) {
+                min_offset = *(ptr.offset);
+                min_size = ptr.target->getSize();
+            }
+        }
+        return std::make_tuple(GI->getPointerOperand(), min_offset,
+                                min_size);
+
+    }
+    else {
+        return std::make_tuple(nullptr, 0, 0);
+    }
+}
 
 std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
     if (!a->getType()->isPointerTy())
@@ -201,6 +261,7 @@ static const std::string supportedQueries[] = {
     "isValidPointer",
     "pointsTo",
     "hasKnownSize",
+    "hasKnownSizes",
     "getPointerInfo",
     "isNull",
     "isInvalid"

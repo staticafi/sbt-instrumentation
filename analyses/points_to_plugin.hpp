@@ -22,6 +22,7 @@ class PointsToPlugin : public InstrPlugin
         std::string isValidPointer(llvm::Value* a, llvm::Value *len);
         std::string pointsTo(llvm::Value* a, llvm::Value *b);
         std::string hasKnownSize(llvm::Value* a);
+        std::string hasKnownSizes(llvm::Value* a);
         std::string isInvalid(llvm::Value* a);
 
     public:
@@ -37,6 +38,9 @@ class PointsToPlugin : public InstrPlugin
             } else if (query == "hasKnownSize") {
                 assert(operands.size() == 1 && "Wrong number of operands");
                 return hasKnownSize(operands[0]);
+            } else if (query == "hasKnownSizes") {
+                assert(operands.size() == 1 && "Wrong number of operands");
+                return hasKnownSizes(operands[0]);
             } else if (query == "isNull") {
                 assert(operands.size() == 1 && "Wrong number of operands");
                 return isNull(operands[0]);}
@@ -49,6 +53,7 @@ class PointsToPlugin : public InstrPlugin
         }
 
         virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(llvm::Value* a);
+        virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfoMin(llvm::Value* a);
         virtual void getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* a);
 
         PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
