@@ -347,3 +347,9 @@ void __INSTR_destroy_allocas() {
 
     stack_list = cur;
 }
+
+void __INSTR_fail() {
+    assert(0 && "invalid dereference (null or freed)");
+    __VERIFIER_error();
+
+}
