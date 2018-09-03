@@ -24,6 +24,9 @@ class PointsToPlugin : public InstrPlugin
         std::string hasKnownSize(llvm::Value* a);
         std::string hasKnownSizes(llvm::Value* a);
         std::string isInvalid(llvm::Value* a);
+        std::string pointsToHeap(llvm::Value* a);
+        std::string pointsToStack(llvm::Value* a);
+        std::string pointsToGlobal(llvm::Value* a);
 
     public:
         bool supports(const std::string& query) override;
@@ -43,8 +46,17 @@ class PointsToPlugin : public InstrPlugin
                 return hasKnownSizes(operands[0]);
             } else if (query == "isNull") {
                 assert(operands.size() == 1 && "Wrong number of operands");
-                return isNull(operands[0]);}
-            else if (query == "isInvalid") {
+                return isNull(operands[0]);
+            } else if (query == "pointsToHeap") {
+                assert(operands.size() == 1 && "Wrong number of operands");
+                return pointsToHeap(operands[0]);
+            } else if (query == "pointsToGlobal") {
+                assert(operands.size() == 1 && "Wrong number of operands");
+                return pointsToGlobal(operands[0]);
+            } else if (query == "pointsToStack") {
+                assert(operands.size() == 1 && "Wrong number of operands");
+                return pointsToStack(operands[0]);
+            } else if (query == "isInvalid") {
                 assert(operands.size() == 1 && "Wrong number of operands");
                 return isInvalid(operands[0]);
             } else {

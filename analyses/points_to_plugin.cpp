@@ -4,6 +4,76 @@
 #include <iostream>
 
 using dg::analysis::pta::PSNode;
+using dg::analysis::pta::PSNodeAlloc;
+
+std::string PointsToPlugin::pointsToStack(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isInvalidated() || ptr.isUnknown())
+            return "false";
+
+        PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);
+        if (!target || target->isGlobal() || target->isHeap())
+            return "false";
+    }
+
+    // a points to stack
+    return "true";
+}
+
+std::string PointsToPlugin::pointsToGlobal(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isInvalidated() || ptr.isUnknown())
+            return "false";
+
+        PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);
+        if (!target || !target->isGlobal())
+            return "false";
+    }
+
+    // a points to a global variable
+    return "true";
+}
+
+std::string PointsToPlugin::pointsToHeap(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isInvalidated() || ptr.isUnknown())
+            return "false";
+
+        PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);
+        if (!target || !target->isHeap())
+            return "false";
+    }
+
+    // a points to heap
+    return "true";
+}
 
 std::string PointsToPlugin::isInvalid(llvm::Value* a) {
     // need to have the PTA
@@ -264,6 +334,9 @@ static const std::string supportedQueries[] = {
     "hasKnownSizes",
     "getPointerInfo",
     "isNull",
+    "pointsToHeap",
+    "pointsToGlobal",
+    "pointsToStack",
     "isInvalid"
 };
 
@@ -275,8 +348,6 @@ bool PointsToPlugin::supports(const std::string& query) {
 
     return false;
 }
-
-
 
 extern "C" InstrPlugin* create_object(llvm::Module* module) {
         return new PointsToPlugin(module);
