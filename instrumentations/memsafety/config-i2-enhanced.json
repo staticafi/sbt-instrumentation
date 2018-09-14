@@ -286,7 +286,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "<t4>", "<t5>", "<t1>", "<t2>", "__INSTR_check_bounds_min"]
+                    "operands": ["<t3>", "<t4>", "<t5>", "<t1>", "<t2>", "__INSTR_check_bounds_min_lr"]
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
@@ -308,7 +308,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t4>", "<t5>", "<t6>", "<t2>", "<t3>", "__INSTR_check_bounds_min"]
+                    "operands": ["<t4>", "<t5>", "<t6>", "<t2>", "<t3>", "__INSTR_check_bounds_min_lr"]
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
@@ -317,7 +317,6 @@
                                {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
                 "in": "*"
             },
-
             {
                 "findInstructions": [
                 {

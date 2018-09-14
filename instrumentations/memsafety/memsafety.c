@@ -301,12 +301,12 @@ void __INSTR_check_pointer(rec_id id, a_size range) {
          * invalid pointer */
         assert(0 && "invalid pointer dereference");
         __VERIFIER_error();
-    }
+}
 }
 
-void __INSTR_check_bounds_min(rec_id addr_a, a_size offa, a_size size, rec_id addr_b, a_size range) {
-    int64_t offb = addr_b - addr_a + offa;
-    if (offb < 0 || offb + range > size) {
+void __INSTR_check_bounds_min_lr(rec_id addr_a, a_size min_off, a_size min_space, rec_id addr_b, a_size range) {
+    int64_t n = addr_b - addr_a;
+    if (-min_off >= n || n + range > min_space) {
         __INSTR_check_pointer(addr_b, range);
     }
 }

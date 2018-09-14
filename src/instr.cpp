@@ -85,7 +85,7 @@ void getPointsToPlugin(LLVMInstrumentation& instr) {
  * Get info about allocated memory to which given pointer points to.
  * @param I instruction.
  * @param ins LLVMInstrumentation object.
- * @param min get info for the object with minimal size
+ * @param min get info for the object with minimal space left (size - offset) and minimal offset
  * @return pointer, offset and size of allocated memory to which pointer points to.
  */
 std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr,
@@ -105,7 +105,7 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, cons
     if (instr.ppPlugin && !min) {
         return instr.ppPlugin->getPointerInfo(op);
     } else if (instr.ppPlugin) {
-        return instr.ppPlugin->getPointerInfoMin(op);
+        return instr.ppPlugin->getPInfoMin(op);
     }
 
     return std::make_tuple(nullptr, 0, 0);
