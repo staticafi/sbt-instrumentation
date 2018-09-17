@@ -66,6 +66,7 @@ class PointsToPlugin : public InstrPlugin
 
         virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(llvm::Value* a);
         virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPInfoMin(llvm::Value* a);
+        virtual std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> getPInfoMinMax(llvm::Value* a);
         virtual void getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* a);
 
         PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {

@@ -210,6 +210,47 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPointerInfo(llvm
     }
 }
 
+std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> PointsToPlugin::getPInfoMinMax(llvm::Value* a) {
+    // check is a is getelementptr
+    if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
+        // need to have the PTA
+        assert(PTA);
+        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        if (!psnode || psnode->pointsTo.empty()) {
+            return std::make_tuple(nullptr, 0, 0, 0, 0);
+        }
+
+        uint64_t min_offset = *((*psnode->pointsTo.begin()).offset);
+        uint64_t min_space = (*psnode->pointsTo.begin()).target->getSize()
+                             - *((*psnode->pointsTo.begin()).offset);
+        uint64_t max_offset = *((*psnode->pointsTo.begin()).offset);
+        uint64_t max_space = (*psnode->pointsTo.begin()).target->getSize()
+                             - *((*psnode->pointsTo.begin()).offset);
+
+        for (const auto& ptr : psnode->pointsTo) {
+            if ((*(ptr.offset) < min_offset))
+                min_offset = *(ptr.offset);
+            if ((ptr.target->getSize() - *(ptr.offset))
+                < min_space) {
+                min_space = ptr.target->getSize() - *(ptr.offset);
+            }
+            if ((*(ptr.offset) > max_offset))
+                max_offset = *(ptr.offset);
+            if ((ptr.target->getSize() - *(ptr.offset))
+                > max_space) {
+                max_space = ptr.target->getSize() - *(ptr.offset);
+            }
+        }
+        return std::make_tuple(GI->getPointerOperand(), min_offset,
+                                min_space, max_offset, max_space);
+
+    }
+    else {
+        return std::make_tuple(nullptr, 0, 0, 0, 0);
+    }
+}
+
+
 std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPInfoMin(llvm::Value* a) {
     // check is a is getelementptr
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
