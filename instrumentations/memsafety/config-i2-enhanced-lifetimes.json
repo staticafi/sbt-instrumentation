@@ -293,7 +293,8 @@
                                {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t1>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t1>"], "expectedResults":["false", "maybe"]}],
-                "in": "*"
+                "in": "*",
+                "remember": "<t1>"
             },
             {
                 "findInstructions": [
@@ -315,7 +316,8 @@
                                {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t2>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
-                "in": "*"
+                "in": "*",
+                "remember": "<t2>"
             },
             {
                 "findInstructions": [
