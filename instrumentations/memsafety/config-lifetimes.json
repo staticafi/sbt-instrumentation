@@ -6,23 +6,34 @@
         {
             "instructionsRules": [
             {
-                "newInstruction": {
-                    "returnValue": "*",
+                "findInstructions": [
+                {
                     "instruction": "call",
-                    "operands": ["__INSTR_set_flag"]
+                    "operands": ["*","<t1>","llvm.lifetime.end.p0i8"]
+                }
+                ],
+                "newInstruction": {
+                    "instruction": "call",
+                    "operands": ["<t1>", "__INSTR_destroy"]
                 },
-                "where": "entry",
+                "where": "after",
                 "in": "*"
             },
             {
-                "newInstruction": {
-                    "returnValue": "*",
+                "findInstructions": [
+                {
                     "instruction": "call",
-                    "operands": ["__INSTR_destroy_allocas"]
+                    "operands": ["*","<t1>","llvm.lifetime.end"]
+                }
+                ],
+                "newInstruction": {
+                    "instruction": "call",
+                    "operands": ["<t1>", "__INSTR_destroy"]
                 },
-                "where": "return",
+                "where": "after",
                 "in": "*"
             },
+
             {
                 "findInstructions": [
                 {
@@ -247,9 +258,7 @@
                     "operands": ["<t3>", "<t4>", "<t5>", "<t1>", "<t2>", "__INSTR_check_bounds"]
                 },
                 "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["true"]},
-                               {"query":["isInvalid", "<t1>"], "expectedResults":["false", "maybe"]}],
+                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]}, {"query":["hasKnownSize", "<t1>"], "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -268,9 +277,7 @@
                     "operands": ["<t4>", "<t5>", "<t6>", "<t2>", "<t3>", "__INSTR_check_bounds"]
                 },
                 "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["true"]},
-                               {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
+                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]}, {"query":["hasKnownSize", "<t2>"], "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -288,9 +295,7 @@
                     "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                 },
                 "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]},
-                               {"query":["isInvalid", "<t1>"], "expectedResults":["false", "maybe"]}],
+                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]}, {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]}],
                 "in": "*",
                 "remember": "<t1>"
             },
@@ -309,51 +314,7 @@
                     "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                 },
                 "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
-                "in": "*",
-                "remember": "<t2>"
-            },
-            {
-                "findInstructions": [
-                {
-                    "returnValue": "*",
-                    "instruction": "load",
-                    "operands": ["<t1>"],
-                    "getTypeSize": "<t2>"
-                }
-                ],
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["__INSTR_fail"]
-                },
-                "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]},
-                               {"query":["isInvalid", "<t1>"], "expectedResults":["true"]}],
-                "in": "*",
-                "remember": "<t1>"
-            },
-            {
-                "findInstructions": [
-                {
-                    "returnValue": "*",
-                    "instruction": "store",
-                    "operands": ["<t1>", "<t2>"],
-                    "getTypeSize": "<t3>"
-                }
-                ],
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["__INSTR_check_pointer"]
-                },
-                "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["isInvalid", "<t2>"], "expectedResults":["true"]}],
+                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]}, {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]}],
                 "in": "*",
                 "remember": "<t2>"
             },
@@ -612,22 +573,22 @@
                 "in": "main",
                 "conditions": [{"query":["malloc"], "expectedResults": ["true"]}]
             }
-            ],
-            "globalVariablesRules": [
-            {
-                "findGlobals": {
-                    "globalVariable": "<t1>",
-                    "getTypeSize": "<t2>"
-                },
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
-                },
-                "in": "main",
-                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
-           }
-           ]
-         }
-       ]
+          ],
+          "globalVariablesRules": [
+          {
+              "findGlobals": {
+                "globalVariable": "<t1>",
+                "getTypeSize": "<t2>"
+            },
+            "newInstruction": {
+                "returnValue": "*",
+                "instruction": "call",
+                "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
+            },
+            "in": "main",
+            "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+          }
+          ]
+      }
+   ]
 }

@@ -5,6 +5,7 @@ install(FILES
 	memsafety/config-enhanced.json
 	memsafety/config-enhanced-noconst.json
 	memsafety/config-marker.json
+	memsafety/config-i2-enhanced.json
 	memsafety/memsafety.c
 	memsafety/marker.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/

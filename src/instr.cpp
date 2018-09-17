@@ -85,9 +85,12 @@ void getPointsToPlugin(LLVMInstrumentation& instr) {
  * Get info about allocated memory to which given pointer points to.
  * @param I instruction.
  * @param ins LLVMInstrumentation object.
+ * @param min get info for the object with minimal space left (size - offset) and minimal offset
  * @return pointer, offset and size of allocated memory to which pointer points to.
  */
-std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr) {
+std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr,
+                                                            bool min = false)
+{
     Value* op;
     if (const StoreInst *SI = dyn_cast<StoreInst>(I)) {
         op = SI->getOperand(1);
@@ -99,8 +102,10 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, cons
         return std::make_tuple(nullptr, 0, 0);
     }
 
-    if (instr.ppPlugin) {
+    if (instr.ppPlugin && !min) {
         return instr.ppPlugin->getPointerInfo(op);
+    } else if (instr.ppPlugin) {
+        return instr.ppPlugin->getPInfoMin(op);
     }
 
     return std::make_tuple(nullptr, 0, 0);
@@ -762,6 +767,18 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                                                                             std::get<1>(pointerInfo));
 
                 variables[iIns.getPointerInfoTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                            std::get<2>(pointerInfo));
+            }
+            if (iIns.getPointerInfoMinTo.size() == 3) {
+                std::tuple<llvm::Value*, uint64_t, uint64_t> pointerInfo = getPointerInfo(ins, instr, true);
+                // Do not apply this rule, if there was no relevant answer from pointer analysis
+                if (!std::get<0>(pointerInfo))
+                    instrument = false;
+                variables[iIns.getPointerInfoMinTo.front()] = std::get<0>(pointerInfo);
+                variables[*(std::next(iIns.getPointerInfoMinTo.begin(), 1))] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
+                                                                            std::get<1>(pointerInfo));
+
+                variables[iIns.getPointerInfoMinTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
                                                                             std::get<2>(pointerInfo));
             }
         }

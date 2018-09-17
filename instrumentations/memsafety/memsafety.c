@@ -235,6 +235,51 @@ void __INSTR_check(rec_id id, a_size range, rec r) {
     }
 }
 
+void __INSTR_check_stack(rec_id id, a_size range) {
+    rec_list_node *n = NULL;
+
+    if ((n = __INSTR_list_search(stack_list, id))) {
+        __INSTR_check(id, range, n->rec);
+    } else {
+        /* we register all memory allocations, so if we
+         * haven't found the allocation, then this is
+         * invalid pointer */
+        assert(0 && "invalid pointer dereference");
+        __VERIFIER_error();
+    }
+}
+
+void __INSTR_check_globals(rec_id id, a_size range) {
+    rec_list_node *n = NULL;
+
+    if ((n = __INSTR_list_search(globals_list, id))) {
+        __INSTR_check(id, range, n->rec);
+    } else {
+        /* we register all memory allocations, so if we
+         * haven't found the allocation, then this is
+         * invalid pointer */
+        assert(0 && "invalid pointer dereference");
+        __VERIFIER_error();
+    }
+}
+
+void __INSTR_check_heap(rec_id id, a_size range) {
+    rec_list_node *n = NULL;
+
+    if ((n = __INSTR_list_search(heap_list, id))) {
+        __INSTR_check(id, range, n->rec);
+    } else if ((n = __INSTR_list_search(deallocated_list, id))) {
+        assert(0 && "dereference on freed memory");
+        __VERIFIER_error();
+    } else {
+        /* we register all memory allocations, so if we
+         * haven't found the allocation, then this is
+         * invalid pointer */
+        assert(0 && "invalid pointer dereference");
+        __VERIFIER_error();
+    }
+}
+
 void __INSTR_check_pointer(rec_id id, a_size range) {
     rec_list_node *n = NULL;
 
@@ -256,6 +301,13 @@ void __INSTR_check_pointer(rec_id id, a_size range) {
          * invalid pointer */
         assert(0 && "invalid pointer dereference");
         __VERIFIER_error();
+}
+}
+
+void __INSTR_check_bounds_min_lr(rec_id addr_a, a_size min_off, a_size min_space, rec_id addr_b, a_size range) {
+    int64_t n = addr_b - addr_a;
+    if (-min_off >= n || n + range > min_space) {
+        __INSTR_check_pointer(addr_b, range);
     }
 }
 
@@ -346,4 +398,10 @@ void __INSTR_destroy_allocas() {
     }
 
     stack_list = cur;
+}
+
+void __INSTR_fail() {
+    assert(0 && "invalid dereference (null or freed)");
+    __VERIFIER_error();
+
 }

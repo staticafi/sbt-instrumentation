@@ -1,8 +1,98 @@
 #include "points_to_plugin.hpp"
 #include <set>
 #include <string>
+#include <iostream>
 
 using dg::analysis::pta::PSNode;
+using dg::analysis::pta::PSNodeAlloc;
+
+std::string PointsToPlugin::pointsToStack(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isInvalidated() || ptr.isUnknown())
+            return "false";
+
+        PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);
+        if (!target || target->isGlobal() || target->isHeap())
+            return "false";
+    }
+
+    // a points to stack
+    return "true";
+}
+
+std::string PointsToPlugin::pointsToGlobal(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isInvalidated() || ptr.isUnknown())
+            return "false";
+
+        PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);
+        if (!target || !target->isGlobal())
+            return "false";
+    }
+
+    // a points to a global variable
+    return "true";
+}
+
+std::string PointsToPlugin::pointsToHeap(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isInvalidated() || ptr.isUnknown())
+            return "false";
+
+        PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);
+        if (!target || !target->isHeap())
+            return "false";
+    }
+
+    // a points to heap
+    return "true";
+}
+
+std::string PointsToPlugin::isInvalid(llvm::Value* a) {
+    // need to have the PTA
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (!ptr.isNull() && !ptr.isInvalidated())
+            return "false";
+    }
+
+    // a is null or invalidated
+    return "true";
+}
 
 std::string PointsToPlugin::isNull(llvm::Value* a) {
     if (!a->getType()->isPointerTy())
@@ -25,6 +115,38 @@ std::string PointsToPlugin::isNull(llvm::Value* a) {
     }
 
     // a can not be null
+    return "false";
+}
+
+std::string PointsToPlugin::hasKnownSizes(llvm::Value* a) {
+    // check is a is getelementptr
+    if (const llvm::GetElementPtrInst *GI
+            = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
+        // need to have the PTA
+        assert(PTA);
+        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        if (!psnode || psnode->pointsTo.empty()) {
+            // we know nothing about the allocated size
+            return "false";
+        }
+
+        // check that all the objects has known sizes and
+        // offsets
+        for (const auto& ptr : psnode->pointsTo) {
+            // ptset cannot contain null, unknown or invalidated pointer
+            if(ptr.isNull() || ptr.isUnknown() || ptr.isInvalidated())
+                return "false";
+
+            // the sizes and offsets need to be known
+            if (ptr.offset.isUnknown() ||
+                ptr.target->getSize() == 0) {
+                return "false";
+            }
+        }
+
+        return "true";
+    }
+
     return "false";
 }
 
@@ -88,6 +210,35 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPointerInfo(llvm
     }
 }
 
+std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPInfoMin(llvm::Value* a) {
+    // check is a is getelementptr
+    if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
+        // need to have the PTA
+        assert(PTA);
+        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        if (!psnode || psnode->pointsTo.empty()) {
+            return std::make_tuple(nullptr, 0, 0);
+        }
+
+        uint64_t min_offset = *((*psnode->pointsTo.begin()).offset);
+        uint64_t min_space = (*psnode->pointsTo.begin()).target->getSize()
+                             - *((*psnode->pointsTo.begin()).offset);
+        for (const auto& ptr : psnode->pointsTo) {
+            if ((*(ptr.offset) < min_offset))
+                min_offset = *(ptr.offset);
+            if ((ptr.target->getSize() - *(ptr.offset))
+                < min_space) {
+                min_space = ptr.target->getSize() - *(ptr.offset);
+            }
+        }
+        return std::make_tuple(GI->getPointerOperand(), min_offset,
+                                min_space);
+
+    }
+    else {
+        return std::make_tuple(nullptr, 0, 0);
+    }
+}
 
 std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
     if (!a->getType()->isPointerTy())
@@ -182,8 +333,13 @@ static const std::string supportedQueries[] = {
     "isValidPointer",
     "pointsTo",
     "hasKnownSize",
+    "hasKnownSizes",
     "getPointerInfo",
-    "isNull"
+    "isNull",
+    "pointsToHeap",
+    "pointsToGlobal",
+    "pointsToStack",
+    "isInvalid"
 };
 
 bool PointsToPlugin::supports(const std::string& query) {
@@ -194,8 +350,6 @@ bool PointsToPlugin::supports(const std::string& query) {
 
     return false;
 }
-
-
 
 extern "C" InstrPlugin* create_object(llvm::Module* module) {
         return new PointsToPlugin(module);
