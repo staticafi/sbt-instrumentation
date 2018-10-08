@@ -47,7 +47,7 @@ add_definitions(-DHAVE_LLVM)
 if (DG_PATH)
 	include_directories(${DG_PATH}/src/)
 else()
-	include_directories(${CMAKE_SOURCE_DIR}/dg/src)
+	include_directories(${CMAKE_SOURCE_DIR}/dg/include)
     set(DG_PATH ${CMAKE_SOURCE_DIR}/dg)
 endif()
 

@@ -6,8 +6,8 @@
 #include <llvm/IR/Constants.h>
 #include <tuple>
 #include "instr_plugin.hpp"
-#include "llvm/analysis/PointsTo/PointsTo.h"
-#include "analysis/PointsTo/PointsToWithInvalidate.h"
+#include "dg/llvm/analysis/PointsTo/PointerAnalysis.h"
+#include "dg/analysis/PointsTo/PointerAnalysisFSInv.h"
 #include "call_graph.hpp"
 
 
