@@ -5,8 +5,8 @@
 #include <set>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Instruction.h>
-#include "llvm/analysis/PointsTo/PointsTo.h"
-#include "analysis/PointsTo/PointsToFlowInsensitive.h"
+#include "dg/llvm/analysis/PointsTo/PointerAnalysis.h"
+#include "dg/analysis/PointsTo/PointerAnalysisFSInv.h"
 
 class CGNode {
     public:

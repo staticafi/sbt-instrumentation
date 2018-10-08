@@ -80,12 +80,13 @@ endif()
 
 find_library(LIBLP LLVMpta PATHS ${DG_PATH}/lib/)
 find_library(LIBP PTA PATHS ${DG_PATH}/lib/)
+find_library(LIBDGA DGAnalysis PATHS ${DG_PATH}/lib/)
 
-if (LIBLP AND LIBP)
-	message(STATUS "Dg libraries found: ${LIBLP}, ${LIBP}")
+if (LIBLP AND LIBP AND LIBDGA)
+	message(STATUS "Dg libraries found: ${LIBLP}, ${LIBP}, ${LIBDGA}")
 	# those libraries we'll use. We need to use whole LLVMdg,
 	# since we'll use the LLVM points-to analysis
-	set(dg_libs ${LIBLP} ${LIBP})
+	set(dg_libs ${LIBLP} ${LIBP} ${LIBDGA})
 else()
 	message(FATAL_ERROR "Dg not found! Try specifying -DDG_PATH=<path>.")
 endif()

@@ -3,8 +3,8 @@
 #include "catch.hpp"
 #include "../analyses/call_graph.hpp"
 
-#include "llvm/analysis/PointsTo/PointsTo.h"
-#include "analysis/PointsTo/PointsToFlowInsensitive.h"
+#include "dg/llvm/analysis/PointsTo/PointerAnalysis.h"
+#include "dg/analysis/PointsTo/PointerAnalysisFI.h"
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IRReader/IRReader.h>
@@ -34,7 +34,7 @@ TEST_CASE( "recursive01", "[callgraph]" ) {
 
     Module *m = getModule("sources/recursive01.ll");
     std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
-    PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
+    PTA->run<dg::analysis::pta::PointerAnalysisFI>();
     CallGraph cg;
     cg.buildCallGraph(*m, PTA);
 
@@ -58,7 +58,7 @@ TEST_CASE( "function_pointers01", "[callgraph]" ) {
 
     Module *m = getModule("sources/function_pointers01.ll");
     std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
-    PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
+    PTA->run<dg::analysis::pta::PointerAnalysisFI>();
     CallGraph cg;
     cg.buildCallGraph(*m, PTA);
 
@@ -79,7 +79,7 @@ TEST_CASE( "recursive02", "[callgraph]" ) {
 
     Module *m = getModule("sources/recursive02.ll");
     std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
-    PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
+    PTA->run<dg::analysis::pta::PointerAnalysisFI>();
     CallGraph cg;
     cg.buildCallGraph(*m, PTA);
 
@@ -113,7 +113,7 @@ TEST_CASE( "indirect_calls01", "[callgraph]" ) {
 
     Module *m = getModule("sources/indirect_calls01.ll");
     std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
-    PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
+    PTA->run<dg::analysis::pta::PointerAnalysisFI>();
     CallGraph cg;
     cg.buildCallGraph(*m, PTA);
 
@@ -161,7 +161,7 @@ TEST_CASE( "indirect_calls02", "[callgraph]" ) {
 
     Module *m = getModule("sources/indirect_calls02.ll");
     std::unique_ptr<dg::LLVMPointerAnalysis> PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(m));
-    PTA->run<dg::analysis::pta::PointsToFlowInsensitive>();
+    PTA->run<dg::analysis::pta::PointerAnalysisFI>();
     CallGraph cg;
     cg.buildCallGraph(*m, PTA);
 
