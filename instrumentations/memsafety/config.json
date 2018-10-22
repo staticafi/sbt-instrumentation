@@ -348,7 +348,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["__INSTR_check_pointer"]
+                    "operands": ["<t2>", "<t3>", "__INSTR_check_pointer"]
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
