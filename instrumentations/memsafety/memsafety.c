@@ -1,9 +1,26 @@
-#include <stdlib.h>
-#include <stdint.h>
 #include <assert.h>
 
+#ifdef __SIZE_TYPE__
+typedef __SIZE_TYPE__ size_t;
+#else
+# if __WORDSIZE == 64
+typedef unsigned long int size_t;
+#else
+typedef unsigned int size_t;
+#endif
+#endif
+
+# if __WORDSIZE == 64
+typedef signed long int64_t;
+#else
+typedef signed long long int64_t;
+#endif
+
 typedef void* rec_id;
-typedef uint64_t a_size;
+typedef size_t a_size;
+
+extern void *malloc(size_t);
+extern void free(void *);
 
 extern void __VERIFIER_error() __attribute__((noreturn));
 
