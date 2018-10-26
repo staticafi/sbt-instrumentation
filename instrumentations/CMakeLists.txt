@@ -19,6 +19,7 @@ install(FILES
 
 install(FILES
     int_overflows/config.json
+    int_overflows/config-no-ra.json
     int_overflows/overflows.c
     DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/int_overflows/
 )

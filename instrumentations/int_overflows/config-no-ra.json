@@ -1,0 +1,282 @@
+{
+    "file": "overflows.c",
+    "phases": [
+        {
+            "instructionsRules": [
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "add",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i32"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_i32"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "add",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i64"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_i64"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "add",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i16"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_i16"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "add",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i8"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_add_i8"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "sub",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i32"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i32"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "sub",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i64"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i64"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "sub",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i16"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i16"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "sub",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i8"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_sub_i8"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "mul",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i32"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i32"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "mul",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i64"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i64"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "mul",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i16"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i16"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "mul",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i8"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_mul_i8"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "div",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i32"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_i32"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "div",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i64"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_i64"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "div",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i16"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_i16"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "div",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i8"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__INSTR_check_div_i8"]
+                    },
+                    "where": "before",
+                    "in": "*"
+                }
+
+            ]
+        }
+    ]
+}
