@@ -11,11 +11,14 @@ install(FILES
 	memsafety/config-minmax.json
 	memsafety/memsafety.c
 	memsafety/marker.c
+	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/
+)
+install(FILES
 	memsafety/sttt-experiments/config-basic.json
 	memsafety/sttt-experiments/config-rc-rt.json
 	memsafety/sttt-experiments/config-rc.json
 	memsafety/sttt-experiments/config-i1-rt.json
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/
+	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/sttt-experiments
 )
 
 install(FILES
