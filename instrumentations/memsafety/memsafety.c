@@ -1,6 +1,10 @@
 #include <assert.h>
 #include <stdint.h>
 
+#ifndef NULL
+#define NULL ((void*)0)
+#endif
+
 /* we do not want to include stdlib.h as it
  * may break build inside Symbiotic, where
  * the include paths are not set to the system's one */
