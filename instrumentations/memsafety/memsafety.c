@@ -121,7 +121,7 @@ rec_list_node* __INSTR_list_search(rec_list_node *head, rec_id id) {
     return NULL;
 }
 
-rec_list_node* __INSTR_detach_node(rec_list_node *n, rec_list_node **head){
+void __INSTR_detach_node(rec_list_node *n, rec_list_node **head){
 
     if (n->prev != NULL) {
         n->prev->next = n->next;
@@ -136,11 +136,10 @@ rec_list_node* __INSTR_detach_node(rec_list_node *n, rec_list_node **head){
 
     n->next = NULL;
     n->prev = NULL;
-    return n;
 }
 
-void __INSTR_rec_destroy(rec_list_node *n, rec_list_node *head) {
-    __INSTR_detach_node(n, &head);
+void __INSTR_rec_destroy(rec_list_node *n, rec_list_node **head) {
+    __INSTR_detach_node(n, head);
     free(n);
 }
 
@@ -369,7 +368,6 @@ void __INSTR_destroy_lists() {
 }
 
 void __INSTR_check_realloc(rec_id old_id) {
-
     if (old_id == 0) {
       return;
     }
@@ -385,7 +383,6 @@ void __INSTR_check_realloc(rec_id old_id) {
 }
 
 void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
-
     if (new_id == 0) {
       return; // if realloc returns null, nothing happens
     }
@@ -399,7 +396,7 @@ void __INSTR_realloc(rec_id old_id, rec_id new_id, size_t size) {
 
     if (n != NULL) {
         __INSTR_rec_create_heap(new_id, size);
-        __INSTR_rec_destroy(n, heap_list);
+        __INSTR_rec_destroy(n, &heap_list);
     }
 }
 
@@ -411,7 +408,7 @@ void __INSTR_set_flag() {
 void __INSTR_destroy(rec_id id) {
     rec_list_node *n = __INSTR_list_search(stack_list, id);
     if (n != NULL) {
-        __INSTR_rec_destroy(n, stack_list);
+        __INSTR_rec_destroy(n, &stack_list);
     }
 }
 
@@ -429,6 +426,8 @@ void __INSTR_destroy_allocas() {
     }
 
     stack_list = cur;
+    if (cur != NULL)
+        cur->prev = NULL;
 }
 
 void __INSTR_fail() {
