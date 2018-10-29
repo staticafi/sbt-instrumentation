@@ -1,34 +1,37 @@
-// blindly instrument every load/store
-// without any optimization
 {
     "file": "memsafety.c",
-    // load the plugin so that we can create
-    // the call-graph and instrument only reachable functions.
-    // (it is important when we want to compare the numbers with
-    //  other configurations)
     "phases": [
         {
-            "instructionsRules":
-                [
+            "instructionsRules": [
+             {
+                "findInstructions": [
                 {
-                    "newInstruction": {
-                        "returnValue": "*",
-                        "instruction": "call",
-                        "operands": ["__INSTR_set_flag"]
-                    },
-                    "where": "entry",
-                    "in": "*"
+                    "instruction": "call",
+                    "operands": ["*","<t1>","llvm.lifetime.end.p0i8"]
+                }
+                ],
+                "newInstruction": {
+                    "instruction": "call",
+                    "operands": ["<t1>", "__INSTR_destroy"]
                 },
+                "where": "after",
+                "in": "*"
+             },
+             {
+                "findInstructions": [
                 {
-                    "newInstruction": {
-                        "returnValue": "*",
-                        "instruction": "call",
-                        "operands": ["__INSTR_destroy_allocas"]
-                    },
-                    "where": "return",
-                    "in": "*"
+                    "instruction": "call",
+                    "operands": ["*","<t1>","llvm.lifetime.end"]
+                }
+                ],
+                "newInstruction": {
+                    "instruction": "call",
+                    "operands": ["<t1>", "__INSTR_destroy"]
                 },
-                {
+                "where": "after",
+                "in": "*"
+             },
+               {
                     "findInstructions": [
                     {
                         "returnValue": "<t1>",
@@ -190,7 +193,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -207,7 +211,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -224,7 +229,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -241,7 +247,8 @@
                         "operands": ["<t1>","<t2>", "__INSTR_check_pointer"]
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t1>"
                 },
                 {
                     "findInstructions": [
@@ -258,7 +265,8 @@
                         "operands": ["<t2>","<t3>", "__INSTR_check_pointer"]
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t2>"
                 },
                 {
                     "findInstructions": [
@@ -275,7 +283,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -292,7 +301,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -309,7 +319,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -326,7 +337,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -343,7 +355,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -360,7 +373,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -377,7 +391,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -394,7 +409,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -411,7 +427,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -428,7 +445,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -445,7 +463,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
@@ -462,7 +481,8 @@
                         "stripInboundsOffsets": "<t3>"
                     },
                     "where": "before",
-                    "in": "*"
+                    "in": "*",
+                    "remember": "<t3>"
                 },
                 {
                     "findInstructions": [
