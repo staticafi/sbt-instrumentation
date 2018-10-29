@@ -6,6 +6,9 @@ install(FILES
 	memsafety/config-enhanced-noconst.json
 	memsafety/config-marker.json
 	memsafety/config-i2-enhanced.json
+	memsafety/config-i2-enhanced-lifetimes.json
+	memsafety/config-lifetimes.json
+	memsafety/config-i2-minmax.json
 	memsafety/memsafety.c
 	memsafety/marker.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/

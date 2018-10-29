@@ -62,6 +62,10 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
             instr.getPointerInfoMinTo.push_back(info.asString());
         }
 
+        for (const auto& info : findInstruction["getPointerInfoMinMax"]) {
+            instr.getPInfoMinMaxTo.push_back(info.asString());
+        }
+
         instr.stripInboundsOffsets = findInstruction["stripInboundsOffsets"].asString();
         r.foundInstrs.push_back(instr);
     }
