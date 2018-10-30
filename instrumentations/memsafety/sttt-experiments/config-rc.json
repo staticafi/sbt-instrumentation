@@ -823,8 +823,7 @@
                     "operands": ["__INSTR_check_leaks"]
                 },
                 "where": "before",
-                "in": "main",
-                "conditions": [{"query":["malloc"], "expectedResults": ["true"]}]
+                "in": "main"
             }
             ],
             "globalVariablesRules": [
