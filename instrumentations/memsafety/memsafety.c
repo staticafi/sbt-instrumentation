@@ -324,7 +324,10 @@ void __INSTR_check_pointer(rec_id id, a_size range) {
 
 void __INSTR_check_bounds_min(rec_id addr_a, a_size min_off, a_size min_space, rec_id addr_b, a_size range) {
     int64_t n = addr_b - addr_a;
-    if (-min_off >= n || n + range > min_space) {
+    if (n == -9223372036854775808 && (min_off < 9223372036854775808)) {
+        __INSTR_check_pointer(addr_b, range);
+    }
+    else if (min_off <= -n || n + range > min_space) {
         __INSTR_check_pointer(addr_b, range);
     }
 }
@@ -333,10 +336,15 @@ void __INSTR_check_bounds_min_max(rec_id addr_a, a_size min_off, a_size min_spac
                                      rec_id addr_b, a_size range)
 {
     int64_t n = addr_b - addr_a;
-    if (max_off < n || n + range > max_space) {
+    if (n == -9223372036854775808 && (min_off < 9223372036854775808)) {
+        __INSTR_check_pointer(addr_b, range);
+    } else if (n == -9223372036854775808 && (max_off < 9223372036854775808)) {
         assert(0 && "invalid pointer dereference");
     }
-    else if (min_off < n || n + range > min_space) {
+    if (max_off <= -n || n + range > max_space) {
+        assert(0 && "invalid pointer dereference");
+    }
+    else if (min_off <= -n || n + range > min_space) {
         __INSTR_check_pointer(addr_b, range);
     }
 }
