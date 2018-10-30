@@ -800,6 +800,36 @@
             {
                 "findInstructions": [
                 {
+                    "instruction": "call",
+                    "operands": ["<size>","<t1>","llvm.lifetime.start.p0i8"]
+                }
+                ],
+                "newInstruction": {
+                    "instruction": "call",
+                    "operands": ["<t1>", "<size>", "1", "__INSTR_remember"]
+                },
+                "where": "after",
+                "in": "*",
+                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+            },
+            {
+                "findInstructions": [
+                {
+                    "instruction": "call",
+                    "operands": ["<size>","<t1>","llvm.lifetime.start"]
+                }
+                ],
+                "newInstruction": {
+                    "instruction": "call",
+                    "operands": ["<t1>","<size>","1", "__INSTR_remember"]
+                },
+                "where": "after",
+                "in": "*",
+                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+            },
+            {
+                "findInstructions": [
+                {
                     "returnValue": "<t1>",
                     "instruction": "alloca",
                     "operands": ["<t0>"],

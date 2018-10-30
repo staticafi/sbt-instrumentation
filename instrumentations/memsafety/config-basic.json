@@ -6,6 +6,7 @@
     // the call-graph and instrument only reachable functions.
     // (it is important when we want to compare the numbers with
     //  other configurations)
+    "analyses": ["libPointsToPlugin.so"],
     "phases": [
         {
             "instructionsRules":

@@ -2,6 +2,7 @@ install(FILES
 	memsafety/config.json
 	memsafety/config-noconst.json
 	memsafety/config-basic.json
+	memsafety/config-basic-lifetimes.json
 	memsafety/config-enhanced.json
 	memsafety/config-enhanced-noconst.json
 	memsafety/config-marker.json
