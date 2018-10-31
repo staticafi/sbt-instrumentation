@@ -238,48 +238,6 @@
                     "instruction": "load",
                     "operands": ["<t1>"],
                     "getTypeSize": "<t2>",
-                    "getPointerInfo": ["<t3>", "<t4>", "<t5>"]
-                }
-                ],
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["<t3>", "<t4>", "<t5>", "<t1>", "<t2>", "__INSTR_check_bounds"]
-                },
-                "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["true"]},
-                               {"query":["isInvalid", "<t1>"], "expectedResults":["false", "maybe"]}],
-                "in": "*"
-            },
-            {
-                "findInstructions": [
-                {
-                    "returnValue": "*",
-                    "instruction": "store",
-                    "operands": ["<t1>", "<t2>"],
-                    "getTypeSize": "<t3>",
-                    "getPointerInfo": ["<t4>", "<t5>", "<t6>"]
-                }
-                ],
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["<t4>", "<t5>", "<t6>", "<t2>", "<t3>", "__INSTR_check_bounds"]
-                },
-                "where": "before",
-                "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["true"]},
-                               {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
-                "in": "*"
-            },
-            {
-                "findInstructions": [
-                {
-                    "returnValue": "*",
-                    "instruction": "load",
-                    "operands": ["<t1>"],
-                    "getTypeSize": "<t2>",
                     "getPointerInfoMinMax": ["<t3>", "<t4>", "<t5>", "<t6>", "<t7>"]
                 }
                 ],
@@ -290,7 +248,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t1>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t1>"], "expectedResults":["false", "maybe"]}],
                 "in": "*",
@@ -313,7 +270,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t2>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
                 "in": "*",
@@ -335,7 +291,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t1>"], "expectedResults":["false"]},
                                {"query":["pointsToStack", "<t1>"], "expectedResults":["false", "maybe"]},
                                {"query":["pointsToHeap", "<t1>"], "expectedResults":["false", "maybe"]},
@@ -360,7 +315,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t2>"], "expectedResults":["false"]},
                                {"query":["pointsToStack", "<t2>"], "expectedResults":["false", "maybe"]},
                                {"query":["pointsToHeap", "<t2>"], "expectedResults":["false", "maybe"]},
@@ -423,7 +377,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t1>"], "expectedResults":["false"]},
                                {"query":["pointsToStack", "<t1>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t1>"], "expectedResults":["false", "maybe"]}],
@@ -446,7 +399,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t2>"], "expectedResults":["false"]},
                                {"query":["pointsToStack", "<t2>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
@@ -470,7 +422,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t1>"], "expectedResults":["false"]},
                                {"query":["pointsToHeap", "<t1>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t1>"], "expectedResults":["false", "maybe"]}],
@@ -493,7 +444,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t2>"], "expectedResults":["false"]},
                                {"query":["pointsToHeap", "<t2>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
@@ -516,7 +466,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"], "expectedResults":["false", "maybe"]},
-                               {"query":["hasKnownSize", "<t1>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t1>"], "expectedResults":["false"]},
                                {"query":["pointsToGlobal", "<t1>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t1>"], "expectedResults":["false", "maybe"]}],
@@ -539,7 +488,6 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"], "expectedResults":["false","maybe"]},
-                               {"query":["hasKnownSize", "<t2>"], "expectedResults":["false", "maybe"]},
                                {"query":["hasKnownSizes", "<t2>"], "expectedResults":["false"]},
                                {"query":["pointsToGlobal", "<t2>"], "expectedResults":["true"]},
                                {"query":["isInvalid", "<t2>"], "expectedResults":["false", "maybe"]}],
@@ -780,7 +728,7 @@
                 },
                 "where": "after",
                 "in": "*",
-                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+                "conditions": [{"query":["isRemembered+", "<t1>"], "expectedResults":["true","maybe"]}]
             },
             {
                 "findInstructions": [
@@ -795,7 +743,7 @@
                 },
                 "where": "after",
                 "in": "*",
-                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+                "conditions": [{"query":["isRemembered+", "<t1>"], "expectedResults":["true","maybe"]}]
             },
             {
                 "findInstructions": [
@@ -810,7 +758,7 @@
                 },
                 "where": "after",
                 "in": "*",
-                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+                "conditions": [{"query":["isRemembered+", "<t1>"], "expectedResults":["true","maybe"]}]
             },
             {
                 "findInstructions": [
@@ -825,7 +773,7 @@
                 },
                 "where": "after",
                 "in": "*",
-                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+                "conditions": [{"query":["isRemembered+", "<t1>"], "expectedResults":["true","maybe"]}]
             },
             {
                 "findInstructions": [
@@ -843,7 +791,7 @@
                 },
                 "where": "after",
                 "in": "*",
-                "conditions": [{"query":["isRemembered", "<t1>"], "expectedResults":["true","maybe"]}]
+                "conditions": [{"query":["isRemembered+", "<t1>"], "expectedResults":["true","maybe"]}]
             },
             {
                 "findInstructions": [
