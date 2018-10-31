@@ -342,6 +342,7 @@ void __INSTR_check_bounds_min_max(rec_id addr_a, a_size min_off, a_size min_spac
     int64_t n = addr_b - addr_a;
     if (n == INT_64_MIN && (min_off < INT_64_MIN_OFF)) {
         __INSTR_check_pointer(addr_b, range);
+    }
     else if (n == INT_64_MIN && (max_off < INT_64_MIN_OFF)) {
         assert(0 && "invalid pointer dereference");
     } else if (n == INT_64_MIN && (max_off < INT_64_MIN_OFF)) {
