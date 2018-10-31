@@ -758,10 +758,11 @@ void setFlags(const RewriteRule& rule, Rewriter& rewriter) {
  * @param instr instrumentation object
  * @param variables list of variables
 **/
-void rememberValues(string name, LLVMInstrumentation& instr, Variables variables) {
+void rememberValues(string name, LLVMInstrumentation& instr, Variables variables, const RewriteRule& rw) {
     auto search = variables.find(name);
     if (search != variables.end()) {
-        instr.rememberedValues.push_back(search->second);
+        std::string calledFunction = rw.newInstr.parameters.back();
+        instr.rememberedValues.push_back(std::make_pair(search->second, calledFunction));
     }
 }
 
@@ -858,7 +859,7 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             setFlags(rw, instr.rewriter);
 
             // Remember values that should be remembered
-            rememberValues(rw.remember, instr, variables);
+            rememberValues(rw.remember, instr, variables, rw);
 
             // Try to apply rule
             Instruction *where;

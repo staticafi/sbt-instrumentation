@@ -34,8 +34,10 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	return plugin;
 }
 
-bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, InstrPlugin* plugin,
-                                const Condition &condition, const list<llvm::Value*>& parameters) {
+bool Analyzer::shouldInstrument(const list<std::pair<llvm::Value*, std::string>> & rememberedValues,
+                                InstrPlugin* plugin, const Condition &condition,
+                                const list<llvm::Value*>& parameters)
+{
 
     string answer;
 
@@ -44,8 +46,8 @@ bool Analyzer::shouldInstrument(const list<llvm::Value*>& rememberedValues, Inst
         if (!plugin->supports("pointsTo"))
             return false;
 
-        for (auto v : rememberedValues) {
-            answer = plugin->query("pointsTo", {v, *(parameters.begin())});
+        for (auto& v : rememberedValues) {
+            answer = plugin->query("pointsTo", {v.first, *(parameters.begin())});
             for (const auto& expV : condition.expectedValues)
             if (answer == expV)
                 return true;
