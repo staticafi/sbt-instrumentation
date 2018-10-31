@@ -19,6 +19,7 @@ install(FILES
 	memsafety/sttt-experiments/config-rc-rt.json
 	memsafety/sttt-experiments/config-rc.json
 	memsafety/sttt-experiments/config-i1-rt.json
+	memsafety/sttt-experiments/config-new-checkbounds.json
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/sttt-experiments
 )
 
