@@ -68,6 +68,7 @@ class PointsToPlugin : public InstrPlugin
         virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPInfoMin(llvm::Value* a);
         virtual std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> getPInfoMinMax(llvm::Value* a);
         virtual void getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* a);
+        virtual std::string notMinMemoryBlock(llvm::Value* min, llvm::Value* a);
 
         PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
             llvm::errs() << "Running points-to analysis...\n";

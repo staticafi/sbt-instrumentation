@@ -4,6 +4,7 @@
 #include <iostream>
 
 using dg::analysis::pta::PSNode;
+using dg::analysis::pta::Pointer;
 using dg::analysis::pta::PSNodeAlloc;
 
 std::string PointsToPlugin::pointsToStack(llvm::Value* a) {
@@ -27,6 +28,57 @@ std::string PointsToPlugin::pointsToStack(llvm::Value* a) {
 
     // a points to stack
     return "true";
+}
+
+std::string PointsToPlugin::notMinMemoryBlock(llvm::Value* p, llvm::Value* a) {
+    // check is a is getelementptr
+    if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(p)) {
+        // need to have the PTA
+        assert(PTA);
+        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        if (!psnode || psnode->pointsTo.empty()) {
+            return "true";
+        }
+
+        uint64_t min_offset = *((*psnode->pointsTo.begin()).offset);
+        uint64_t min_space = (*psnode->pointsTo.begin()).target->getSize()
+                             - *((*psnode->pointsTo.begin()).offset);
+        bool pointsTo = false;
+
+        uint64_t act_offset = 0;
+        uint64_t act_space = 0;
+
+        for (const auto& ptr : psnode->pointsTo) {
+            llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
+
+            if (llvmVal == a) {
+                act_offset = *(ptr.offset);
+                act_space = (ptr.target->getSize() - *(ptr.offset));
+                pointsTo = true;
+            }
+
+            if ((*(ptr.offset) < min_offset))
+                min_offset = *(ptr.offset);
+
+            if ((ptr.target->getSize() - *(ptr.offset))
+                < min_space) {
+                min_space = ptr.target->getSize() - *(ptr.offset);
+            }
+        }
+
+        if (!pointsTo) {
+            return "unknown";
+        }
+
+        if (act_offset <= min_offset && act_space <= min_space) {
+            return "false";
+        } else {
+            return "true";
+        }
+    }
+    else {
+        return "unknown";
+    }
 }
 
 std::string PointsToPlugin::pointsToGlobal(llvm::Value* a) {

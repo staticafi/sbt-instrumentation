@@ -1,4 +1,5 @@
 #include "instr_analyzer.hpp"
+#include "points_to_plugin.hpp"
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -51,6 +52,30 @@ bool Analyzer::shouldInstrument(const list<std::pair<llvm::Value*, std::string>>
             for (const auto& expV : condition.expectedValues)
             if (answer == expV)
                 return true;
+        }
+        return false;
+    }
+
+   if (condition.name == "isRemembered+") {
+        assert(parameters.size() == 1);
+        if (plugin->getName() != "PointsTo")
+            return false;
+
+        PointsToPlugin* ppPlugin = static_cast<PointsToPlugin*>(plugin);
+
+        for (auto& p : rememberedValues) {
+            if (p.second == "__INSTR_check_bounds_min_max") {
+                answer = ppPlugin->notMinMemoryBlock(p.first, *(parameters.begin()));
+                if (answer == "unknown")
+                    answer = plugin->query("pointsTo", {p.first, *(parameters.begin())});
+            }
+            else {
+                answer = plugin->query("pointsTo", {p.first, *(parameters.begin())});
+            }
+
+            for (const auto& expV : condition.expectedValues)
+                if (answer == expV)
+                    return true;
         }
         return false;
     }
