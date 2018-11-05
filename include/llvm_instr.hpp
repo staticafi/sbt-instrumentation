@@ -21,7 +21,7 @@ class LLVMInstrumentation {
         std::string outputName;
         std::list<std::pair<llvm::Value*, std::string>> rememberedValues;
         std::vector<llvm::Value*> rememberedPTSets;
-        bool rememberedUnknown;
+        bool rememberedUnknown = false;
         Variables variables;
         Rewriter rewriter;
 		std::set<const llvm::Function*> reachableFunctions;

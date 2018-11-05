@@ -690,6 +690,9 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
     if (condition.name == "")
         return true;
 
+    if (condition.name == "isRemembered+" && instr.rememberedUnknown)
+        return true;
+
     list<Value*> parameters;
     for (const auto& arg : condition.arguments) {
         auto search = variables.find(arg);
