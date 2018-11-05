@@ -18,7 +18,7 @@ std::string PointsToPlugin::pointsToStack(llvm::Value* a) {
     }
 
     for (const auto& ptr : psnode->pointsTo) {
-        if (ptr.isInvalidated() || ptr.isUnknown())
+        if (ptr.isUnknown())
             return "false";
 
         PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);
@@ -92,7 +92,7 @@ std::string PointsToPlugin::pointsToGlobal(llvm::Value* a) {
     }
 
     for (const auto& ptr : psnode->pointsTo) {
-        if (ptr.isInvalidated() || ptr.isUnknown())
+        if (ptr.isUnknown())
             return "false";
 
         PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);
@@ -115,7 +115,7 @@ std::string PointsToPlugin::pointsToHeap(llvm::Value* a) {
     }
 
     for (const auto& ptr : psnode->pointsTo) {
-        if (ptr.isInvalidated() || ptr.isUnknown())
+        if (ptr.isUnknown())
             return "false";
 
         PSNodeAlloc *target = PSNodeAlloc::get(ptr.target);

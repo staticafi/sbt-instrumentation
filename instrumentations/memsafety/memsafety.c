@@ -261,10 +261,10 @@ void __INSTR_check_stack(rec_id id, a_size range) {
 
     if ((n = __INSTR_list_search(stack_list, id))) {
         __INSTR_check(id, range, n->rec);
+    } else if ((n = __INSTR_list_search(deallocated_list, id))) {
+        assert(0 && "dereference on freed memory");
+        __VERIFIER_error();
     } else {
-        /* we register all memory allocations, so if we
-         * haven't found the allocation, then this is
-         * invalid pointer */
         assert(0 && "invalid pointer dereference");
         __VERIFIER_error();
     }
@@ -275,10 +275,10 @@ void __INSTR_check_globals(rec_id id, a_size range) {
 
     if ((n = __INSTR_list_search(globals_list, id))) {
         __INSTR_check(id, range, n->rec);
+    } else if ((n = __INSTR_list_search(deallocated_list, id))) {
+        assert(0 && "dereference on freed memory");
+        __VERIFIER_error();
     } else {
-        /* we register all memory allocations, so if we
-         * haven't found the allocation, then this is
-         * invalid pointer */
         assert(0 && "invalid pointer dereference");
         __VERIFIER_error();
     }
@@ -293,9 +293,6 @@ void __INSTR_check_heap(rec_id id, a_size range) {
         assert(0 && "dereference on freed memory");
         __VERIFIER_error();
     } else {
-        /* we register all memory allocations, so if we
-         * haven't found the allocation, then this is
-         * invalid pointer */
         assert(0 && "invalid pointer dereference");
         __VERIFIER_error();
     }
