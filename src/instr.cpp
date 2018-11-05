@@ -88,7 +88,7 @@ void getPointsToPlugin(LLVMInstrumentation& instr) {
  * @return pointer, offset and size of allocated memory to which pointer points to.
  */
 std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t>
-    getPointerInfoMinMax(Instruction *I, const LLVMInstrumentation& instr)
+    getPointerInfoMinMax(Instruction *I, LLVMInstrumentation& instr)
 {
     Value* op;
     if (const StoreInst *SI = dyn_cast<StoreInst>(I)) {
@@ -102,7 +102,7 @@ std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t>
     }
 
     if (instr.ppPlugin)
-        return instr.ppPlugin->getPInfoMinMax(op);
+        return instr.ppPlugin->getPInfoMinMax(op, instr.rememberedPTSets);
 
     return std::make_tuple(nullptr, 0, 0, 0, 0);
 }
@@ -183,12 +183,8 @@ uint64_t getAllocatedSize(Instruction *I, const Module& M) {
  * @return true if ok, false for instrumentation fail
  */
 bool getPointerInfos(Variables& variables, const InstrumentInstruction& iIns,
-                        Instruction *ins, const LLVMInstrumentation& instr)
+                        Instruction *ins, LLVMInstrumentation& instr)
 {
-    if (!iIns.getSizeTo.empty()) {
-        variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
-    }
-
     if (iIns.getPointerInfoTo.size() == 3) {
         std::tuple<llvm::Value*, uint64_t, uint64_t> pointerInfo = getPointerInfo(ins, instr);
         // Do not apply this rule, if there was no relevant answer from pointer analysis
@@ -767,6 +763,23 @@ void rememberValues(string name, LLVMInstrumentation& instr, Variables variables
 }
 
 /**
+ * Adds ptset values that should be remembered into
+ * instr's list.
+ * @param name name of the value to be remembered
+ * @param instr instrumentation object
+ * @param variables list of variables
+**/
+void rememberPTSet(string name, LLVMInstrumentation& instr, Variables variables, const RewriteRule& rw) {
+    auto search = variables.find(name);
+    std::string calledFunction = rw.newInstr.parameters.back();
+    if (search != variables.end() && calledFunction != "__INSTR_check_bounds_min_max") {
+        bool containsUnknown = instr.ppPlugin->getPointsTo(search->second, instr.rememberedPTSets);
+        if (containsUnknown)
+            instr.rememberedUnknown = true;
+    }
+}
+
+/**
  * Checks if the given instruction should be instrumented.
  * @param ins instruction to be checked.
  * @param rw_config parsed rules to apply.
@@ -838,28 +851,32 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             }
         }
 
-        if (rw.foundInstrs.size() == 1) {
-            InstrumentInstruction iIns = rw.foundInstrs.front();
-            if (!getPointerInfos(variables, iIns, ins, instr))
-                instrument = false;
-        }
-
         // If all instructions match and conditions are satisfied
         // try to instrument the code
         if (instrument) {
+            InstrumentInstruction iIns = rw.foundInstrs.front();
+
+            if (!iIns.getSizeTo.empty()) {
+                variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
+            }
+
             if (!checkConditions(rw.conditions, instr, variables)) {
                 const string& func = *(--rw.newInstr.parameters.end());
                 ++statistics.suppresed_instr[func];
                 continue;
             }
 
-            InstrumentInstruction iIns = rw.foundInstrs.front();
+            if (rw.foundInstrs.size() == 1) {
+                if (!getPointerInfos(variables, iIns, ins, instr))
+                    return false;
+            }
 
             // Set flags
             setFlags(rw, instr.rewriter);
 
             // Remember values that should be remembered
             rememberValues(rw.remember, instr, variables, rw);
+            rememberPTSet(rw.rememberPTSet, instr, variables, rw);
 
             // Try to apply rule
             Instruction *where;

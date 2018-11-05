@@ -262,7 +262,9 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPointerInfo(llvm
     }
 }
 
-std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> PointsToPlugin::getPInfoMinMax(llvm::Value* a) {
+std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> PointsToPlugin::getPInfoMinMax(
+                                        llvm::Value* a, std::vector<llvm::Value*>& ptset)
+{
     // check is a is getelementptr
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
@@ -293,6 +295,16 @@ std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> PointsToPlugin:
                 max_space = ptr.target->getSize() - *(ptr.offset);
             }
         }
+
+        for (const auto& ptr : psnode->pointsTo) {
+            if ((*(ptr.offset) > min_offset) &&
+                (ptr.target->getSize() - *(ptr.offset)) > min_space) {
+                llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
+                if (llvmVal)
+                    ptset.push_back(llvmVal);
+            }
+        }
+
         return std::make_tuple(GI->getPointerOperand(), min_offset,
                                 min_space, max_offset, max_space);
 
@@ -416,6 +428,33 @@ std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
     }
 
     return "false";
+}
+
+/**
+ * Gets points to set of llvm value a.
+ * @return true if ptset contains unknown
+**/
+bool PointsToPlugin::getPointsTo(llvm::Value* a, std::vector<llvm::Value*>& ptset) {
+    bool containsUnknown = false;
+    if(PTA) {
+        PSNode *psnode = PTA->getPointsTo(a);
+        if (!psnode) return false;
+        for (const auto& ptr : psnode->pointsTo) {
+            if (ptr.isUnknown()) {
+                containsUnknown = true;
+                continue;
+            }
+
+            if (ptr.isNull() || ptr.isInvalidated())
+                continue;
+
+            llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
+            if(llvmVal)
+                ptset.push_back(llvmVal);
+        }
+    }
+
+    return containsUnknown;
 }
 
 void PointsToPlugin::getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* from) {

@@ -64,9 +64,10 @@ class PointsToPlugin : public InstrPlugin
             }
         }
 
+        virtual bool getPointsTo(llvm::Value* a, std::vector<llvm::Value*>& ptset);
         virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(llvm::Value* a);
         virtual std::tuple<llvm::Value*, uint64_t, uint64_t> getPInfoMin(llvm::Value* a);
-        virtual std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> getPInfoMinMax(llvm::Value* a);
+        virtual std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> getPInfoMinMax(llvm::Value* a, std::vector<llvm::Value*>& ptset);
         virtual void getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* a);
         virtual std::string notMinMemoryBlock(llvm::Value* min, llvm::Value* a);
 
