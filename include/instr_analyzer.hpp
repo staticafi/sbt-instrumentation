@@ -12,7 +12,8 @@ class Analyzer {
 
   public:
 	static std::unique_ptr<InstrPlugin> analyze(const std::string &path, llvm::Module* module);
-	static bool shouldInstrument(const std::list<std::pair<llvm::Value*, std::string>>& rememberedValues, InstrPlugin* plugin,
+	static bool shouldInstrument(const std::list<std::pair<llvm::Value*, std::string>>& rememberedValues,
+                                 std::vector<llvm::Value*>& rememberedPTSets, InstrPlugin* plugin,
                                  const Condition &condition, const std::list<llvm::Value*>& parameters);
 
   private:

@@ -707,7 +707,7 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
     }
 
     for (auto& plugin : instr.plugins) {
-        if (Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition, parameters)) {
+        if (Analyzer::shouldInstrument(instr.rememberedValues, instr.rememberedPTSets, plugin.get(), condition, parameters)) {
             // Some plugin told us that we should instrument
             return true;
         }
