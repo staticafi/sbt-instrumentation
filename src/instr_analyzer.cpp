@@ -7,13 +7,16 @@
 
 using namespace std;
 
-unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module) {
+unique_ptr<InstrPlugin> Analyzer::analyze(const string &path,
+                                          llvm::Module* module)
+{
 
     if (path.empty())
 		return nullptr;
 
     string err;
-    auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str(), &err);
+    auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str(),
+                                                             &err);
 
     if (!DL.isValid()) {
         cerr << "Cannot open library: " << path << "\n";
@@ -34,9 +37,11 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	return plugin;
 }
 
-bool Analyzer::shouldInstrument(const list<std::pair<llvm::Value*, std::string>> & rememberedValues,
-                                std::vector<llvm::Value*>& rememberedPTSets, InstrPlugin* plugin,
-                                const Condition &condition, const list<llvm::Value*>& parameters)
+bool Analyzer::shouldInstrument(const RememberedValues& rememberedValues,
+                                const ValuesVector& rememberedPTSets,
+                                InstrPlugin* plugin,
+                                const Condition &condition,
+                                const ValuesVector& parameters)
 {
 
     string answer;
@@ -46,8 +51,9 @@ bool Analyzer::shouldInstrument(const list<std::pair<llvm::Value*, std::string>>
         if (!plugin->supports("pointsTo"))
             return false;
 
-        for (auto& v : rememberedValues) {
-            answer = plugin->query("pointsTo", {v.first, *(parameters.begin())});
+        for (const auto& v : rememberedValues) {
+            answer = plugin->query("pointsTo",
+                                   {v.first, *(parameters.begin())});
             for (const auto& expV : condition.expectedValues)
             if (answer == expV)
                 return true;
