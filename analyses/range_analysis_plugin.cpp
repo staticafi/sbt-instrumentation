@@ -118,13 +118,11 @@ std::string RangeAnalysisPlugin::canOverflowTrunc(const Range& a,
     if (!t)
         return "unknown";
 
-    if (y > 0 && y > (std::pow(2, t->getBitWidth() - 1) - 1)) {
+    if (y > 0 && y > (std::pow(2, t->getBitWidth() - 1) - 1))
         return "true";
-    }
 
-    if (x < 0 && x < (-std::pow(2, t->getBitWidth() - 1))) {
+    if (x < 0 && x < (-std::pow(2, t->getBitWidth() - 1)))
         return "true";
-    }
 
     return "false";
 }
@@ -134,9 +132,8 @@ Range RangeAnalysisPlugin::getRange(ConstraintGraph& CG,
 {
     Range r = CG.getRange(val);
     if (r.isUnknown()) {
-        if (auto* loadInst = llvm::dyn_cast<llvm::LoadInst>(val)) {
+        if (auto* loadInst = llvm::dyn_cast<llvm::LoadInst>(val))
             return CG.getRange(loadInst->getOperand(0));
-        }
     }
 
     return r;
@@ -146,13 +143,12 @@ bool checkOverflowAdd(APInt ax, APInt ay, const IntegerType& t) {
     double x = ax.signedRoundToDouble();
     double y = ay.signedRoundToDouble();
 
-    if((x > 0) && (y > 0) && (x > (std::pow(2, t.getBitWidth() - 1) - 1) - y)) {
-        return true;
-    }
+    if((x > 0) && (y > 0) &&
+       (x > (std::pow(2, t.getBitWidth() - 1) - 1) - y))\
+    return true;
 
-    if((x < 0) && (y < 0) && (x < (-std::pow(2, t.getBitWidth() - 1)) - y)) {
+    if((x < 0) && (y < 0) && (x < (-std::pow(2, t.getBitWidth() - 1)) - y))
         return true;
-    }
 
     return false;
 }
@@ -160,13 +156,11 @@ bool checkOverflowAdd(APInt ax, APInt ay, const IntegerType& t) {
 std::string RangeAnalysisPlugin::canOverflowAdd(const Range& a,
         const Range& b, const IntegerType& t)
 {
-    if (checkOverflowAdd(a.getUpper(), b.getUpper(), t)) {
+    if (checkOverflowAdd(a.getUpper(), b.getUpper(), t))
         return "true";
-    }
 
-    if (checkOverflowAdd(a.getLower(), b.getLower(), t)) {
+    if (checkOverflowAdd(a.getLower(), b.getLower(), t))
         return "true";
-    }
 
     return "false";
 }
@@ -175,13 +169,11 @@ bool checkOverflowSub(APInt ax, APInt ay, const IntegerType& t) {
     double x = ax.signedRoundToDouble();
     double y = ay.signedRoundToDouble();
 
-    if((y > 0) && (x < (-std::pow(2, t.getBitWidth() - 1)) +  y)) {
+    if((y > 0) && (x < (-std::pow(2, t.getBitWidth() - 1)) +  y))
         return true;
-    }
 
-    if((y < 0) && (x > (std::pow(2, t.getBitWidth() - 1) - 1) + y)) {
+    if((y < 0) && (x > (std::pow(2, t.getBitWidth() - 1) - 1) + y))
         return true;
-    }
 
     return false;
 }
@@ -189,21 +181,17 @@ bool checkOverflowSub(APInt ax, APInt ay, const IntegerType& t) {
 std::string RangeAnalysisPlugin::canOverflowSub(const Range& a,
         const Range& b, const IntegerType& t)
 {
-    if (checkOverflowSub(a.getUpper(), b.getUpper(), t)) {
+    if (checkOverflowSub(a.getUpper(), b.getUpper(), t))
         return "true";
-    }
 
-    if (checkOverflowSub(a.getLower(), b.getLower(), t)) {
+    if (checkOverflowSub(a.getLower(), b.getLower(), t))
         return "true";
-    }
 
-    if (checkOverflowSub(a.getUpper(), b.getLower(), t)) {
+    if (checkOverflowSub(a.getUpper(), b.getLower(), t))
         return "true";
-    }
 
-    if (checkOverflowSub(a.getLower(), b.getUpper(), t)) {
+    if (checkOverflowSub(a.getLower(), b.getUpper(), t))
         return "true";
-    }
 
     return "false";
 }
@@ -215,12 +203,11 @@ bool checkOverflowMul(APInt ax, APInt ay, const IntegerType& t) {
     if (x == 0 || y == 0)
         return false;
 
-    if (x > (std::pow(2, t.getBitWidth() - 1) - 1) / y) {
+    if (x > (std::pow(2, t.getBitWidth() - 1) - 1) / y)
         return true;
-    }
-    if (x < (-std::pow(2, t.getBitWidth() - 1)) / y) {
+
+    if (x < (-std::pow(2, t.getBitWidth() - 1)) / y)
         return true;
-    }
 
     return false;
 }
@@ -228,21 +215,17 @@ bool checkOverflowMul(APInt ax, APInt ay, const IntegerType& t) {
 std::string RangeAnalysisPlugin::canOverflowMul(const Range& a,
         const Range& b, const IntegerType& t)
 {
-    if (checkOverflowMul(a.getUpper(), b.getUpper(), t)) {
+    if (checkOverflowMul(a.getUpper(), b.getUpper(), t))
         return "true";
-    }
 
-    if (checkOverflowMul(a.getLower(), b.getLower(), t)) {
+    if (checkOverflowMul(a.getLower(), b.getLower(), t))
         return "true";
-    }
 
-    if (checkOverflowMul(a.getUpper(), b.getLower(), t)) {
+    if (checkOverflowMul(a.getUpper(), b.getLower(), t))
         return "true";
-    }
 
-    if (checkOverflowMul(a.getLower(), b.getUpper(), t)) {
+    if (checkOverflowMul(a.getLower(), b.getUpper(), t))
         return "true";
-    }
 
     if (a.getLower().signedRoundToDouble() <= (-std::pow(2, t.getBitWidth()))
          && b.getLower().signedRoundToDouble() <= -1
