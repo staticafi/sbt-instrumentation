@@ -242,28 +242,28 @@ std::string PointsToPlugin::hasKnownSize(llvm::Value* a) {
     return "false";
 }
 
-std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPointerInfo(llvm::Value* a) {
+PointerInfo PointsToPlugin::getPointerInfo(llvm::Value* a) {
     // check is a is getelementptr
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
         assert(PTA);
         PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
-            return std::make_tuple(nullptr, 0, 0);
+            return PointerInfo();
         }
 
         const auto& first = *(psnode->pointsTo.begin());
-        return std::make_tuple(GI->getPointerOperand(), *(first.offset),
-                                first.target->getSize());
+        return PointerInfo(GI->getPointerOperand(), *(first.offset),
+                           first.target->getSize());
 
     }
     else {
-        return std::make_tuple(nullptr, 0, 0);
+        return PointerInfo();
     }
 }
 
-std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> PointsToPlugin::getPInfoMinMax(
-                                        llvm::Value* a, std::vector<llvm::Value*>& ptset)
+PointerInfo PointsToPlugin::getPInfoMinMax(llvm::Value* a,
+                                            std::vector<llvm::Value*>& ptset)
 {
     // check is a is getelementptr
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
@@ -271,7 +271,7 @@ std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> PointsToPlugin:
         assert(PTA);
         PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
-            return std::make_tuple(nullptr, 0, 0, 0, 0);
+            return PointerInfo();
         }
 
         uint64_t min_offset = *((*psnode->pointsTo.begin()).offset);
@@ -305,24 +305,24 @@ std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> PointsToPlugin:
             }
         }
 
-        return std::make_tuple(GI->getPointerOperand(), min_offset,
-                                min_space, max_offset, max_space);
+        return PointerInfo(GI->getPointerOperand(), min_offset,
+                           min_space, max_offset, max_space);
 
     }
     else {
-        return std::make_tuple(nullptr, 0, 0, 0, 0);
+        return PointerInfo();
     }
 }
 
 
-std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPInfoMin(llvm::Value* a) {
+PointerInfo PointsToPlugin::getPInfoMin(llvm::Value* a) {
     // check is a is getelementptr
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
         assert(PTA);
         PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
-            return std::make_tuple(nullptr, 0, 0);
+            return PointerInfo();
         }
 
         uint64_t min_offset = *((*psnode->pointsTo.begin()).offset);
@@ -336,12 +336,12 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> PointsToPlugin::getPInfoMin(llvm::V
                 min_space = ptr.target->getSize() - *(ptr.offset);
             }
         }
-        return std::make_tuple(GI->getPointerOperand(), min_offset,
-                                min_space);
+        return PointerInfo(GI->getPointerOperand(), min_offset,
+                           min_space);
 
     }
     else {
-        return std::make_tuple(nullptr, 0, 0);
+        return PointerInfo();
     }
 }
 
