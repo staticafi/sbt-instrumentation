@@ -96,6 +96,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
 
     r.inFunction = rule["in"].asString();
     r.remember = rule["remember"].asString();
+    r.rememberPTSet = rule["rememberPTSet"].asString();
 
     // Get conditions
     parseConditions(rule["conditions"], r.conditions);

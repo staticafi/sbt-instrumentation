@@ -19,7 +19,9 @@ class LLVMInstrumentation {
         llvm::Module& definitionsModule;
         std::list<std::unique_ptr<InstrPlugin>> plugins;
         std::string outputName;
-        std::list<std::pair<llvm::Value*, std::string>> rememberedValues;
+        std::vector<std::pair<llvm::Value*, std::string>> rememberedValues;
+        std::vector<llvm::Value*> rememberedPTSets;
+        bool rememberedUnknown = false;
         Variables variables;
         Rewriter rewriter;
 		std::set<const llvm::Function*> reachableFunctions;

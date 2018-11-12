@@ -1,5 +1,4 @@
 #include "instr_analyzer.hpp"
-#include "points_to_plugin.hpp"
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -8,13 +7,16 @@
 
 using namespace std;
 
-unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* module) {
+unique_ptr<InstrPlugin> Analyzer::analyze(const string &path,
+                                          llvm::Module* module)
+{
 
     if (path.empty())
 		return nullptr;
 
     string err;
-    auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str(), &err);
+    auto DL = llvm::sys::DynamicLibrary::getPermanentLibrary(path.c_str(),
+                                                             &err);
 
     if (!DL.isValid()) {
         cerr << "Cannot open library: " << path << "\n";
@@ -35,9 +37,11 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path, llvm::Module* modu
 	return plugin;
 }
 
-bool Analyzer::shouldInstrument(const list<std::pair<llvm::Value*, std::string>> & rememberedValues,
-                                InstrPlugin* plugin, const Condition &condition,
-                                const list<llvm::Value*>& parameters)
+bool Analyzer::shouldInstrument(const RememberedValues& rememberedValues,
+                                const ValuesVector& rememberedPTSets,
+                                InstrPlugin* plugin,
+                                const Condition &condition,
+                                const ValuesVector& parameters)
 {
 
     string answer;
@@ -47,8 +51,9 @@ bool Analyzer::shouldInstrument(const list<std::pair<llvm::Value*, std::string>>
         if (!plugin->supports("pointsTo"))
             return false;
 
-        for (auto& v : rememberedValues) {
-            answer = plugin->query("pointsTo", {v.first, *(parameters.begin())});
+        for (const auto& v : rememberedValues) {
+            answer = plugin->query("pointsTo",
+                                   {v.first, *(parameters.begin())});
             for (const auto& expV : condition.expectedValues)
             if (answer == expV)
                 return true;
@@ -56,26 +61,12 @@ bool Analyzer::shouldInstrument(const list<std::pair<llvm::Value*, std::string>>
         return false;
     }
 
-   if (condition.name == "isRemembered+") {
+    if (condition.name == "isRemembered+") {
         assert(parameters.size() == 1);
-        if (plugin->getName() != "PointsTo")
-            return false;
 
-        PointsToPlugin* ppPlugin = static_cast<PointsToPlugin*>(plugin);
-
-        for (auto& p : rememberedValues) {
-            if (p.second == "__INSTR_check_bounds_min_max") {
-                answer = ppPlugin->notMinMemoryBlock(p.first, *(parameters.begin()));
-                if (answer == "unknown")
-                    answer = plugin->query("pointsTo", {p.first, *(parameters.begin())});
-            }
-            else {
-                answer = plugin->query("pointsTo", {p.first, *(parameters.begin())});
-            }
-
-            for (const auto& expV : condition.expectedValues)
-                if (answer == expV)
-                    return true;
+        for (auto* v : rememberedPTSets) {
+            if (*(parameters.begin()) == v)
+                return true;
         }
         return false;
     }

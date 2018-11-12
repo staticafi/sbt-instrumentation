@@ -8,15 +8,23 @@
 #include "instr_plugin.hpp"
 #include "rewriter.hpp"
 
-class Analyzer {
+class Analyzer
+{
 
-  public:
-	static std::unique_ptr<InstrPlugin> analyze(const std::string &path, llvm::Module* module);
-	static bool shouldInstrument(const std::list<std::pair<llvm::Value*, std::string>>& rememberedValues, InstrPlugin* plugin,
-                                 const Condition &condition, const std::list<llvm::Value*>& parameters);
+    using RememberedValues = std::vector<std::pair<llvm::Value*, std::string>>;
+    using ValuesVector = std::vector<llvm::Value*>;
 
-  private:
-	 Analyzer() {}
+public:
+    static std::unique_ptr<InstrPlugin> analyze(const std::string &path,
+                                                llvm::Module* module);
+    static bool shouldInstrument(const RememberedValues& rememberedValues,
+                                 const ValuesVector& rememberedPTSets,
+                                 InstrPlugin* plugin,
+                                 const Condition &condition,
+                                 const ValuesVector& parameters);
+
+private:
+     Analyzer() {}
 };
 
 #endif

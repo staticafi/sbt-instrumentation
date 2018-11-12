@@ -82,13 +82,14 @@ void getPointsToPlugin(LLVMInstrumentation& instr) {
 }
 
 /**
- * Get info about minimum and maximum allocated memory to which given pointer points to.
+ * Get info about minimum and maximum allocated memory to which given pointer
+ * points to.
  * @param I instruction.
  * @param ins LLVMInstrumentation object.
- * @return pointer, offset and size of allocated memory to which pointer points to.
+ * @return pointer, offset and size of allocated memory to which pointer points
+ *         to.
  */
-std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t>
-    getPointerInfoMinMax(Instruction *I, const LLVMInstrumentation& instr)
+PointerInfo getPointerInfoMinMax(Instruction *I, LLVMInstrumentation& instr)
 {
     Value* op;
     if (const StoreInst *SI = dyn_cast<StoreInst>(I)) {
@@ -98,23 +99,25 @@ std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t>
         op = LI->getOperand(0);
     }
     else {
-        return std::make_tuple(nullptr, 0, 0, 0, 0);
+        return PointerInfo();
     }
 
     if (instr.ppPlugin)
-        return instr.ppPlugin->getPInfoMinMax(op);
+        return instr.ppPlugin->getPInfoMinMax(op, instr.rememberedPTSets);
 
-    return std::make_tuple(nullptr, 0, 0, 0, 0);
+    return PointerInfo();
 }
 
 /**
  * Get info about allocated memory to which given pointer points to.
  * @param I instruction.
  * @param ins LLVMInstrumentation object.
- * @param min get info for the object with minimal space left (size - offset) and minimal offset
- * @return pointer, offset and size of allocated memory to which pointer points to.
+ * @param min get info for the object with minimal space left (size - offset)
+ *        and minimal offset
+ * @return pointer, offset and size of allocated memory to which pointer points
+ *         to.
  */
-std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, const LLVMInstrumentation& instr,
+PointerInfo getPointerInfo(Instruction *I, const LLVMInstrumentation& instr,
                                                             bool min = false)
 {
     Value* op;
@@ -125,7 +128,7 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, cons
         op = LI->getOperand(0);
     }
     else {
-        return std::make_tuple(nullptr, 0, 0);
+        return PointerInfo();
     }
 
     if (instr.ppPlugin && !min) {
@@ -134,7 +137,7 @@ std::tuple<llvm::Value*, uint64_t, uint64_t> getPointerInfo(Instruction *I, cons
         return instr.ppPlugin->getPInfoMin(op);
     }
 
-    return std::make_tuple(nullptr, 0, 0);
+    return PointerInfo();
 }
 
 /**
@@ -183,51 +186,49 @@ uint64_t getAllocatedSize(Instruction *I, const Module& M) {
  * @return true if ok, false for instrumentation fail
  */
 bool getPointerInfos(Variables& variables, const InstrumentInstruction& iIns,
-                        Instruction *ins, const LLVMInstrumentation& instr)
+                        Instruction *ins, LLVMInstrumentation& instr)
 {
-    if (!iIns.getSizeTo.empty()) {
-        variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
-    }
-
     if (iIns.getPointerInfoTo.size() == 3) {
-        std::tuple<llvm::Value*, uint64_t, uint64_t> pointerInfo = getPointerInfo(ins, instr);
-        // Do not apply this rule, if there was no relevant answer from pointer analysis
-        if (!std::get<0>(pointerInfo))
+        PointerInfo pointerInfo = getPointerInfo(ins, instr);
+        // Do not apply this rule, if there was no relevant answer
+        // from pointer analysis
+        if (!pointerInfo.getPointer())
              return false;
-        variables[iIns.getPointerInfoTo.front()] = std::get<0>(pointerInfo);
+        variables[iIns.getPointerInfoTo.front()] = pointerInfo.getPointer();
         variables[*(std::next(iIns.getPointerInfoTo.begin(), 1))] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                        std::get<1>(pointerInfo));
+                                                                        pointerInfo.getMinOffset());
 
         variables[iIns.getPointerInfoTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                            std::get<2>(pointerInfo));
+                                                                         pointerInfo.getMinSpace());
      }
 
     if (iIns.getPointerInfoMinTo.size() == 3) {
-        std::tuple<llvm::Value*, uint64_t, uint64_t> pointerInfo = getPointerInfo(ins, instr, true);
-        // Do not apply this rule, if there was no relevant answer from pointer analysis
-        if (!std::get<0>(pointerInfo))
+        PointerInfo pointerInfo = getPointerInfo(ins, instr, true);
+        // Do not apply this rule, if there was no relevant answer
+        // from pointer analysis
+        if (!pointerInfo.getPointer())
             return false;
-        variables[iIns.getPointerInfoMinTo.front()] = std::get<0>(pointerInfo);
+        variables[iIns.getPointerInfoMinTo.front()] = pointerInfo.getPointer();
         variables[*(std::next(iIns.getPointerInfoMinTo.begin(), 1))] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                           std::get<1>(pointerInfo));
+                                                                           pointerInfo.getMinOffset());
         variables[iIns.getPointerInfoMinTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                            std::get<2>(pointerInfo));
+                                                                           pointerInfo.getMinSpace());
     }
 
     if (iIns.getPInfoMinMaxTo.size() == 5) {
-        std::tuple<llvm::Value*, uint64_t, uint64_t, uint64_t, uint64_t> pointerInfo = getPointerInfoMinMax(ins, instr);
+        PointerInfo pointerInfo = getPointerInfoMinMax(ins, instr);
         // Do not apply this rule, if there was no relevant answer from pointer analysis
-        if (!std::get<0>(pointerInfo))
+        if (!pointerInfo.getPointer())
             return false;
-        variables[iIns.getPInfoMinMaxTo.front()] = std::get<0>(pointerInfo);
+        variables[iIns.getPInfoMinMaxTo.front()] = pointerInfo.getPointer();
         variables[*(std::next(iIns.getPInfoMinMaxTo.begin(), 1))] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                           std::get<1>(pointerInfo));
+                                                                           pointerInfo.getMinOffset());
         variables[*(std::next(iIns.getPInfoMinMaxTo.begin(), 2))] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                           std::get<2>(pointerInfo));
+                                                                           pointerInfo.getMinSpace());
         variables[*(std::next(iIns.getPInfoMinMaxTo.begin(), 3))] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                           std::get<3>(pointerInfo));
+                                                                           pointerInfo.getMaxOffset());
         variables[iIns.getPInfoMinMaxTo.back()] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()),
-                                                                            std::get<4>(pointerInfo));
+                                                                           pointerInfo.getMaxSpace());
     }
 
 
@@ -694,7 +695,11 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
     if (condition.name == "")
         return true;
 
-    list<Value*> parameters;
+    if (condition.name == "isRemembered+" && instr.rememberedUnknown)
+        return true;
+
+    vector<Value*> parameters;
+    parameters.reserve(condition.arguments.size());
     for (const auto& arg : condition.arguments) {
         auto search = variables.find(arg);
         if (search != variables.end()) {
@@ -708,7 +713,7 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
     }
 
     for (auto& plugin : instr.plugins) {
-        if (Analyzer::shouldInstrument(instr.rememberedValues, plugin.get(), condition, parameters)) {
+        if (Analyzer::shouldInstrument(instr.rememberedValues, instr.rememberedPTSets, plugin.get(), condition, parameters)) {
             // Some plugin told us that we should instrument
             return true;
         }
@@ -763,6 +768,23 @@ void rememberValues(string name, LLVMInstrumentation& instr, Variables variables
     if (search != variables.end()) {
         std::string calledFunction = rw.newInstr.parameters.back();
         instr.rememberedValues.push_back(std::make_pair(search->second, calledFunction));
+    }
+}
+
+/**
+ * Adds ptset values that should be remembered into
+ * instr's list.
+ * @param name name of the value to be remembered
+ * @param instr instrumentation object
+ * @param variables list of variables
+**/
+void rememberPTSet(string name, LLVMInstrumentation& instr, Variables variables, const RewriteRule& rw) {
+    auto search = variables.find(name);
+    std::string calledFunction = rw.newInstr.parameters.back();
+    if (search != variables.end() && calledFunction != "__INSTR_check_bounds_min_max") {
+        bool containsUnknown = instr.ppPlugin->getPointsTo(search->second, instr.rememberedPTSets);
+        if (containsUnknown)
+            instr.rememberedUnknown = true;
     }
 }
 
@@ -838,28 +860,32 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             }
         }
 
-        if (rw.foundInstrs.size() == 1) {
-            InstrumentInstruction iIns = rw.foundInstrs.front();
-            if (!getPointerInfos(variables, iIns, ins, instr))
-                instrument = false;
-        }
-
         // If all instructions match and conditions are satisfied
         // try to instrument the code
         if (instrument) {
+            InstrumentInstruction iIns = rw.foundInstrs.front();
+
+            if (!iIns.getSizeTo.empty()) {
+                variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
+            }
+
             if (!checkConditions(rw.conditions, instr, variables)) {
                 const string& func = *(--rw.newInstr.parameters.end());
                 ++statistics.suppresed_instr[func];
                 continue;
             }
 
-            InstrumentInstruction iIns = rw.foundInstrs.front();
+            if (rw.foundInstrs.size() == 1) {
+                if (!getPointerInfos(variables, iIns, ins, instr))
+                    return false;
+            }
 
             // Set flags
             setFlags(rw, instr.rewriter);
 
             // Remember values that should be remembered
             rememberValues(rw.remember, instr, variables, rw);
+            rememberPTSet(rw.rememberPTSet, instr, variables, rw);
 
             // Try to apply rule
             Instruction *where;

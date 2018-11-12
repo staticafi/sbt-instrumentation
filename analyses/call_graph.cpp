@@ -28,7 +28,9 @@ int CGNode::getId() const {
     return id;
 }
 
-bool CGNode::containsCall(std::vector<CGNode> nodeMapping, const Function* call) {
+bool CGNode::containsCall(std::vector<CGNode> nodeMapping,
+                          const Function* call)
+{
     for(auto node : calls) {
         // If node contains call for unknown target or given call, return true
         if(node == 0 || nodeMapping[node].getCaller() == call) {
@@ -38,7 +40,9 @@ bool CGNode::containsCall(std::vector<CGNode> nodeMapping, const Function* call)
     return false;
 }
 
-void CallGraph::buildCallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysis> &PTA) {
+void CallGraph::buildCallGraph(Module &M,
+                               std::unique_ptr<dg::LLVMPointerAnalysis> &PTA)
+{
     nodes = std::vector<CGNode>();
     int distance = std::distance(M.begin(),M.end());
     nodes.reserve(distance+1);
@@ -47,17 +51,19 @@ void CallGraph::buildCallGraph(Module &M, std::unique_ptr<dg::LLVMPointerAnalysi
     nodes.push_back(CGNode(nullptr, 0));
 
     // Creates nodes from functions
-    for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
-        CGNode newNode(&*Fiterator, nodes.size());
+    for (const auto& F : M) {
+        CGNode newNode(&F, nodes.size());
         nodes.push_back(newNode);
     }
 
     // Go through functions
-    for (Module::iterator Fiterator = M.begin(), E = M.end(); Fiterator != E; ++Fiterator) {
-        // Look for call instructions
-        for (inst_iterator Iiterator = inst_begin(*Fiterator); Iiterator != inst_end(*Fiterator); ++Iiterator){
-            if (const CallInst *CI = dyn_cast<CallInst const>(&*Iiterator)){
-                handleCallInst(PTA, &*Fiterator, CI);
+    for (const auto& F : M) {
+        for (const auto& BB : F) {
+            // Look for call instructions
+            for (const auto& I : BB){
+                if (const CallInst *CI = dyn_cast<CallInst const>(&I)){
+                    handleCallInst(PTA, &F, CI);
+                }
             }
         }
     }
@@ -113,7 +119,9 @@ bool CallGraph::containsCall(const Function* caller, const Function* callee) {
     return (visited[calleeId] || visited[0]);
 }
 
-bool CallGraph::containsDirectCall(const Function* caller, const Function* callee) {
+bool CallGraph::containsDirectCall(const Function* caller,
+                                   const Function* callee)
+{
     for(auto& node : nodes) {
         if(node.getCaller() == caller) {
             return node.containsCall(nodes, callee);
@@ -122,7 +130,9 @@ bool CallGraph::containsDirectCall(const Function* caller, const Function* calle
     return false;
 }
 
-void CallGraph::getReachableFunctions(std::set<const Function*>& reachableFunctions, const Function* start) {
+void CallGraph::getReachableFunctions(Functions& reachableFunctions,
+                                      const Function* start)
+{
     reachableFunctions.insert(start);
 
     CGNode *startNode = &nodes[findNode(start)];
@@ -150,7 +160,9 @@ bool CallGraph::isRecursive(const Function* function) {
     return containsCall(function, function);
 }
 
-void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA, const Function *F,  const CallInst *CI) {
+void CallGraph::handleCallInst(std::unique_ptr<dg::LLVMPointerAnalysis> &PTA,
+                               const Function *F,  const CallInst *CI)
+{
     CGNode *caller = &nodes[findNode(F)];
 
     // Store called functions for F in its vector

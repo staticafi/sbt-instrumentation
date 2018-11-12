@@ -73,6 +73,7 @@ class RewriteRule {
     std::list<Condition> conditions;
     Flags setFlags;
     std::string remember;
+    std::string rememberPTSet;
 };
 
 typedef std::list<RewriteRule> RewriterConfig;
