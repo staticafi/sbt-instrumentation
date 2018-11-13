@@ -10,6 +10,7 @@ install(FILES
 	memsafety/config-i2-enhanced-lifetimes.json
 	memsafety/config-lifetimes.json
 	memsafety/config-minmax.json
+	memsafety/config-memcleanup.json
 	memsafety/memsafety.c
 	memsafety/marker.c
 	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/memsafety/
