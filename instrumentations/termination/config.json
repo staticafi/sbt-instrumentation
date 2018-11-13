@@ -1,0 +1,28 @@
+{
+    "file": "termination.c",
+    "analyses": ["libInfiniteLoopsPlugin.so"],
+    "phases": [
+        {
+            "instructionsRules":
+                [
+                {
+                    "findInstructions": [
+                    {
+						"returnValue": "<br>",
+                        "instruction": "br",
+                        "operands": ["*"]
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["__INSTR_fail"]
+                    },
+                    "where": "before",
+                    "in": "*",
+					"conditions": [{"query":["isInfinite", "<br>"], "expectedResults":["true"]}]
+				}
+                ]
+        }
+    ]
+}

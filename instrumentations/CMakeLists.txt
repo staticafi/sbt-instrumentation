@@ -31,6 +31,12 @@ install(FILES
 )
 
 install(FILES
+	termination/config.json
+	termination/termination.c
+	DESTINATION ${CMAKE_INSTALL_DATADIR}/sbt-instrumentation/termination/
+)
+
+install(FILES
     int_overflows/config.json
     int_overflows/config-no-ra.json
     int_overflows/overflows.c
