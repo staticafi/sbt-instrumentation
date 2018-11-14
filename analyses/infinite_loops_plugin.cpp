@@ -40,7 +40,6 @@ std::string InfiniteLoopsPlugin::handleConditional(const BranchInst* br) {
 std::string InfiniteLoopsPlugin::isInfinite(Value* value) {
     // Support only branch instructions
     auto* inst = dyn_cast<BranchInst>(value);
-    value->dump();
     if (!inst)
         return "unknown";
 
