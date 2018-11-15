@@ -60,6 +60,10 @@ class PointsToPlugin : public InstrPlugin
 {
 
 private:
+    bool allMayBeLeaked = false;
+    // possibly leaked allocations
+    std::set<PSNode *> possiblyLeaked;
+    std::unique_ptr<dg::analysis::pta::PointerAnalysis> PTAImpl;
     std::unique_ptr<dg::LLVMPointerAnalysis> PTA;
     CallGraph cg;
 
@@ -72,6 +76,11 @@ private:
     std::string pointsToHeap(llvm::Value* a);
     std::string pointsToStack(llvm::Value* a);
     std::string pointsToGlobal(llvm::Value* a);
+    std::string mayBeLeaked(llvm::Value* a);
+    std::string mayBeLeakedOrFreed(llvm::Value* a);
+
+    void gatherPossiblyLeaked(llvm::Module *);
+    void gatherPossiblyLeaked(llvm::ReturnInst *);
 
 public:
     bool supports(const std::string& query) override;
@@ -105,6 +114,12 @@ public:
         } else if (query == "isInvalid") {
             assert(operands.size() == 1 && "Wrong number of operands");
             return isInvalid(operands[0]);
+        } else if (query == "mayBeLeaked") {
+            assert(operands.size() == 1 && "Wrong number of operands");
+            return mayBeLeaked(operands[0]);
+        } else if (query == "mayBeLeakedOrFreed") {
+            assert(operands.size() == 1 && "Wrong number of operands");
+            return mayBeLeakedOrFreed(operands[0]);
         } else {
             return "unsupported query";
         }
@@ -122,9 +137,14 @@ public:
     PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
         llvm::errs() << "Running points-to analysis...\n";
         PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(module));
-        PTA->run<dg::analysis::pta::PointerAnalysisFSInv>();
+        PTAImpl.reset(PTA->createPTA<dg::analysis::pta::PointerAnalysisFSInv>());
+        PTAImpl->run();
+
         llvm::errs() << "Building call-graph...\n";
         cg.buildCallGraph(*module, PTA);
+
+        gatherPossiblyLeaked(module);
+
         llvm::errs() << "PT plugin done.\n";
     }
 };

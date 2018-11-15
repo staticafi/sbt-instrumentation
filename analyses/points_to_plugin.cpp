@@ -457,6 +457,90 @@ bool PointsToPlugin::getPointsTo(llvm::Value* a, std::vector<llvm::Value*>& ptse
     return containsUnknown;
 }
 
+void PointsToPlugin::gatherPossiblyLeaked(llvm::ReturnInst *RI) {
+    PSNode *ret = PTA->getPointsTo(RI);
+    if (!ret) {
+        allMayBeLeaked = true;
+        return;
+    }
+
+    auto mm = ret->getData<dg::analysis::pta::PointerAnalysisFSInv::MemoryMapT>();
+    if (!mm) {
+        allMayBeLeaked = true;
+        return;
+    }
+
+    // Find all heap allocations in the memory map.
+    // If the memory was freed for sure, it was replaced with invalidated,
+    // therefore if it is in the map, it may not have been freed
+    for (auto& it : *mm) {
+        for (auto& ptrs : *(it.second.get())) {
+            for (const auto &ptr : ptrs.second) {
+                const auto alloc = PSNodeAlloc::get(ptr.target);
+                if (alloc && alloc->isHeap()) {
+                    possiblyLeaked.insert(alloc);
+                }
+            }
+        }
+    }
+}
+
+void PointsToPlugin::gatherPossiblyLeaked(llvm::Module *M) {
+    auto Main = M->getFunction("main");
+    if (!Main) {
+        allMayBeLeaked = true;
+        return;
+    }
+
+    for (auto& B : *Main) {
+        auto term = B.getTerminator();
+        if (auto RI = llvm::dyn_cast<llvm::ReturnInst>(term)) {
+            gatherPossiblyLeaked(RI);
+            if (allMayBeLeaked) {
+                possiblyLeaked.clear();
+                return;
+            }
+        }
+    }
+}
+
+std::string PointsToPlugin::mayBeLeaked(llvm::Value* a) {
+    if (allMayBeLeaked)
+        return "true";
+
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty())
+        return "true";
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isUnknown())
+            return "true";
+        if (possiblyLeaked.count(ptr.target) > 0)
+            return "true";
+    }
+
+    return "false";
+}
+
+std::string PointsToPlugin::mayBeLeakedOrFreed(llvm::Value* a) {
+    if (allMayBeLeaked)
+        return "true";
+
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty())
+        return "true";
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isUnknown() || ptr.isInvalidated())
+            return "true";
+        if (possiblyLeaked.count(ptr.target) > 0)
+            return "true";
+    }
+
+    return "false";
+}
+
+
 void PointsToPlugin::getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* from) {
     cg.getReachableFunctions(reachableFunctions, from);
 }
@@ -471,7 +555,9 @@ static const std::string supportedQueries[] = {
     "pointsToHeap",
     "pointsToGlobal",
     "pointsToStack",
-    "isInvalid"
+    "isInvalid",
+    "mayBeLeaked",
+    "mayBeLeakedOrFreed",
 };
 
 bool PointsToPlugin::supports(const std::string& query) {
