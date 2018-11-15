@@ -2,6 +2,8 @@
 #include <limits>
 #include <cmath>
 
+#include <llvm/IR/Operator.h>
+
 using namespace llvm;
 
 std::string CheckNSWPlugin::canOverflow(Value* value) {

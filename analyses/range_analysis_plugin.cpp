@@ -2,6 +2,8 @@
 #include <limits>
 #include <cmath>
 
+#include <llvm/IR/Operator.h>
+
 using namespace llvm;
 
 bool checkUnknown(const Range& a, const Range& b) {
