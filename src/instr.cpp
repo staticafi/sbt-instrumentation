@@ -713,7 +713,8 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
     }
 
     for (auto& plugin : instr.plugins) {
-        if (Analyzer::shouldInstrument(instr.rememberedValues, instr.rememberedPTSets, plugin.get(), condition, parameters)) {
+        if (Analyzer::shouldInstrument(instr.rememberedValues, instr.rememberedPTSets,
+                                       plugin.get(), condition, parameters, logger)) {
             // Some plugin told us that we should instrument
             return true;
         }
@@ -1241,12 +1242,13 @@ bool loadPlugins(LLVMInstrumentation& instr) {
     for (const string& path : instr.rewriter.analysisPaths) {
         auto plugin = Analyzer::analyze(path, &instr.module);
         if (plugin) {
-            logger.write_info("Plugin " + plugin->getName() + " loaded.");
+            logger.write_info("Plugin " + plugin->getName() + " loaded " +
+                              "(" + path +").");
             instr.plugins.push_back(std::move(plugin));
         }
         else {
             logger.write_error("Failed loading plugin " + path);
-            cout <<"Failed loading plugin: " << path << endl;
+            cerr <<"Failed loading plugin: " << path << endl;
             return false;
         }
     }

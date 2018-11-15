@@ -8,6 +8,8 @@
 #include "instr_plugin.hpp"
 #include "rewriter.hpp"
 
+class Logger;
+
 class Analyzer
 {
 
@@ -21,7 +23,8 @@ public:
                                  const ValuesVector& rememberedPTSets,
                                  InstrPlugin* plugin,
                                  const Condition &condition,
-                                 const ValuesVector& parameters);
+                                 const ValuesVector& parameters,
+                                 Logger& logger);
 
 private:
      Analyzer() {}
