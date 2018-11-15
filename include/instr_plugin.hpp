@@ -3,10 +3,6 @@
 
 #include <string>
 
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Value.h>
-#include <llvm/IR/Operator.h>
-
 class InstrPlugin
 {
     private:
