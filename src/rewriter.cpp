@@ -5,10 +5,10 @@
 #include "rewriter.hpp"
 #include "json/json.h"
 
-using namespace std;
-
-void parseConditions(const Json::Value& conditions, std::list<Condition>& r_conditions) {
-    for (const auto& condition : conditions){
+void parseConditions(const Json::Value& conditions,
+                     std::list<Condition>& r_conditions)
+{
+    for (const auto& condition : conditions) {
         Condition r_condition;
         r_condition.name = condition["query"][0].asString();
 
@@ -17,7 +17,8 @@ void parseConditions(const Json::Value& conditions, std::list<Condition>& r_cond
         }
 
         for (uint i = 0; i < condition["expectedResults"].size(); i++) {
-            r_condition.expectedValues.push_back(condition["expectedResults"][i].asString());
+            r_condition.expectedValues.push_back(
+                        condition["expectedResults"][i].asString());
         }
 
         r_conditions.push_back(r_condition);
@@ -50,6 +51,7 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
         for (const auto& operand : findInstruction["operands"]) {
             instr.parameters.push_back(operand.asString());
         }
+
         instr.getSizeTo = findInstruction["getTypeSize"].asString();
         instr.type = getType(findInstruction["type"].asString());
         instr.getDestType = findInstruction["getDestType"].asString();
@@ -66,7 +68,9 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
             instr.getPInfoMinMaxTo.push_back(info.asString());
         }
 
-        instr.stripInboundsOffsets = findInstruction["stripInboundsOffsets"].asString();
+        instr.stripInboundsOffsets =
+                        findInstruction["stripInboundsOffsets"].asString();
+
         r.foundInstrs.push_back(instr);
     }
 
@@ -108,24 +112,30 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
     }
 }
 
-void parseGlobalRule(const Json::Value& globalRule, GlobalVarsRule& rw_globals_rule) {
+void parseGlobalRule(const Json::Value& global_rule,
+                     GlobalVarsRule& r_global_rule)
+{
     // Get rule for global variables
-    rw_globals_rule.globalVar.globalVariable = globalRule["findGlobals"]["globalVariable"].asString();
-    rw_globals_rule.globalVar.getSizeTo = globalRule["findGlobals"]["getTypeSize"].asString();
+    r_global_rule.globalVar.globalVariable =
+                    global_rule["findGlobals"]["globalVariable"].asString();
+    r_global_rule.globalVar.getSizeTo =
+                    global_rule["findGlobals"]["getTypeSize"].asString();
 
     // Get conditions
-    parseConditions(globalRule["conditions"], rw_globals_rule.conditions);
-    if (globalRule["mustHoldForAll"].asString() == "true")
-        rw_globals_rule.mustHoldForAll = true;
+    parseConditions(global_rule["conditions"], r_global_rule.conditions);
+    if (global_rule["mustHoldForAll"].asString() == "true")
+        r_global_rule.mustHoldForAll = true;
 
-    rw_globals_rule.newInstr.returnValue = globalRule["newInstruction"]["returnValue"].asString();
-    rw_globals_rule.newInstr.instruction = globalRule["newInstruction"]["instruction"].asString();
+    r_global_rule.newInstr.returnValue =
+                    global_rule["newInstruction"]["returnValue"].asString();
+    r_global_rule.newInstr.instruction =
+                    global_rule["newInstruction"]["instruction"].asString();
 
-    for (auto operand : globalRule["newInstruction"]["operands"]) {
-        rw_globals_rule.newInstr.parameters.push_back(operand.asString());
+    for (auto operand : global_rule["newInstruction"]["operands"]) {
+        r_global_rule.newInstr.parameters.push_back(operand.asString());
     }
 
-    rw_globals_rule.inFunction = globalRule["in"].asString();
+    r_global_rule.inFunction = global_rule["in"].asString();
 }
 
 void parsePhase(const Json::Value& phase, Phase& r_phase) {
@@ -144,7 +154,7 @@ void parsePhase(const Json::Value& phase, Phase& r_phase) {
     }
 }
 
-void Rewriter::parseConfig(ifstream &config_file) {
+void Rewriter::parseConfig(std::ifstream &config_file) {
     Json::Value json_rules;
     bool parsingSuccessful;
 
@@ -161,11 +171,12 @@ void Rewriter::parseConfig(ifstream &config_file) {
     Json::CharReaderBuilder rbuilder;
     rbuilder["collectComments"] = false;
     std::string errs;
-    parsingSuccessful = Json::parseFromStream(rbuilder, config_file, &json_rules, &errs);
+    parsingSuccessful = Json::parseFromStream(rbuilder, config_file,
+                                              &json_rules, &errs);
     if (!parsingSuccessful) {
-        cerr  << "Failed to parse configuration\n"
+        std::cerr  << "Failed to parse configuration\n"
               << errs;
-        throw runtime_error("Config parsing failure.");
+        throw std::runtime_error("Config parsing failure.");
     }
 
 #endif
@@ -192,18 +203,18 @@ const Phases& Rewriter::getPhases() {
     return this->phases;
 }
 
-bool Rewriter::isFlag(string name) {
+bool Rewriter::isFlag(std::string name) {
     auto search = this->flags.find(name);
     return search != this->flags.end();
 }
 
-void Rewriter::setFlag(string name, string value) {
+void Rewriter::setFlag(std::string name, std::string value) {
     auto search = this->flags.find(name);
     if (search != this->flags.end())
             search->second = value;
 }
 
-string Rewriter::getFlagValue(string name) {
+std::string Rewriter::getFlagValue(std::string name) {
     auto search = this->flags.find(name);
     if (search != this->flags.end())
         return search->second;

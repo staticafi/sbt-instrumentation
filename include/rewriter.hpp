@@ -25,7 +25,7 @@ enum class BinOpType {
 };
 
 class InstrumentInstruction {
- public:
+public:
     std::string returnValue;
     std::string instruction;
     std::list<std::string> parameters;
@@ -39,40 +39,39 @@ class InstrumentInstruction {
 };
 
 class InstrumentGlobalVar {
- public:
-	std::string globalVariable;
-	std::string getSizeTo;
+public:
+    std::string globalVariable;
+    std::string getSizeTo;
 };
 
 class Condition {
-    public:
-        std::string name;
-        std::list<std::string> arguments;
-        std::list<std::string> expectedValues;
-};
-
-
-class GlobalVarsRule {
- public:
-    InstrumentGlobalVar globalVar;
-    InstrumentInstruction newInstr;
-    std::string inFunction;
-    std::list<Condition> conditions;
-    bool mustHoldForAll = false;
+public:
+    std::string name;
+    std::list<std::string> arguments;
+    std::list<std::string> expectedValues;
 };
 
 typedef std::list<InstrumentInstruction> InstrumentSequence;
 typedef std::map<std::string, std::string> Flags;
 typedef std::pair<std::string, std::string> Flag;
 
-class RewriteRule {
- public:
-    InstrumentSequence foundInstrs;
+class Rule {
+public:
     InstrumentInstruction newInstr;
-    InstrumentPlacement where;
     std::string inFunction;
     std::list<Condition> conditions;
     bool mustHoldForAll = false;
+};
+
+class GlobalVarsRule : public Rule {
+public:
+    InstrumentGlobalVar globalVar;
+};
+
+class RewriteRule : public Rule {
+public:
+    InstrumentSequence foundInstrs;
+    InstrumentPlacement where;
     Flags setFlags;
     std::string remember;
     std::string rememberPTSet;
@@ -82,7 +81,7 @@ typedef std::list<RewriteRule> RewriterConfig;
 typedef std::list<GlobalVarsRule> RewriterGlobalsConfig;
 
 class Phase {
- public:
+public:
     RewriterConfig config;
     RewriterGlobalsConfig gconfig;
 };
@@ -93,13 +92,14 @@ typedef std::list<Phase> Phases;
 class Rewriter {
     Phases phases;
     Flags flags;
-    public:
-        std::list<std::string> analysisPaths;
-        const Phases& getPhases();
-        void parseConfig(std::ifstream &config_file);
-        void setFlag(std::string name, std::string value);
-        bool isFlag(std::string name);
-        std::string getFlagValue(std::string name);
+
+public:
+    std::list<std::string> analysisPaths;
+    const Phases& getPhases();
+    void parseConfig(std::ifstream &config_file);
+    void setFlag(std::string name, std::string value);
+    bool isFlag(std::string name);
+    std::string getFlagValue(std::string name);
 };
 
 #endif
