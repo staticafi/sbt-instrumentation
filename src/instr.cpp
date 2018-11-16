@@ -691,7 +691,9 @@ bool checkFlag(Condition condition, Rewriter rewriter) {
  * @param variables
  * @return true if condition is ok, false otherwise
  */
-bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const Variables& variables) {
+bool checkAnalysis(const Condition& condition, bool forAll,
+                   LLVMInstrumentation& instr, const Variables& variables)
+{
     if (condition.name == "")
         return true;
 
@@ -713,14 +715,21 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
     }
 
     for (auto& plugin : instr.plugins) {
-        if (Analyzer::shouldInstrument(instr.rememberedValues, instr.rememberedPTSets, plugin.get(), condition, parameters)) {
+        bool answer = Analyzer::shouldInstrument(instr.rememberedValues,
+                            instr.rememberedPTSets, plugin.get(), condition,
+                            parameters);
+        if (answer && !forAll) {
             // Some plugin told us that we should instrument
             return true;
+        } else if (!answer && forAll) {
+
+            // Some plugin told us that we should not instrument
+            return false;
         }
     }
 
     // no plugin told us that we should instrument
-    return false;
+    return forAll;
 }
 
 /**
@@ -730,7 +739,9 @@ bool checkAnalysis(LLVMInstrumentation& instr, const Condition& condition, const
  * @param variables list of variables
  * @return true if conditions are satisfied, false otherwise
  **/
-bool checkConditions(const std::list<Condition>& conditions, LLVMInstrumentation& instr, const Variables& variables) {
+bool checkConditions(const std::list<Condition>& conditions, bool forAll,
+                     LLVMInstrumentation& instr, const Variables& variables)
+{
     // check the conditions
     for (const auto& condition : conditions) {
         if (instr.rewriter.isFlag(condition.name)) {
@@ -738,7 +749,7 @@ bool checkConditions(const std::list<Condition>& conditions, LLVMInstrumentation
                 return false;
             }
         }
-        else if (!checkAnalysis(instr, condition, variables)) {
+        else if (!checkAnalysis(condition, forAll, instr, variables)) {
             return false;
         }
     }
@@ -869,7 +880,9 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                 variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
             }
 
-            if (!checkConditions(rw.conditions, instr, variables)) {
+            if (!checkConditions(rw.conditions, rw.mustHoldForAll,
+                                 instr, variables))
+            {
                 const string& func = *(--rw.newInstr.parameters.end());
                 ++statistics.suppresed_instr[func];
                 continue;
@@ -967,7 +980,9 @@ bool instrumentGlobal(LLVMInstrumentation& instr, const GlobalVarsRule& g_rule) 
             // Check the conditions
             bool satisfied = true;
             for (auto condition : g_rule.conditions) {
-                if (!checkAnalysis(instr, condition, variables)) {
+                if (!checkAnalysis(condition, g_rule.mustHoldForAll,
+                                   instr, variables))
+                {
                     satisfied = false;
                     break;
                 }
