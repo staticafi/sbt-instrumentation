@@ -58,6 +58,7 @@ class GlobalVarsRule {
     InstrumentInstruction newInstr;
     std::string inFunction;
     std::list<Condition> conditions;
+    bool mustHoldForAll = false;
 };
 
 typedef std::list<InstrumentInstruction> InstrumentSequence;
@@ -71,6 +72,7 @@ class RewriteRule {
     InstrumentPlacement where;
     std::string inFunction;
     std::list<Condition> conditions;
+    bool mustHoldForAll = false;
     Flags setFlags;
     std::string remember;
     std::string rememberPTSet;

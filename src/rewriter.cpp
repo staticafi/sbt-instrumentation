@@ -100,6 +100,8 @@ void parseRule(const Json::Value& rule, RewriteRule& r) {
 
     // Get conditions
     parseConditions(rule["conditions"], r.conditions);
+    if (rule["mustHoldForAll"].asString() == "true")
+        r.mustHoldForAll = true;
 
     for (const auto& setFlag : rule["setFlags"]) {
         r.setFlags.insert(Flag(setFlag[0].asString(), setFlag[1].asString()));
@@ -113,6 +115,8 @@ void parseGlobalRule(const Json::Value& globalRule, GlobalVarsRule& rw_globals_r
 
     // Get conditions
     parseConditions(globalRule["conditions"], rw_globals_rule.conditions);
+    if (globalRule["mustHoldForAll"].asString() == "true")
+        rw_globals_rule.mustHoldForAll = true;
 
     rw_globals_rule.newInstr.returnValue = globalRule["newInstruction"]["returnValue"].asString();
     rw_globals_rule.newInstr.instruction = globalRule["newInstruction"]["instruction"].asString();
