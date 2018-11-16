@@ -25,6 +25,11 @@ add_library(InfiniteLoopsPlugin MODULE
 install(TARGETS InfiniteLoopsPlugin
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+add_library(ValueRelationsPlugin MODULE
+	value_relations_plugin.cpp
+)
+install(TARGETS ValueRelationsPlugin
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 # We need all the symbols with dynamic libs. With static libs, we get errors.
 if (BUILD_SHARED_LIBS)
