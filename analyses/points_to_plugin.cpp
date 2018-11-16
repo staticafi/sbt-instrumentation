@@ -540,6 +540,25 @@ std::string PointsToPlugin::mayBeLeakedOrFreed(llvm::Value* a) {
     return "false";
 }
 
+std::string PointsToPlugin::safeForFree(llvm::Value* a) {
+    assert(PTA);
+    PSNode *psnode = PTA->getPointsTo(a);
+    if (!psnode || psnode->pointsTo.empty()) {
+        // llvm::errs() << "No points-to for " << *a << "\n";
+        // we know nothing, it may be null
+        return "maybe";
+    }
+
+    for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.offset != 0)
+            return "false";
+        if (ptr.isUnknown() || ptr.isInvalidated())
+            return "false";
+    }
+
+    // points only to beginnings of known memory or to nullptr
+    return "true";
+}
 
 void PointsToPlugin::getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* from) {
     cg.getReachableFunctions(reachableFunctions, from);
@@ -558,6 +577,7 @@ static const std::string supportedQueries[] = {
     "isInvalid",
     "mayBeLeaked",
     "mayBeLeakedOrFreed",
+    "safeForFree",
 };
 
 bool PointsToPlugin::supports(const std::string& query) {

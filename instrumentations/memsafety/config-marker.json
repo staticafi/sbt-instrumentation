@@ -296,8 +296,25 @@
                     "operands": ["<p>", "__INSTR_mark_free"]
                 },
                 "where": "before",
-                "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"],
-		                "expectedResults":["true"]}],
+                "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"], "expectedResults":["true"]}],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "free"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "__INSTR_mark_free"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"], "expectedResults":["false"]},
+		               {"query":["safeForFree", "<p>"], "expectedResults":["maybe","false"]}],
                 "in": "*"
             },
             {

@@ -78,6 +78,7 @@ private:
     std::string pointsToGlobal(llvm::Value* a);
     std::string mayBeLeaked(llvm::Value* a);
     std::string mayBeLeakedOrFreed(llvm::Value* a);
+    std::string safeForFree(llvm::Value* a);
 
     void gatherPossiblyLeaked(llvm::Module *);
     void gatherPossiblyLeaked(llvm::ReturnInst *);
@@ -120,6 +121,9 @@ public:
         } else if (query == "mayBeLeakedOrFreed") {
             assert(operands.size() == 1 && "Wrong number of operands");
             return mayBeLeakedOrFreed(operands[0]);
+        } else if (query == "safeForFree") {
+            assert(operands.size() == 1 && "Wrong number of operands");
+            return safeForFree(operands[0]);
         } else {
             return "unsupported query";
         }
