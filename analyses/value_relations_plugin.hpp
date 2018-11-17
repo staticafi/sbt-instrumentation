@@ -14,7 +14,7 @@ using dg::analysis::LLVMValueRelations;
 class ValueRelationsPlugin : public InstrPlugin
 {
     LLVMValueRelations VR;
-    std::string isValidPointer(llvm::Value* ptr, llvm::Value *len) const;
+    std::string isValidPointer(llvm::Value* ptr, llvm::Value *len);
 
 public:
     bool supports(const std::string& query) override {

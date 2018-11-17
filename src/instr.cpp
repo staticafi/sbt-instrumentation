@@ -722,8 +722,8 @@ bool checkAnalysis(const Condition& condition, bool forAll,
         if (answer && !forAll) {
             // Some plugin told us that we should instrument
             return true;
-        } else if (!answer && forAll) {
-
+        }
+        if (!answer && forAll) {
             // Some plugin told us that we should not instrument
             return false;
         }

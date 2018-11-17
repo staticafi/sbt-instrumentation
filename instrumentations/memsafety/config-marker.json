@@ -1,6 +1,6 @@
 {
     "file": "marker.c",
-    "analyses": ["libPointsToPlugin.so"],
+    "analyses": ["libPointsToPlugin.so","libValueRelationsPlugin.so"],
     "phases": [
         {
             "instructionsRules": [
@@ -20,7 +20,8 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"],
-		                "expectedResults":["false", "maybe"]}],
+		                "expectedResults":["false", "maybe", "unknown"]}],
+		"mustHoldForAll" : "true",
                 "in": "*"
             },
             {
@@ -39,7 +40,8 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"],
-		                "expectedResults":["false","maybe"]}],
+		                "expectedResults":["false","maybe", "unknown"]}],
+		"mustHoldForAll" : "true",
                 "in": "*"
             },
             {

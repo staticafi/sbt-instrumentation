@@ -28,7 +28,7 @@ const llvm::Value *getMemorySize(const llvm::Value *v) {
     return nullptr;
 }
 
-std::string ValueRelationsPlugin::isValidPointer(Value *ptr, Value *len) const {
+std::string ValueRelationsPlugin::isValidPointer(Value *ptr, Value *len) {
     if (!ptr->getType()->isPointerTy())
         // null must be a pointer
         return "false";
@@ -55,16 +55,27 @@ std::string ValueRelationsPlugin::isValidPointer(Value *ptr, Value *len) const {
     }
 
     if (GEP->getNumIndices() > 1)
-        return "nothandled";
+        return "unknown";
 
-    errs() << *GEP << " + " << *len << "\n";
+    //errs() << *GEP << " + " << *len << "\n";
 
     auto memSize = getMemorySize(GEP->getPointerOperand());
     if (!memSize)
         return "unknown";
 
     auto idx = GEP->getOperand(1);
-    errs() << "idx " << *idx << "\n";
+    //errs() << "idx " << *idx << "\n";
+
+    if (VR.isLt(ptr, idx, memSize)) {
+        // since we stop computing values after
+        // weird casts and shifts, it must be true
+        // that idx means lesser element in array
+        // and "len" fits into memory
+        // (e.g. it cannot be the case that idx
+        //  one byte before the end of memory
+        //  and we want to write 4 bytes)
+        return "true";
+    }
 
     return "unknown";
 
