@@ -16,7 +16,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t1>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"],
 		                "expectedResults":["false", "maybe", "unknown"]}],
@@ -37,7 +37,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t2>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"],
 		                "expectedResults":["false","maybe", "unknown"]}],
@@ -57,7 +57,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -74,7 +74,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -91,7 +91,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -108,7 +108,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -125,7 +125,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -142,7 +142,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -159,7 +159,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -176,7 +176,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -193,7 +193,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -210,7 +210,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -227,7 +227,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -244,7 +244,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -261,7 +261,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -278,7 +278,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -295,7 +295,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "__INSTR_mark_pointer"]
+                    "operands": ["__INSTR_mark_pointer"]
                 },
 		"remember" : "<t3>",
                 "where": "before",
@@ -333,7 +333,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<p>", "__INSTR_mark_free"]
+                    "operands": ["__INSTR_mark_free"]
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"], "expectedResults":["false"]},
@@ -351,7 +351,7 @@
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<p>", "__INSTR_mark_free"]
+                    "operands": ["__INSTR_mark_free"]
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"],
