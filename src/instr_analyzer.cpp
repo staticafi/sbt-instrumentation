@@ -65,6 +65,21 @@ bool Analyzer::shouldInstrument(const RememberedValues& rememberedValues,
         return false;
     }
 
+    if (condition.name == "pointsToRemembered") {
+        assert(parameters.size() == 1);
+        if (!plugin->supports("pointsToSetsOverlap"))
+            return false;
+
+        for (const auto& v : rememberedValues) {
+            answer = plugin->query("pointsToSetsOverlap",
+                                   {v.first, *(parameters.begin())});
+            for (const auto& expV : condition.expectedValues)
+            if (answer == expV)
+                return true;
+        }
+        return false;
+    }
+
     if (condition.name == "isRemembered+") {
         assert(parameters.size() == 1);
 
