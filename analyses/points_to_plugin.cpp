@@ -430,6 +430,34 @@ std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
     return "false";
 }
 
+std::string PointsToPlugin::pointsToSetsOverlap(llvm::Value* a, llvm::Value* b) {
+    assert(PTA);
+    PSNode *nodeA = PTA->getPointsTo(a);
+    PSNode *nodeB = PTA->getPointsTo(a);
+    if (!nodeA || !nodeB)
+        return "maybe";
+    if (nodeA->pointsTo.empty() || nodeB->pointsTo.empty())
+        return "maybe";
+
+    for (const auto& ptrA : nodeA->pointsTo) {
+        if (ptrA.isUnknown())
+            return "maybe";
+
+        for (const auto& ptrB : nodeB->pointsTo) {
+            if (ptrB.isUnknown())
+                return "maybe";
+
+            if ((ptrA.target == ptrB.target) &&
+                ((ptrA.offset.isUnknown() || ptrB.offset.isUnknown()) ||
+                 (ptrA.offset == ptrB.offset)))
+                return "true";
+        }
+    }
+
+    return "false";
+}
+
+
 /**
  * Gets points to set of llvm value a.
  * @return true if ptset contains unknown
@@ -578,6 +606,7 @@ static const std::string supportedQueries[] = {
     "mayBeLeaked",
     "mayBeLeakedOrFreed",
     "safeForFree",
+    "pointsToSetsOverlap",
 };
 
 bool PointsToPlugin::supports(const std::string& query) {
