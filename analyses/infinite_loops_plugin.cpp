@@ -20,12 +20,11 @@ std::string InfiniteLoopsPlugin::handleUnconditional(const BranchInst* br) {
             return "unknown";
 
         auto* bs = dyn_cast<BranchInst>(&succ);
-
         if (bs && bs->isConditional())
             return "unknown";
-
         if (bs && bs->isUnconditional() &&
-                  bs->getOperand(0) == br->getOperand(0))
+              (bs->getOperand(0) == br->getOperand(0) ||
+              (bs->getOperand(0) == br->getParent() && br->getParent()->size() == 1)))
             return "true";
         else if (bs && bs->isConditional())
             return "unknown";
