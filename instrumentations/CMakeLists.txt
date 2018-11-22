@@ -6,6 +6,7 @@ install(FILES
 	memsafety/config-enhanced.json
 	memsafety/config-enhanced-noconst.json
 	memsafety/config-marker.json
+	memsafety/config-marker-memcleanup.json
 	memsafety/config-i2-enhanced.json
 	memsafety/config-i2-enhanced-lifetimes.json
 	memsafety/config-lifetimes.json
