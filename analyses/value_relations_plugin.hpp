@@ -16,6 +16,18 @@ class ValueRelationsPlugin : public InstrPlugin
     LLVMValueRelations VR;
     std::string isValidPointer(llvm::Value* ptr, llvm::Value *len);
 
+    std::set<const llvm::Value *> ok_instructions;
+    void processCycles(llvm::Module *);
+    void processCycle(const std::vector<llvm::BasicBlock *>& cycle);
+
+    void handleIterateUntilValue(llvm::Value *ptr, llvm::Value *value,
+                                 llvm::BasicBlock *entry,
+                                 std::set<llvm::BasicBlock *>& blocks);
+
+    void handleIterateUntilLessThan(llvm::Value *ptr, llvm::Value *value,
+                                    llvm::BasicBlock *entry,
+                                    std::set<llvm::BasicBlock *>& blocks);
+
 public:
     bool supports(const std::string& query) override {
         return query == "isValidPointer";
