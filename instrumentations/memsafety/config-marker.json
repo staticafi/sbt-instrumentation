@@ -1,6 +1,6 @@
 {
     "file": "marker.c",
-    "analyses": ["libPointsToPlugin.so","libValueRelationsPlugin.so"],
+    "analyses": ["libPointsToPlugin.so"],
     "phases": [
         {
             "instructionsRules": [
