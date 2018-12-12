@@ -1239,7 +1239,11 @@ void saveModule(LLVMInstrumentation& instr) {
     // Write the module
     errs() << "Saving the instrumented module to: " << instr.outputName << "\n";
     logger.write_info("Saving the instrumented module to: " + instr.outputName);
+    #if (LLVM_VERSION_MAJOR > 6)
+    llvm::WriteBitcodeToFile(instr.module, ostream);
+    #else
     llvm::WriteBitcodeToFile(&instr.module, ostream);
+    #endif
 }
 
 /**
