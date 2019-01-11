@@ -312,8 +312,8 @@ void cloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2) {
         }
     }
 
-    assert(metadataI && "Did not find dbg in any instruction of a block");
-    i2->setDebugLoc(metadataI->getDebugLoc());
+    if (metadataI)
+        i2->setDebugLoc(metadataI->getDebugLoc());
 }
 
 /**
