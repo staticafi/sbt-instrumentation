@@ -8,8 +8,8 @@ cd `dirname $`
 
 # don't do redundant work
 if [ ! -d ra ]; then
-	# checkout dg directory
-	git clone https://github.com/xvitovs1/ra
+	# checkout ra directory
+	git clone https://github.com/staticafi/ra
 fi
 
 cd ra
