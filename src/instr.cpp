@@ -462,9 +462,9 @@ tuple<vector<Value *>, Instruction*> insertArgument(InstrumentInstruction rw_new
                 argInt = stoi(arg);
                 Value *intValue = ConstantInt::get(Type::getInt32Ty(I->getContext()), argInt);
                 args.push_back(intValue);
-            } catch (invalid_argument) {
+            } catch (invalid_argument&) {
                 logger.write_error("Problem with instruction arguments: invalid argument.");
-            } catch (out_of_range) {
+            } catch (out_of_range&) {
                 logger.write_error("Problem with instruction arguments: out of range.");
             }
         } else {
@@ -1319,7 +1319,7 @@ int main(int argc, char *argv[]) {
     try {
         rw.parseConfig(config_file);
     }
-    catch (runtime_error ex){
+    catch (runtime_error& ex){
         string exceptionString = "Error parsing configuration: ";
         logger.write_error(exceptionString.append(ex.what()));
         config_file.close();
