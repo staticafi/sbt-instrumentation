@@ -8,6 +8,7 @@ install(TARGETS PointsToPlugin
 
 add_library(RangeAnalysisPlugin MODULE
 	range_analysis_plugin.cpp
+	ra/RangeAnalysis.cpp
 )
 target_link_libraries(RangeAnalysisPlugin PRIVATE ${ra_libs})
 install(TARGETS RangeAnalysisPlugin

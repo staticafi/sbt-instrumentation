@@ -6,7 +6,7 @@
 #include <llvm/IR/Constants.h>
 #include <map>
 #include "instr_plugin.hpp"
-#include "RangeAnalysis.h"
+#include "ra/RangeAnalysis.h"
 
 class RangeAnalysisPlugin : public InstrPlugin
 {
