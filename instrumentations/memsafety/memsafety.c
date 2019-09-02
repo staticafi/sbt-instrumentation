@@ -24,8 +24,8 @@ extern void free(void *);
 typedef void* rec_id;
 typedef uint64_t a_size;
 
-const int64_t INT_64_MIN = -9223372036854775808;
-const uint64_t INT_64_MIN_OFF = 9223372036854775808;
+const int64_t INT_64_MIN = (-(9223372036854775807LL)-1);
+const uint64_t INT_64_MIN_OFF = 9223372036854775808UL;
 
 extern void __VERIFIER_error() __attribute__((noreturn));
 
