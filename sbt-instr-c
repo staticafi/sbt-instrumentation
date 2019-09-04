@@ -6,6 +6,8 @@ import os
 import getopt
 from subprocess import call, Popen, PIPE, STDOUT
 
+sbtinstr='./bin/sbt-instr'
+
 # ---------------------
 # Functions from Symbiotic
 # ---------------------
@@ -140,7 +142,7 @@ def run():
         else:
             dbg('Source file converted to .bc.')
 
-    ret = call(['./bin/sbt-instr {0} {1} {2} {3} --no-linking'.format(configFile, bcSourceFile, bcConfigFile, final_output)],
+    ret = call(['{0} {1} {2} {3} {4}'.format(sbtinstr, configFile, bcSourceFile, bcConfigFile, final_output)],
                shell=True)
     if ret != 0:
         err('Instrumentation failed!')
@@ -148,12 +150,12 @@ def run():
     else:
         dbg('Instrumentation done.')
 
-    ret = call(['llvm-link {0} {1} -o {2}'.format(final_output, bcConfigFile, final_output)], shell=True)
-    if ret != 0:
-        err('Linking instrumentation functions failed!')
-        return
-    else:
-        dbg('Linked instrumentation functions to the output file.')
+#     ret = call(['llvm-link {0} {1} -o {2}'.format(final_output, bcConfigFile, final_output)], shell=True)
+#     if ret != 0:
+#         err('Linking instrumentation functions failed!')
+#         return
+#     else:
+#         dbg('Linked instrumentation functions to the output file.')
 
     if(generate_ll):
        ret = call(['llvm-dis {0}'.format(final_output)], shell=True)
