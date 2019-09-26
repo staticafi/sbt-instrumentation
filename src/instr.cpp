@@ -539,9 +539,15 @@ static llvm::Function *getOrInsertFunc(LLVMInstrumentation& I,
             return nullptr;
         }
 
-        return cast<Function>(I.module.getOrInsertFunction(name, defF->getFunctionType()));
-    } else
-        return cast<Function>(cF);
+        auto F = I.module.getOrInsertFunction(name, defF->getFunctionType());
+#if LLVM_VERSION_MAJOR >= 9
+        auto cF = F.getCallee();
+#else
+        auto cF = F;
+#endif
+    }
+
+    return cast<Function>(cF);
 }
 
 /**
