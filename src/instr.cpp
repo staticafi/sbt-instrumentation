@@ -541,9 +541,9 @@ static llvm::Function *getOrInsertFunc(LLVMInstrumentation& I,
 
         auto F = I.module.getOrInsertFunction(name, defF->getFunctionType());
 #if LLVM_VERSION_MAJOR >= 9
-        auto cF = F.getCallee();
+        cF = F.getCallee();
 #else
-        auto cF = F;
+        cF = F;
 #endif
     }
 
