@@ -34,7 +34,7 @@ public:
                 return "false";
             }
         } else if (query == "isValidPointer") {
-            assert(operands.size() == 1);
+            assert(operands.size() == 2);
             if (isPointerDangerous(operands[0])) {
                 return "false";
             } else {
