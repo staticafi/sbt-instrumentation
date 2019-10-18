@@ -15,6 +15,9 @@ extern "C" InstrPlugin* create_object(llvm::Module* module) {
 }
 
 bool PredatorPlugin::isInstructionDangerous(const llvm::Instruction& inst) const {
+    if (!inst.getDebugLoc())
+        return false;
+
     const unsigned line = inst.getDebugLoc().getLine();
     const unsigned col = inst.getDebugLoc().getCol();
 
