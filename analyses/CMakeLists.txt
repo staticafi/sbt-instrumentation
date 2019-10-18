@@ -32,6 +32,10 @@ add_library(ValueRelationsPlugin MODULE
 install(TARGETS ValueRelationsPlugin
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+add_library(PredatorPlugin MODULE
+    predator_plugin.cpp
+)
+
 # We need all the symbols with dynamic libs. With static libs, we get errors.
 if (BUILD_SHARED_LIBS)
 	target_link_libraries(dgPointsToPlugin PRIVATE ${llvm_libs})
