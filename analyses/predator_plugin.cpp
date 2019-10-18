@@ -1,7 +1,12 @@
 #include "predator_plugin.hpp"
 
-#include <unordered_set>
+#include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/Support/raw_os_ostream.h>
+
+#include <cstdlib>
 #include <fstream>
+#include <sstream>
+#include <unordered_set>
 
 static const std::unordered_set<std::string> supportedQueries {
     "isValidPointer",
@@ -39,9 +44,32 @@ bool PredatorPlugin::isPointerDangerous(const llvm::Value* deref) const {
     return false;
 }
 
-void PredatorPlugin::loadPredatorOutput(const std::string& name) {
-    // TODO
-    std::ifstream is(name);
+void PredatorPlugin::runPredator(llvm::Module* mod) {
+
+    // write module to aux file
+    {
+        std::ofstream ofs("predator_in.bc");
+        llvm::raw_os_ostream ostream(ofs);
+#if (LLVM_VERSION_MAJOR > 6)
+        llvm::WriteBitcodeToFile(*mod, ostream);
+#else
+        llvm::WriteBitcodeToFile(mod, ostream);
+#endif
+    }
+
+    // build predator command
+    std::stringstream cmd;
+    cmd << "slllvm" << " "
+        << "predator_in.bc" << " "
+        << " 2>&1 | trt.py > predator.log";
+
+    // run predator on that file
+    auto str = cmd.str();
+    std::system(str.c_str());
+}
+
+void PredatorPlugin::loadPredatorOutput() {
+    std::ifstream is("predator.log");
     if (!is.is_open()) {
         llvm::errs() << "PredatorPlugin: failed to open file with predator output\n";
         return;
@@ -50,9 +78,12 @@ void PredatorPlugin::loadPredatorOutput(const std::string& name) {
     while (!is.eof()) {
         unsigned lineNumber, colNumber;
         is >> lineNumber;
+
         if (is.eof())
             break;
+
         is >> colNumber;
+
         predatorErrors.insert(std::make_pair(lineNumber, colNumber));
     }
 
