@@ -50,6 +50,8 @@ void PredatorPlugin::loadPredatorOutput(const std::string& name) {
     while (!is.eof()) {
         unsigned lineNumber, colNumber;
         is >> lineNumber;
+        if (is.eof())
+            break;
         is >> colNumber;
         predatorErrors.insert(std::make_pair(lineNumber, colNumber));
     }
