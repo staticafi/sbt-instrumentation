@@ -10,15 +10,17 @@ class PredatorPlugin : public InstrPlugin
 private:
     bool isPointerDangerous(const llvm::Value* deref) const;
     bool isInstructionDangerous(const llvm::Instruction& deref) const;
-    void loadPredatorOutput(const std::string& fname);
+
+    void loadPredatorOutput();
+    void runPredator(llvm::Module* mod);
 
     std::set<std::pair<unsigned, unsigned>> predatorErrors;
 
 public:
     PredatorPlugin(llvm::Module* module) : InstrPlugin("Predator") {
-        // TODO: run predator on @module
         llvm::errs() << "PredatorPlugin: Loading predator output\n";
-        loadPredatorOutput("predator.log");
+        runPredator(module);
+        loadPredatorOutput();
     }
 
     bool supports(const std::string& query) override;
