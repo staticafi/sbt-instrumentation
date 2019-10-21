@@ -59,8 +59,8 @@ void PredatorPlugin::runPredator(llvm::Module* mod) {
 
     // build predator command
     std::stringstream cmd;
-    cmd << "slllvm" << " "
-        << "predator_in.bc" << " "
+    cmd << "slllvm "
+        << "predator_in.bc "
         << " 2>&1 | trt.py > predator.log";
 
     // run predator on that file
