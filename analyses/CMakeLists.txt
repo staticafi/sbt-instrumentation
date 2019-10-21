@@ -35,6 +35,10 @@ add_library(PredatorPlugin MODULE
     predator_plugin.cpp
 )
 
+install(TARGETS PredatorPlugin
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
 # We need all the symbols with dynamic libs. With static libs, we get errors.
 if (BUILD_SHARED_LIBS)
 	target_link_libraries(dgPointsToPlugin PRIVATE ${llvm_libs})
