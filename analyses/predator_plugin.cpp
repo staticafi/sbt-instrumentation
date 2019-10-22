@@ -59,9 +59,9 @@ void PredatorPlugin::runPredator(llvm::Module* mod) {
 
     // build predator command
     std::stringstream cmd;
-    cmd << "slllvm "
-        << "predator_in.bc "
-        << " 2>&1 | trt.py > predator.log";
+    cmd << "predator_wrapper.py "
+        << "--out predator.log "
+        << "predator_in.bc ";
 
     // run predator on that file
     auto str = cmd.str();
@@ -73,6 +73,13 @@ void PredatorPlugin::loadPredatorOutput() {
     if (!is.is_open()) {
         llvm::errs() << "PredatorPlugin: failed to open file with predator output\n";
         return;
+    }
+
+    std::string result;
+    is >> result;
+    if (result != "ok") {
+        allIsMaybe = true;
+        llvm::errs() << "PredatorPlugin: Predator failed with '" << result << "', always saying \"maybe\" \n";
     }
 
     while (!is.eof()) {
