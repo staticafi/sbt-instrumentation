@@ -76,8 +76,9 @@ void PredatorPlugin::loadPredatorOutput() {
 
     std::string result;
     is >> result;
+    predatorSuccess = (result == "ok");
+
     if (result != "ok") {
-        allIsMaybe = true;
         llvm::errs() << "PredatorPlugin: Predator failed with '" << result << "', always saying \"maybe\" \n";
     }
 
@@ -96,5 +97,5 @@ void PredatorPlugin::loadPredatorOutput() {
 }
 
 bool PredatorPlugin::supports(const std::string& query) {
-    return supportedQueries.find(query) != supportedQueries.end();
+    return predatorSuccess && (supportedQueries.find(query) != supportedQueries.end());
 }
