@@ -15,11 +15,11 @@ private:
     void runPredator(llvm::Module* mod);
 
     std::set<std::pair<unsigned, unsigned>> predatorErrors;
-    bool allIsMaybe;
+    bool predatorSuccess;
 
 public:
     PredatorPlugin(llvm::Module* module) : InstrPlugin("Predator") {
-        allIsMaybe = false;
+        predatorSuccess = false;
         llvm::errs() << "PredatorPlugin: Running Predator...\n";
         runPredator(module);
         loadPredatorOutput();
@@ -32,14 +32,14 @@ public:
 
         if (query == "isInvalid") {
             assert(operands.size() == 1);
-            if (isPointerDangerous(operands[0]) || allIsMaybe) {
+            if (isPointerDangerous(operands[0])) {
                 return "maybe";
             } else {
                 return "false";
             }
         } else if (query == "isValidPointer") {
             assert(operands.size() == 2);
-            if (isPointerDangerous(operands[0]) || allIsMaybe) {
+            if (isPointerDangerous(operands[0])) {
                 return "maybe";
             } else {
                 return "true";
