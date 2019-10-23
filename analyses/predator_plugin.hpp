@@ -30,7 +30,7 @@ public:
     std::string query(const std::string& query,
                       const std::vector<llvm::Value *>& operands) {
 
-        if (query == "isNull" || query == "isInvalid") {
+        if (query == "isInvalid") {
             assert(operands.size() == 1);
             if (isPointerDangerous(operands[0]) || allIsMaybe) {
                 return "maybe";

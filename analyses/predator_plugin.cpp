@@ -10,7 +10,6 @@
 
 static const std::unordered_set<std::string> supportedQueries {
     "isValidPointer",
-    "isNull",
     "isInvalid",
 };
 
