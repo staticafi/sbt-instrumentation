@@ -529,7 +529,7 @@ tuple<vector<Value *>, Instruction*> insertArgument(InstrumentInstruction rw_new
 static llvm::Function *getOrInsertFunc(LLVMInstrumentation& I,
                                        const std::string& name)
 {
-    llvm::Constant *cF = I.module.getFunction(name);
+    llvm::Value *cF = I.module.getFunction(name);
     if (!cF) {
         // Get the function from the module with definitions
         // so that we can copy it
