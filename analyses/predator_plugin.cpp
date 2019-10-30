@@ -60,6 +60,8 @@ void PredatorPlugin::runPredator(llvm::Module* mod) {
     std::stringstream cmd;
     cmd << "predator_wrapper.py "
         << "--out predator.log "
+        // TODO: only if 32-bit
+        << "--32 "
         << "predator_in.bc ";
 
     // run predator on that file
