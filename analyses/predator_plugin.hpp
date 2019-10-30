@@ -30,6 +30,10 @@ public:
     std::string query(const std::string& query,
                       const std::vector<llvm::Value *>& operands) {
 
+        if (!predatorSuccess) {
+            return "maybe";
+        }
+
         if (query == "isInvalid") {
             assert(operands.size() == 1);
             if (isPointerDangerous(operands[0])) {
