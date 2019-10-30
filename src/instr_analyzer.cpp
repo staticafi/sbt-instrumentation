@@ -102,6 +102,8 @@ bool Analyzer::shouldInstrument(const RememberedValues& rememberedValues,
             if (answer == expV)
                 return true;
         }
+
+        return false;
     } else {
         if (unsupported.insert(std::make_pair(plugin, condition.name)).second) {
             logger.write_info("Plugin " + plugin->getName() +
@@ -114,6 +116,6 @@ bool Analyzer::shouldInstrument(const RememberedValues& rememberedValues,
                            "Every condition with this query will be false!");
     }
 
-	return false;
+	return true;
 }
 
