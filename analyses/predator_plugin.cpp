@@ -66,6 +66,7 @@ void PredatorPlugin::runPredator(llvm::Module* mod) {
 
     // run predator on that file
     auto str = cmd.str();
+    llvm::errs() << "|> " << str << "\n";
     std::system(str.c_str());
 }
 
