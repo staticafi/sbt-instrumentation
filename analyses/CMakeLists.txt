@@ -5,6 +5,8 @@ add_library(PointsToPlugin MODULE
 target_link_libraries(PointsToPlugin PRIVATE ${dg_libs})
 install(TARGETS PointsToPlugin
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES predator_wrapper.py
+  DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_library(RangeAnalysisPlugin MODULE
 	range_analysis_plugin.cpp
