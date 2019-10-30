@@ -582,6 +582,13 @@ std::string PointsToPlugin::safeForFree(llvm::Value* a) {
             return "false";
         if (ptr.isUnknown() || ptr.isInvalidated())
             return "false";
+
+        if (auto alloc = PSNodeAlloc::get(ptr.target)) {
+            if (!alloc->isHeap())
+                return "false";
+        } else {
+            return "false";
+        }
     }
 
     // points only to beginnings of known memory or to nullptr
