@@ -41,7 +41,6 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path,
 }
 
 bool Analyzer::shouldInstrument(const RememberedValues& rememberedValues,
-                                const ValuesVector& rememberedPTSets,
                                 InstrPlugin* plugin,
                                 const Condition &condition,
                                 const ValuesVector& parameters,
@@ -80,38 +79,13 @@ bool Analyzer::shouldInstrument(const RememberedValues& rememberedValues,
         return false;
     }
 
-    if (condition.name == "isRemembered+") {
-        assert(parameters.size() == 1);
-
-        for (auto* v : rememberedPTSets) {
-            if (*(parameters.begin()) == v)
-                return true;
-        }
-        return false;
-    }
-
     std::vector<llvm::Value *> operands(parameters.begin(), parameters.end());
-
-    static std::set<std::pair<InstrPlugin *, const std::string>> unsupported;
-    static std::set<std::string> none_supports;
-    bool issupported = false;
-    if (plugin->supports(condition.name)) {
-        issupported = true;
-        answer =  plugin->query(condition.name, operands);
-        for (const auto& expV : condition.expectedValues) {
-            if (answer == expV)
-                return true;
-        }
-    } else {
-        if (unsupported.insert(std::make_pair(plugin, condition.name)).second) {
-            logger.write_info("Plugin " + plugin->getName() +
-                              " does not support query '" + condition.name + "'.");
-        }
-    }
-
-    if (issupported == false && none_supports.insert(condition.name).second) {
-        logger.write_error("No plugin supports the query '" + condition.name + "'. "
-                           "Every condition with this query will be false!");
+    assert(plugin->supports(condition.name)
+            && "Plugin does not support the condition");
+    answer = plugin->query(condition.name, operands);
+    for (const auto& expV : condition.expectedValues) {
+        if (answer == expV)
+            return true;
     }
 
 	return false;

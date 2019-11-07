@@ -20,7 +20,6 @@ public:
     static std::unique_ptr<InstrPlugin> analyze(const std::string &path,
                                                 llvm::Module* module);
     static bool shouldInstrument(const RememberedValues& rememberedValues,
-                                 const ValuesVector& rememberedPTSets,
                                  InstrPlugin* plugin,
                                  const Condition &condition,
                                  const ValuesVector& parameters,

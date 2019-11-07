@@ -692,19 +692,17 @@ bool checkFlag(Condition condition, Rewriter rewriter) {
 /**
  * Runs all plugins for static analyses and decides, whether to
  * instrument or not.
- * @param instr instrumentation object
+ * @param instr     instrumentation object
  * @param condition condition that must be satisfied to instrument
+ * @param forAll    instrument only if all plugins that support the query answer
+ *                  that the condition is satisfied
  * @param variables
  * @return true if condition is ok, false otherwise
  */
 bool checkAnalysis(const Condition& condition, bool forAll,
                    LLVMInstrumentation& instr, const Variables& variables)
 {
-    if (condition.name == "")
-        return true;
-
-    if (condition.name == "isRemembered+" && instr.rememberedUnknown)
-        return true;
+    assert(condition.name != "" && "Empty condition passed");
 
     vector<Value*> parameters;
     parameters.reserve(condition.arguments.size());
@@ -716,15 +714,79 @@ bool checkAnalysis(const Condition& condition, bool forAll,
         else {
             // Wrong parameters passed to the condition,
             // condition is not satisifed, do not instrument
+            logger.write_error("Wrong parameters passed to the condtion '" +
+                                condition.name + "'. I'm not instrumenting");
             return false;
         }
     }
 
+    // check isRemembered+ condition
+    // XXX refactor into a method
+    if (condition.name == "isRemembered+") {
+        if (instr.rememberedUnknown)
+            return true;
+
+        assert(parameters.size() == 1);
+
+        for (auto* v : instr.rememberedPTSets) {
+            if (*(parameters.begin()) == v)
+                return true;
+        }
+    }
+
+    // XXX: refactor into a method
+    // check whether the query is supported by some plugin at all
+    static std::set<std::string> none_supports;
+    static std::set<std::string> some_supports;
+    if (some_supports.count(condition.name) == 0 &&
+        none_supports.count(condition.name) == 0) {
+
+        // we haven't run into this query yet...
+        bool issupported = false;
+        static std::set<std::pair<InstrPlugin *, const std::string>> unsupported;
+
+        for (auto& plugin : instr.plugins) {
+            if (plugin->supports(condition.name)) {
+                // yay!
+                issupported = true;
+                // do not break to let the user know which plugins does support the query
+            } else {
+                if (unsupported.insert({plugin.get(), condition.name}).second) {
+                    logger.write_info("Plugin " + plugin->getName() +
+                                      " does not support query '" + condition.name + "'.");
+                }
+            }
+        }
+
+        if (!issupported) {
+            if (none_supports.insert(condition.name).second) {
+                logger.write_error("No plugin supports the query '" + condition.name + "'. "
+                                   "Every condition with this query will be false!");
+            }
+
+            return true;
+        } else {
+            some_supports.insert(condition.name);
+        }
+    }
+
+    if (none_supports.count(condition.name) > 0) {
+        // none plugin supports this query, we should instrument since the condition
+        // is speculatively satisfied
+        return true;
+    }
+
+    assert((some_supports.count(condition.name) > 0)
+            && "BUG: Supported conditions check failed");
+
     for (auto& plugin : instr.plugins) {
+        if (!plugin->supports(condition.name)) {
+            continue;
+        }
 
         bool answer = Analyzer::shouldInstrument(instr.rememberedValues,
-                            instr.rememberedPTSets, plugin.get(), condition,
-                            parameters, logger);
+                                                 plugin.get(), condition,
+                                                 parameters, logger);
         if (answer && !forAll) {
             // Some plugin told us that we should instrument
             return true;
