@@ -1,7 +1,7 @@
 // staged configuration for checking memory leaks
 {
     "file": "memsafety.c",
-    "analyses": ["libPointsToPlugin.so"],
+    "analyses": ["libdgPointsToPlugin.so"],
     "flags": ["malloc"],
     "phases": [
         {

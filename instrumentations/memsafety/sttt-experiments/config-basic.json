@@ -1,6 +1,6 @@
 {
     "file": "memsafety.c",
-    "analyses": ["libPointsToPlugin.so"],
+    "analyses": ["libdgPointsToPlugin.so"],
     "phases": [
         {
             "instructionsRules": [
