@@ -47,7 +47,7 @@
 #include "rewriter.hpp"
 #include "instr_log.hpp"
 #include "instr_analyzer.hpp"
-#include "points_to_plugin.hpp"
+#include "dg_points_to_plugin.hpp"
 
 #include "git-version.h"
 

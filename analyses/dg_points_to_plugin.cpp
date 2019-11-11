@@ -1,4 +1,4 @@
-#include "points_to_plugin.hpp"
+#include "dg_points_to_plugin.hpp"
 #include <set>
 #include <string>
 #include <iostream>
