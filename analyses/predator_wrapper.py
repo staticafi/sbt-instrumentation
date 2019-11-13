@@ -2,7 +2,7 @@
 
 import argparse
 import os
-from select import select
+import selectors
 import subprocess
 from subprocess import PIPE, DEVNULL
 import sys
@@ -44,21 +44,28 @@ def run_predator(timeout, clang, infile):
 
 
         error_locations = set()
-        while True:
-            if proc.poll() != None:
-                break
+        sel = selectors.DefaultSelector()
+        sel.register(proc.stderr, selectors.EVENT_READ)
+        sel.register(proc.stdout, selectors.EVENT_READ)
 
-            ready, _, _ = select([proc.stderr, proc.stdout], [], [], 0)
-            for fd in ready:
+        while True:
+            for key, mask in sel.select():
+                fd = key.fileobj
                 line = fd.readline()
                 line = str(line.strip())
-                if 'NEW' in line:
-                    line = str(proc.stderr.readline()).strip()
+                if 'error:' in line and 'Pass has detected some errors' not in line:
                     [row, col] = line.split(':')[1:3]
                     try:
                         error_locations.add((int(row), int(col)))
                     except ValueError:
                         pass
+
+                # we are not interested in traces
+                if 'TRACE' in line:
+                    break
+
+            if proc.poll() != None:
+                break
 
             now = nstime()
             elapsed = now - start
