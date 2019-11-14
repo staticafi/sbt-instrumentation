@@ -624,6 +624,12 @@ bool PointsToPlugin::isRecursive(const llvm::Function *F) {
     return recursiveFuns.count(F) > 0;
 }
 
+bool PointsToPlugin::isReachableFun(const llvm::Function *F) const {
+    // if PTA built the node for F, it is reachable
+    return PTA->getPointsToNode(F) != nullptr;
+}
+
+
 static const std::string supportedQueries[] = {
     "isValidPointer",
     "pointsTo",

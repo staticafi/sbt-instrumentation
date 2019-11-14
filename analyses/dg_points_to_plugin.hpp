@@ -133,13 +133,15 @@ public:
         }
     }
 
+    // must be virtual since it is called from the main binary
+    virtual bool isReachableFun(const llvm::Function *F) const;
+
     virtual bool getPointsTo(llvm::Value* a,
                              std::vector<llvm::Value*>& ptset);
     virtual PointerInfo getPointerInfo(llvm::Value* a);
     virtual PointerInfo getPInfoMin(llvm::Value* a);
     virtual PointerInfo getPInfoMinMax(llvm::Value* a,
                                         std::vector<llvm::Value*>& ptset);
-    virtual void getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* a);
     virtual std::string notMinMemoryBlock(llvm::Value* min, llvm::Value* a);
 
     PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {

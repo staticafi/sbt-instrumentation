@@ -1186,29 +1186,18 @@ bool instrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
 
 /**
  * Finds out whether the given function is reachable from main.
- * @param instr LLVMInstrumentation object
-*/
-void setReachableFunctions(LLVMInstrumentation& instr) {
-    Function* main = instr.module.getFunction("main");
-    if (main) {
-        instr.ppPlugin->getReachableFunctions(instr.reachableFunctions, main);
-    }
-}
-
-/**
- * Finds out whether the given function is reachable from main.
  * @param f function
  * @param instr LLVMInstrumentation object
  * @return true if the function is reachable from main, false otherwise
 */
-bool isReachable(const Function& f, LLVMInstrumentation& instr) {
-    for (auto& reachableF : instr.reachableFunctions) {
-        if (reachableF == &f) {
-            return true;
-        }
+static bool isReachableFun(const Function& f, LLVMInstrumentation& instr) {
+
+    if (instr.ppPlugin) {
+        return instr.ppPlugin->isReachableFun(&f);
     }
 
-    return false;
+    // we know nothing, so say that F is reachable
+    return true;
 }
 
 /**
@@ -1235,7 +1224,7 @@ bool runPhase(LLVMInstrumentation& instr, const Phase& phase) {
 
         // If we have info from points-to plugin, do not
         // instrument functions that are not reachable from main
-        if (instr.ppPlugin && functionName != "main" && !isReachable((*Fiterator), instr)) {
+        if (!isReachableFun((*Fiterator), instr)) {
             logger.write_info("Omitting function " + functionName + " from instrumentation, not reachable from main.");
             continue;
         }
@@ -1271,11 +1260,6 @@ bool instrumentModule(LLVMInstrumentation& instr) {
 
     // Get points-to plugin
     getPointsToPlugin(instr);
-
-    // Get reachable functions if points to plugin is available
-    if (instr.ppPlugin) {
-        setReachableFunctions(instr);
-    }
 
     Phases rw_phases = instr.rewriter.getPhases();
 
