@@ -54,9 +54,9 @@ else()
     set(DG_PATH ${CMAKE_SOURCE_DIR}/dg)
 endif()
 
-find_library(LIBLP LLVMpta PATHS ${DG_PATH}/lib/)
-find_library(LIBP PTA PATHS ${DG_PATH}/lib/)
-find_library(LIBDGA DGAnalysis PATHS ${DG_PATH}/lib/)
+find_library(LIBLP dgllvmpta PATHS ${DG_PATH}/lib/)
+find_library(LIBP dgpta PATHS ${DG_PATH}/lib/)
+find_library(LIBDGA dganalysis PATHS ${DG_PATH}/lib/)
 
 if (LIBLP AND LIBP AND LIBDGA)
 	message(STATUS "Dg libraries found: ${LIBLP}, ${LIBP}, ${LIBDGA}")

@@ -1,7 +1,7 @@
 #ifndef VALUE_RELATIONS_PLUGIN_H
 #define VALUE_RELATIONS_PLUGIN_H
 
-#include "dg/llvm/analysis/ValueRelations/ValueRelations.h"
+#include "dg/llvm/ValueRelations/ValueRelations.h"
 #include "instr_plugin.hpp"
 
 namespace llvm {

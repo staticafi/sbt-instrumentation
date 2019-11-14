@@ -6,12 +6,10 @@
 #include <llvm/IR/Constants.h>
 #include <tuple>
 #include "instr_plugin.hpp"
-#include "dg/llvm/analysis/PointsTo/PointerAnalysis.h"
-#include "dg/analysis/PointsTo/PointerAnalysisFSInv.h"
-#include "call_graph.hpp"
+#include "dg/llvm/PointerAnalysis/PointerAnalysis.h"
+#include "dg/PointerAnalysis/PointerAnalysisFSInv.h"
 
-
-using dg::analysis::pta::PSNode;
+using dg::pta::PSNode;
 
 class PointerInfo
 {
@@ -63,9 +61,8 @@ private:
     bool allMayBeLeaked = false;
     // possibly leaked allocations
     std::set<PSNode *> possiblyLeaked;
-    std::unique_ptr<dg::analysis::pta::PointerAnalysis> PTAImpl;
-    std::unique_ptr<dg::LLVMPointerAnalysis> PTA;
-    CallGraph cg;
+    std::set<const llvm::Function *> recursiveFuns;
+    std::unique_ptr<dg::DGLLVMPointerAnalysis> PTA;
 
     std::string isNull(llvm::Value* a);
     std::string isValidPointer(llvm::Value* a, llvm::Value *len);
@@ -83,6 +80,9 @@ private:
 
     void gatherPossiblyLeaked(llvm::Module *);
     void gatherPossiblyLeaked(llvm::ReturnInst *);
+
+    void computeRecursiveFuns(llvm::Module *module);
+    bool isRecursive(const llvm::Function *F);
 
 public:
     bool supports(const std::string& query) override;
@@ -143,17 +143,18 @@ public:
     virtual std::string notMinMemoryBlock(llvm::Value* min, llvm::Value* a);
 
     PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
-        llvm::errs() << "Running points-to analysis...\n";
-        PTA = std::unique_ptr<dg::LLVMPointerAnalysis>(new dg::LLVMPointerAnalysis(module));
-        PTAImpl.reset(PTA->createPTA<dg::analysis::pta::PointerAnalysisFSInv>());
-        PTAImpl->run();
+        llvm::errs() << "Running DG points-to analysis with inv...\n";
 
-        llvm::errs() << "Building call-graph...\n";
-        cg.buildCallGraph(*module, PTA);
+        dg::LLVMPointerAnalysisOptions opts;
+        opts.analysisType = dg::LLVMPointerAnalysisOptions::AnalysisType::inv;
+
+        PTA = std::unique_ptr<dg::DGLLVMPointerAnalysis>(new dg::DGLLVMPointerAnalysis(module, opts));
+        PTA->run();
 
         gatherPossiblyLeaked(module);
+        computeRecursiveFuns(module);
 
-        llvm::errs() << "PT plugin done.\n";
+        llvm::errs() << "PTA inv done.\n";
     }
 };
 

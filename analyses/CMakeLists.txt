@@ -1,6 +1,5 @@
 add_library(dgPointsToPlugin MODULE
 	dg_points_to_plugin.cpp
-	call_graph.cpp
 )
 target_link_libraries(dgPointsToPlugin PRIVATE ${dg_libs})
 install(TARGETS dgPointsToPlugin

@@ -1,16 +1,19 @@
 #include "dg_points_to_plugin.hpp"
+
+#include "dg/SCC.h"
+
 #include <set>
 #include <string>
 #include <iostream>
 
-using dg::analysis::pta::PSNode;
-using dg::analysis::pta::Pointer;
-using dg::analysis::pta::PSNodeAlloc;
+using dg::pta::PSNode;
+using dg::pta::Pointer;
+using dg::pta::PSNodeAlloc;
 
 std::string PointsToPlugin::pointsToStack(llvm::Value* a) {
     // need to have the PTA
     assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty()) {
         // llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
@@ -35,7 +38,7 @@ std::string PointsToPlugin::notMinMemoryBlock(llvm::Value* p, llvm::Value* a) {
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(p)) {
         // need to have the PTA
         assert(PTA);
-        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        PSNode *psnode = PTA->getPointsToNode(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
             return "true";
         }
@@ -84,7 +87,7 @@ std::string PointsToPlugin::notMinMemoryBlock(llvm::Value* p, llvm::Value* a) {
 std::string PointsToPlugin::pointsToGlobal(llvm::Value* a) {
     // need to have the PTA
     assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty()) {
         // llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
@@ -107,7 +110,7 @@ std::string PointsToPlugin::pointsToGlobal(llvm::Value* a) {
 std::string PointsToPlugin::pointsToHeap(llvm::Value* a) {
     // need to have the PTA
     assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty()) {
         // llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
@@ -130,7 +133,7 @@ std::string PointsToPlugin::pointsToHeap(llvm::Value* a) {
 std::string PointsToPlugin::isInvalid(llvm::Value* a) {
     // need to have the PTA
     assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty()) {
         // llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
@@ -153,7 +156,7 @@ std::string PointsToPlugin::isNull(llvm::Value* a) {
 
     // need to have the PTA
     assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty()) {
         // llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
@@ -176,7 +179,7 @@ std::string PointsToPlugin::hasKnownSizes(llvm::Value* a) {
             = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
         assert(PTA);
-        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        PSNode *psnode = PTA->getPointsToNode(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
             // we know nothing about the allocated size
             return "false";
@@ -208,7 +211,7 @@ std::string PointsToPlugin::hasKnownSize(llvm::Value* a) {
             = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
         assert(PTA);
-        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        PSNode *psnode = PTA->getPointsToNode(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
             // we know nothing about the allocated size
             return "false";
@@ -247,7 +250,7 @@ PointerInfo PointsToPlugin::getPointerInfo(llvm::Value* a) {
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
         assert(PTA);
-        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        PSNode *psnode = PTA->getPointsToNode(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
             return PointerInfo();
         }
@@ -269,7 +272,7 @@ PointerInfo PointsToPlugin::getPInfoMinMax(llvm::Value* a,
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
         assert(PTA);
-        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        PSNode *psnode = PTA->getPointsToNode(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
             return PointerInfo();
         }
@@ -320,7 +323,7 @@ PointerInfo PointsToPlugin::getPInfoMin(llvm::Value* a) {
     if (llvm::GetElementPtrInst *GI = llvm::dyn_cast<llvm::GetElementPtrInst>(a)) {
         // need to have the PTA
         assert(PTA);
-        PSNode *psnode = PTA->getPointsTo(GI->getPointerOperand());
+        PSNode *psnode = PTA->getPointsToNode(GI->getPointerOperand());
         if (!psnode || psnode->pointsTo.empty()) {
             return PointerInfo();
         }
@@ -368,7 +371,7 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
 
     // need to have the PTA
     assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty()) {
         //llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be invalid
@@ -401,7 +404,7 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
         if (llvm::Instruction *I = llvm::dyn_cast<llvm::Instruction>(a)) {
             if(llvm::Instruction *Iptr = llvm::dyn_cast<llvm::Instruction>(ptr.target->getUserData<llvm::Value>())) {
                 llvm::Function *F = I->getParent()->getParent();
-                if(Iptr->getParent()->getParent() != F || cg.isRecursive(F))
+                if(Iptr->getParent()->getParent() != F || isRecursive(F))
                     return "false";
             } else {
                 //llvm::errs() << "In bound pointer for non-allocated memory: " << *a << "\n";
@@ -417,7 +420,7 @@ std::string PointsToPlugin::isValidPointer(llvm::Value* a, llvm::Value *len) {
 
 std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
     if(PTA) {
-        PSNode *psnode = PTA->getPointsTo(a);
+        PSNode *psnode = PTA->getPointsToNode(a);
         if (!psnode) return "maybe";
         for (const auto& ptr : psnode->pointsTo) {
             llvm::Value *llvmVal = ptr.target->getUserData<llvm::Value>();
@@ -432,8 +435,8 @@ std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
 
 std::string PointsToPlugin::pointsToSetsOverlap(llvm::Value* a, llvm::Value* b) {
     assert(PTA);
-    PSNode *nodeA = PTA->getPointsTo(a);
-    PSNode *nodeB = PTA->getPointsTo(a);
+    PSNode *nodeA = PTA->getPointsToNode(a);
+    PSNode *nodeB = PTA->getPointsToNode(a);
     if (!nodeA || !nodeB)
         return "maybe";
     if (nodeA->pointsTo.empty() || nodeB->pointsTo.empty())
@@ -465,7 +468,7 @@ std::string PointsToPlugin::pointsToSetsOverlap(llvm::Value* a, llvm::Value* b) 
 bool PointsToPlugin::getPointsTo(llvm::Value* a, std::vector<llvm::Value*>& ptset) {
     bool containsUnknown = false;
     if(PTA) {
-        PSNode *psnode = PTA->getPointsTo(a);
+        PSNode *psnode = PTA->getPointsToNode(a);
         if (!psnode) return false;
         for (const auto& ptr : psnode->pointsTo) {
             if (ptr.isUnknown()) {
@@ -486,13 +489,13 @@ bool PointsToPlugin::getPointsTo(llvm::Value* a, std::vector<llvm::Value*>& ptse
 }
 
 void PointsToPlugin::gatherPossiblyLeaked(llvm::ReturnInst *RI) {
-    PSNode *ret = PTA->getPointsTo(RI);
+    PSNode *ret = PTA->getPointsToNode(RI);
     if (!ret) {
         allMayBeLeaked = true;
         return;
     }
 
-    auto mm = ret->getData<dg::analysis::pta::PointerAnalysisFSInv::MemoryMapT>();
+    auto mm = ret->getData<dg::pta::PointerAnalysisFSInv::MemoryMapT>();
     if (!mm) {
         allMayBeLeaked = true;
         return;
@@ -536,7 +539,7 @@ std::string PointsToPlugin::mayBeLeaked(llvm::Value* a) {
     if (allMayBeLeaked)
         return "true";
 
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty())
         return "true";
 
@@ -554,7 +557,7 @@ std::string PointsToPlugin::mayBeLeakedOrFreed(llvm::Value* a) {
     if (allMayBeLeaked)
         return "true";
 
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty())
         return "true";
 
@@ -570,7 +573,7 @@ std::string PointsToPlugin::mayBeLeakedOrFreed(llvm::Value* a) {
 
 std::string PointsToPlugin::safeForFree(llvm::Value* a) {
     assert(PTA);
-    PSNode *psnode = PTA->getPointsTo(a);
+    PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty()) {
         // llvm::errs() << "No points-to for " << *a << "\n";
         // we know nothing, it may be null
@@ -595,8 +598,30 @@ std::string PointsToPlugin::safeForFree(llvm::Value* a) {
     return "true";
 }
 
-void PointsToPlugin::getReachableFunctions(std::set<const llvm::Function*>& reachableFunctions, const llvm::Function* from) {
-    cg.getReachableFunctions(reachableFunctions, from);
+void PointsToPlugin::computeRecursiveFuns(llvm::Module *module) {
+    auto& cg = PTA->getPTA()->getPG()->getCallGraph();
+    auto *entrynd = PTA->getPointsToNode(module->getFunction("main"));
+    assert(entrynd && "PTA has no node for entry to main function");
+    auto *entry = cg.get(entrynd);
+    assert(entry && "CallGraph has no node for the main function");
+
+    auto SCCs = dg::SCC<dg::GenericCallGraph<dg::PSNode *>::FuncNode>().compute(entry);
+    for (auto& component : SCCs) {
+        if (component.size() > 1 ||
+            (component.size() == 1 && component[0]->calls(component[0]))) {
+
+            for (auto *funcnd : component) {
+                auto *fun = funcnd->getValue()->getUserData<llvm::Function>();
+                llvm::errs() << "Recursive fun: " << fun->getName() << "\n";
+                recursiveFuns.insert(fun);
+            }
+        }
+    }
+
+}
+
+bool PointsToPlugin::isRecursive(const llvm::Function *F) {
+    return recursiveFuns.count(F) > 0;
 }
 
 static const std::string supportedQueries[] = {
