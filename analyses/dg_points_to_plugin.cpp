@@ -600,6 +600,9 @@ std::string PointsToPlugin::safeForFree(llvm::Value* a) {
 
 void PointsToPlugin::computeRecursiveFuns(llvm::Module *module) {
     auto& cg = PTA->getPTA()->getPG()->getCallGraph();
+    if (cg.empty()) // only main function without any calls
+        return;
+
     auto *entrynd = PTA->getPointsToNode(module->getFunction("main"));
     assert(entrynd && "PTA has no node for entry to main function");
     auto *entry = cg.get(entrynd);
@@ -612,7 +615,7 @@ void PointsToPlugin::computeRecursiveFuns(llvm::Module *module) {
 
             for (auto *funcnd : component) {
                 auto *fun = funcnd->getValue()->getUserData<llvm::Function>();
-                llvm::errs() << "Recursive fun: " << fun->getName() << "\n";
+                //llvm::errs() << "Recursive fun: " << fun->getName() << "\n";
                 recursiveFuns.insert(fun);
             }
         }
