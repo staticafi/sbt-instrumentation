@@ -1,6 +1,6 @@
 {
     "file": "marker.c",
-    "analyses": ["libPredatorPlugin.so", "libPointsToPlugin.so"],
+    "analyses": ["libdgPointsToPlugin.so", "libPredatorPlugin.so"],
     "phases": [
         {
             "instructionsRules": [
@@ -19,9 +19,9 @@
                     "operands": ["__INSTR_mark_pointer"]
                 },
                 "conditions": [{"query":["isValidPointer", "<t1>", "<t2>"],
-		                "expectedResults":["false", "maybe", "unknown"]}],
-		"mustHoldForAll" : "true",
-		"remember" : "<t1>",
+                                "expectedResults":["false", "maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
+                "remember" : "<t1>",
                 "where": "before",
                 "in": "*"
             },
@@ -40,9 +40,9 @@
                     "operands": ["__INSTR_mark_pointer"]
                 },
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"],
-		                "expectedResults":["false","maybe", "unknown"]}],
-		"mustHoldForAll" : "true",
-		"remember" : "<t2>",
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
+                "remember" : "<t2>",
                 "where": "before",
                 "in": "*"
             },
@@ -51,15 +51,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i32"]
+                    "operands": ["<p>","*", "<len>","*", "llvm.memset.p0i8.i32"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -68,15 +71,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i64"]
+                    "operands": ["<p>","*", "<len>","*", "llvm.memset.p0i8.i64"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -85,15 +91,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>", "*", "<t4>", "memset"]
+                    "operands": ["<p>", "*", "<len>", "memset"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -102,15 +111,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","memcpy"]
+                    "operands": ["<p>","*", "<len>","memcpy"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -119,15 +131,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["*","<t3>", "<t4>","memcpy"]
+                    "operands": ["*","<p>", "<len>","memcpy"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -136,15 +151,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i32"]
+                    "operands": ["<p>","*", "<len>","*", "llvm.memcpy.p0i8.p0i8.i32"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -153,15 +171,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["*","<t3>", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i32"]
+                    "operands": ["*", "<p>", "<len>","*", "llvm.memcpy.p0i8.p0i8.i32"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -170,15 +191,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i64"]
+                    "operands": ["<p>", "*", "<len>", "*", "llvm.memcpy.p0i8.p0i8.i64"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -187,15 +211,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["*","<t3>", "<t4>","*","*", "llvm.memcpy.p0i8.p0i8.i64"]
+                    "operands": ["*", "<p>", "<len>", "*", "llvm.memcpy.p0i8.p0i8.i64"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -204,15 +231,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","memmove"]
+                    "operands": ["<p>", "*", "<len>","memmove"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -221,15 +251,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["*","<t3>", "<t4>","memmove"]
+                    "operands": ["*", "<p>", "<len>","memmove"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -238,15 +271,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i32"]
+                    "operands": ["<p>", "*", "<len>", "*", "llvm.memmove.p0i8.p0i8.i32"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -255,15 +291,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["*","<t3>", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i32"]
+                    "operands": ["*", "<p>", "<len>", "*", "llvm.memmove.p0i8.p0i8.i32"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -272,15 +311,18 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i64"]
+                    "operands": ["<p>", "*", "<len>", "*", "llvm.memmove.p0i8.p0i8.i64"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             },
@@ -289,19 +331,22 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["*","<t3>", "<t4>","*","*", "llvm.memmove.p0i8.p0i8.i64"]
+                    "operands": ["*", "<p>", "<len>", "*","llvm.memmove.p0i8.p0i8.i64"]
                 }
                 ],
+                "conditions": [{"query":["isValidPointer", "<p>", "<len>"],
+                                "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
                 "newInstruction": {
                     "returnValue": "*",
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-		"remember" : "<t3>",
+                "remember" : "<p>",
                 "where": "before",
                 "in": "*"
             }
-	    ]
+            ]
         },
         {   "instructionsRules":
             [
@@ -337,7 +382,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"], "expectedResults":["false"]},
-		               {"query":["safeForFree", "<p>"], "expectedResults":["maybe","false"]}],
+                               {"query":["safeForFree", "<p>"], "expectedResults":["maybe","false"]}],
                 "in": "*"
             },
             {
@@ -355,9 +400,9 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"],
-		                "expectedResults":["false"]},
-			       {"query":["pointsToRemembered", "<p>"],
-				"expectedResults":["true", "maybe"]}],
+                                "expectedResults":["false"]},
+                               {"query":["pointsToRemembered", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
                 "in": "*"
             },
             {
@@ -375,7 +420,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
-		                "expectedResults":["true"]}],
+                                "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -393,7 +438,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
-		                "expectedResults":["true"]}],
+                                "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -411,7 +456,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
-		                "expectedResults":["true"]}],
+                                "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -429,7 +474,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
-		                "expectedResults":["true"]}],
+                                "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -447,7 +492,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
-		                "expectedResults":["true"]}],
+                                "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -465,7 +510,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
-		                "expectedResults":["true"]}],
+                                "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -483,7 +528,7 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
-		                "expectedResults":["true"]}],
+                                "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -501,13 +546,13 @@
                 },
                 "where": "before",
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
-		                "expectedResults":["false"]},
-			       {"query":["isInvalid", "<oldmem>"],
-				"expectedResults":["maybe", "false"]}],
+                                "expectedResults":["false"]},
+                               {"query":["isInvalid", "<oldmem>"],
+                                "expectedResults":["maybe", "false"]}],
                 "in": "*"
             }
 
-	]
+        ]
         }
     ]
 }
