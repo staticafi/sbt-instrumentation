@@ -49,7 +49,7 @@ def run_predator(timeout, clang, infile):
         sel.register(proc.stdout, selectors.EVENT_READ)
 
         while True:
-            for key, mask in sel.select():
+            for key, mask in sel.select(timeout):
                 fd = key.fileobj
                 line = fd.readline()
                 line = str(line.strip())
