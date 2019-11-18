@@ -4,7 +4,7 @@ add_library(dgPointsToPlugin MODULE
 target_link_libraries(dgPointsToPlugin PRIVATE ${dg_libs})
 install(TARGETS dgPointsToPlugin
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES predator_wrapper.py
+install(PROGRAMS predator_wrapper.py
   DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_library(RangeAnalysisPlugin MODULE
