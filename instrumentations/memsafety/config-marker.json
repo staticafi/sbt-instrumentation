@@ -1,6 +1,6 @@
 {
     "file": "marker.c",
-    "analyses": ["libdgPointsToPlugin.so"],
+    "analyses": ["libdgPointsToPlugin.so","libLLVMPointsToPlugin.so"],
     "phases": [
         {
             "instructionsRules": [
