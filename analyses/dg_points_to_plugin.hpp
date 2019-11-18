@@ -149,9 +149,14 @@ public:
 
         dg::LLVMPointerAnalysisOptions opts;
         opts.analysisType = dg::LLVMPointerAnalysisOptions::AnalysisType::inv;
+        opts.maxIterations = 100000000; // empirically set
 
         PTA = std::unique_ptr<dg::DGLLVMPointerAnalysis>(new dg::DGLLVMPointerAnalysis(module, opts));
-        PTA->run();
+        bool finished = PTA->run();
+        if (!finished) {
+            llvm::errs() << "DG PTA reached iteration threshold: "
+                         << opts.maxIterations << " iterations\n";
+        }
 
         gatherPossiblyLeaked(module);
         computeRecursiveFuns(module);
