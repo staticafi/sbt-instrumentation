@@ -149,7 +149,7 @@ public:
 
         dg::LLVMPointerAnalysisOptions opts;
         opts.analysisType = dg::LLVMPointerAnalysisOptions::AnalysisType::inv;
-        opts.maxIterations = 100000000; // empirically set
+        opts.maxIterations = 50000; // empirically set
 
         PTA = std::unique_ptr<dg::DGLLVMPointerAnalysis>(new dg::DGLLVMPointerAnalysis(module, opts));
         bool finished = PTA->run();
