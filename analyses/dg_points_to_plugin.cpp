@@ -488,6 +488,87 @@ bool PointsToPlugin::getPointsTo(llvm::Value* a, std::vector<llvm::Value*>& ptse
     return containsUnknown;
 }
 
+static std::set<PSNode *>
+gatherReachableObjects(dg::pta::PointerAnalysisFSInv::MemoryMapT *mm,
+                       bool includeFromLocal) {
+    // FIXME: use proper queue...
+    std::set<PSNode *> reachable;
+    std::set<PSNode *> queue;
+    for (auto& it : *mm) {
+        PSNodeAlloc *target = PSNodeAlloc::cast(it.first);
+        if (includeFromLocal || target->isGlobal() || target->isHeap()) {
+            queue.insert(it.first);
+            reachable.insert(it.first);
+        }
+    }
+
+    while (!queue.empty()) {
+        PSNode *obj = *queue.begin();
+        queue.erase(queue.begin());
+
+        auto it = mm->find(obj);
+        if (it == mm->end())
+            continue;
+
+        auto *memobj = it->second.get();
+        for (auto& ptit : *memobj) {
+            for (const auto& ptr : ptit.second) {
+                if (reachable.insert(ptr.target).second) {
+                    queue.insert(ptr.target);
+                }
+            }
+        }
+    }
+    return reachable;
+}
+
+///
+// Return true if this store may cause loosing the last
+// reference to some heap allocated memory
+std::string PointsToPlugin::storeMayLeak(llvm::Value *v) {
+    auto SI = llvm::dyn_cast<llvm::StoreInst>(v);
+    if (!SI) {
+        assert(false && "Called not on store");
+        return "false";
+    }
+
+    PSNode *snode = PTA->getPointsToNode(SI);
+    if (!snode || snode->pointsTo.hasUnknown()) {
+        return "maybe";
+    }
+
+    auto mm = snode->getData<dg::pta::PointerAnalysisFSInv::MemoryMapT>();
+    if (!mm) {
+        return "maybe";
+    }
+
+    bool isMain = SI->getParent()->getParent()->getName().equals("main");
+
+    auto sobjects = gatherReachableObjects(mm, isMain);
+    for (auto *pred : snode->getPredecessors()) {
+        auto pm = pred->getData<dg::pta::PointerAnalysisFSInv::MemoryMapT>();
+        if (!pm) {
+            return "maybe";
+        }
+
+        auto pobjects = gatherReachableObjects(pm, isMain);
+        std::set<PSNode *> diff;
+        std::set_difference(pobjects.begin(), pobjects.end(),
+                            sobjects.begin(), sobjects.end(),
+                            std::inserter(diff, diff.end()));
+        for (auto *obj : diff) {
+            auto alloc = PSNodeAlloc::get(obj);
+            if (alloc && alloc->isHeap()) {
+                //llvm::errs() << "Leaking store:" << *SI << "\n";
+                return "true";
+            }
+        }
+    }
+
+    return "false";
+}
+
+
 void PointsToPlugin::gatherPossiblyLeaked(llvm::ReturnInst *RI) {
     PSNode *ret = PTA->getPointsToNode(RI);
     if (!ret) {
@@ -647,6 +728,7 @@ static const std::string supportedQueries[] = {
     "mayBeLeaked",
     "mayBeLeakedOrFreed",
     "safeForFree",
+    "storeMayLeak",
     "pointsToSetsOverlap",
 };
 

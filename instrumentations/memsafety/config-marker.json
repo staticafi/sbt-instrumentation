@@ -50,6 +50,25 @@
                 "findInstructions": [
                 {
                     "returnValue": "*",
+                    "instruction": "store",
+                    "operands": ["<val>", "<ptr>"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "conditions": [{"query":["storeMayLeak", "<this>"],
+                                "expectedResults":["true","maybe","unknown"]}],
+                "mustHoldForAll" : "true",
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
                     "instruction": "call",
                     "operands": ["<p>","*", "<len>","*", "llvm.memset.p0i8.i32"]
                 }

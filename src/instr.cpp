@@ -699,7 +699,7 @@ bool checkFlag(Condition condition, Rewriter rewriter) {
  * @param variables
  * @return true if condition is ok, false otherwise
  */
-bool checkAnalysis(const Condition& condition, bool forAll,
+bool checkAnalysis(Value *ins, const Condition& condition, bool forAll,
                    LLVMInstrumentation& instr, const Variables& variables)
 {
     assert(condition.name != "" && "Empty condition passed");
@@ -707,6 +707,10 @@ bool checkAnalysis(const Condition& condition, bool forAll,
     vector<Value*> parameters;
     parameters.reserve(condition.arguments.size());
     for (const auto& arg : condition.arguments) {
+        if (arg == "<this>") { // special variable for this instruction
+            parameters.push_back(ins);
+            continue;
+        }
         auto search = variables.find(arg);
         if (search != variables.end()) {
             parameters.push_back(search->second);
@@ -808,8 +812,9 @@ bool checkAnalysis(const Condition& condition, bool forAll,
  * @param variables list of variables
  * @return true if conditions are satisfied, false otherwise
  **/
-bool checkConditions(const std::list<Condition>& conditions, bool forAll,
-                     LLVMInstrumentation& instr, const Variables& variables)
+bool checkConditions(Instruction *ins, const std::list<Condition>& conditions,
+                     bool forAll, LLVMInstrumentation& instr,
+                     const Variables& variables)
 {
     // check the conditions
     for (const auto& condition : conditions) {
@@ -818,7 +823,7 @@ bool checkConditions(const std::list<Condition>& conditions, bool forAll,
                 return false;
             }
         }
-        else if (!checkAnalysis(condition, forAll, instr, variables)) {
+        else if (!checkAnalysis(ins, condition, forAll, instr, variables)) {
             return false;
         }
     }
@@ -949,7 +954,7 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
                 variables[iIns.getSizeTo] = ConstantInt::get(Type::getInt64Ty(instr.module.getContext()), getAllocatedSize(ins, instr.module));
             }
 
-            if (!checkConditions(rw.conditions, rw.mustHoldForAll,
+            if (!checkConditions(ins, rw.conditions, rw.mustHoldForAll,
                                  instr, variables))
             {
                 const string& func = *(--rw.newInstr.parameters.end());
@@ -1049,7 +1054,7 @@ bool instrumentGlobal(LLVMInstrumentation& instr, const GlobalVarsRule& g_rule) 
             // Check the conditions
             bool satisfied = true;
             for (auto condition : g_rule.conditions) {
-                if (!checkAnalysis(condition, g_rule.mustHoldForAll,
+                if (!checkAnalysis(GV, condition, g_rule.mustHoldForAll,
                                    instr, variables))
                 {
                     satisfied = false;

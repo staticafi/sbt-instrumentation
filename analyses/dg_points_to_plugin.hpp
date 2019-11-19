@@ -77,6 +77,7 @@ private:
     std::string mayBeLeakedOrFreed(llvm::Value* a);
     std::string safeForFree(llvm::Value* a);
     std::string pointsToSetsOverlap(llvm::Value* a, llvm::Value *b);
+    std::string storeMayLeak(llvm::Value* S);
 
     void gatherPossiblyLeaked(llvm::Module *);
     void gatherPossiblyLeaked(llvm::ReturnInst *);
@@ -125,6 +126,9 @@ public:
         } else if (query == "safeForFree") {
             assert(operands.size() == 1 && "Wrong number of operands");
             return safeForFree(operands[0]);
+        } else if (query == "storeMayLeak") {
+            assert(operands.size() == 1 && "Wrong number of operands");
+            return storeMayLeak(operands[0]);
         } else if (query == "pointsToSetsOverlap") {
             assert(operands.size() == 2 && "Wrong number of operands");
             return pointsToSetsOverlap(operands[0], operands[1]);
