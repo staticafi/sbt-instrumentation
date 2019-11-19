@@ -489,17 +489,28 @@ bool PointsToPlugin::getPointsTo(llvm::Value* a, std::vector<llvm::Value*>& ptse
 }
 
 static std::set<PSNode *>
-gatherReachableObjects(dg::pta::PointerAnalysisFSInv::MemoryMapT *mm,
-                       bool includeFromLocal) {
+gatherReachableObjects(dg::pta::PointerAnalysisFSInv::MemoryMapT *mm) {
     // FIXME: use proper queue...
     std::set<PSNode *> reachable;
+
     std::set<PSNode *> queue;
     for (auto& it : *mm) {
+        // skip allocations not in main and also heap objects
+        // (which cannot stand on its own in the code
+        // -- their address must be stored somewhere)
         PSNodeAlloc *target = PSNodeAlloc::cast(it.first);
-        if (includeFromLocal || target->isGlobal() || target->isHeap()) {
-            queue.insert(it.first);
-            reachable.insert(it.first);
+        if (target->isHeap())
+            continue;
+        if (auto val = target->getUserData<llvm::Value>()) {
+            if (auto A = llvm::dyn_cast<llvm::AllocaInst>(val)) {
+                if (!A->getParent()->getParent()->getName().equals("main")) {
+                    continue;
+                }
+            }
         }
+
+        queue.insert(it.first);
+        reachable.insert(it.first);
     }
 
     while (!queue.empty()) {
@@ -542,16 +553,15 @@ std::string PointsToPlugin::storeMayLeak(llvm::Value *v) {
         return "maybe";
     }
 
-    bool isMain = SI->getParent()->getParent()->getName().equals("main");
+    auto sobjects = gatherReachableObjects(mm);
 
-    auto sobjects = gatherReachableObjects(mm, isMain);
     for (auto *pred : snode->getPredecessors()) {
         auto pm = pred->getData<dg::pta::PointerAnalysisFSInv::MemoryMapT>();
         if (!pm) {
             return "maybe";
         }
 
-        auto pobjects = gatherReachableObjects(pm, isMain);
+        auto pobjects = gatherReachableObjects(pm);
         std::set<PSNode *> diff;
         std::set_difference(pobjects.begin(), pobjects.end(),
                             sobjects.begin(), sobjects.end(),
