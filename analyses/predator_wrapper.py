@@ -41,7 +41,7 @@ def parse_errors(line):
     if 'TRACE' in line:
         return []
 
-    error_classes = map(lambda x: (re.compile(x[0], x[1])),[
+    error_classes = [
         (': error: dereference of already deleted heap object', ['invalid']),
         (': error: dereferencing object of size [0-9]*B out of bounds', ['invalid']),
         (': error: dereference of NULL value', ['invalid']),
@@ -58,18 +58,23 @@ def parse_errors(line):
         (': error: (free|realloc)\(\) called on non-pointer value', ['free']),
 
         (': (error|warning): memory leak detected', ['leak']),
-    ])
+    ]
 
     result = []
-    for regex, classes in error_classes:
-        if regex.search(line) != None:
+    for (regex, classes) in error_classes:
+        try:
+            match = re.search(regex, line)
+        except:
+            print(regex)
+            print(line)
+        if match != None:
             [row, col] = line.split(':')[1:3]
             try:
                 result += [ErrorReport(int(row), int(col), cl) for cl in classes]
             except ValueError:
                 pass
 
-    return result
+    return set(result)
 
 def line_reports_unsupported_feature(line):
     unsupported_feature_regexes = map(re.compile, [
@@ -78,7 +83,7 @@ def line_reports_unsupported_feature(line):
         ': warning: possible .*flow of .* integer',
     ])
 
-    return False
+    return any(map(lambda x: x.search(line) != None, unsupported_feature_regexes))
 
 def run_predator(timeout, clang, infile):
     """
@@ -111,8 +116,9 @@ def run_predator(timeout, clang, infile):
         while True:
             for key, mask in sel.select(timeout):
                 fd = key.fileobj
-                line = str(fd.readline().strip())
-                error_locations.update(parse_errors(line))
+                line = fd.readline().strip().decode('utf-8')
+                line_errors = parse_errors(line)
+                error_locations.update(line_errors)
 
                 if line_reports_unsupported_feature(line):
                     log('Predator encountered an unsupported feature, so the result is unknown')
@@ -120,8 +126,14 @@ def run_predator(timeout, clang, infile):
                     log(line)
                     proc.kill()
                     return ('unknown', set())
+                elif len(line_errors) == 0 and ': error:' in line:
+                    log('Predator encountered an unknown error, so the result is error')
+                    log('That is based on this line:')
+                    log(line)
+                    proc.kill()
+                    return ('error', set())
 
-                if re.search(line, 'clEasyRun\(\) took'):
+                if re.search('clEasyRun\(\) took', line):
                     log('Predator finished')
                     return ('ok', error_locations)
 
