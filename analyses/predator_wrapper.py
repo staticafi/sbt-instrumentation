@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+from subprocess import PIPE, DEVNULL
 import argparse
 import os
+import re
 import selectors
 import subprocess
-from subprocess import PIPE, DEVNULL
 import sys
 import time
 
@@ -40,22 +41,44 @@ def parse_errors(line):
     if 'TRACE' in line:
         return []
 
-    if 'error:' in line and 'Pass has detected some errors' not in line:
-        [row, col] = line.split(':')[1:3]
-        try:
-            return [ErrorReport(int(row), int(col), 'invalid')]
-        except ValueError:
-            pass
+    error_classes = map(lambda x: (re.compile(x[0], x[1])),[
+        (': error: dereference of already deleted heap object', ['invalid']),
+        (': error: dereferencing object of size [0-9]*B out of bounds', ['invalid']),
+        (': error: dereference of NULL value', ['invalid']),
+        (': error: invalid dereference', ['invalid']),
+        (': error: dereference of non-existing non-heap object', ['invalid']),
+        (': error: not enough space to store value of a pointer', ['invalid']),
+        (': error: invalid L-value', ['invalid']),
 
-    if 'warning: memory leak detected' in line:
-        [row, col] = line.split(':')[1:3]
-        try:
-            return [ErrorReport(int(row), int(col), 'leak')]
-        except ValueError:
-            pass
+        (': error: (free|realloc)\(\) called with offset', ['free']),
+        (': error: invalid free\(\)', ['free']),
+        (': error: double free', ['free']),
+        (': error: attempt to free a non-existing non-heap object', ['free']),
+        (': error: attempt to free a non-heap object', ['free']),
+        (': error: (free|realloc)\(\) called on non-pointer value', ['free']),
 
-    return []
+        (': (error|warning): memory leak detected', ['leak']),
+    ])
 
+    result = []
+    for regex, classes in error_classes:
+        if regex.search(line) != None:
+            [row, col] = line.split(':')[1:3]
+            try:
+                result += [ErrorReport(int(row), int(col), cl) for cl in classes]
+            except ValueError:
+                pass
+
+    return result
+
+def line_reports_unsupported_feature(line):
+    unsupported_feature_regexes = map(re.compile, [
+        ': warning: ignoring call of undefined function: ',
+        ': warning: conditional jump depends on uninitialized value',
+        ': warning: possible .*flow of .* integer',
+    ])
+
+    return False
 
 def run_predator(timeout, clang, infile):
     """
@@ -91,6 +114,17 @@ def run_predator(timeout, clang, infile):
                 line = str(fd.readline().strip())
                 error_locations.update(parse_errors(line))
 
+                if line_reports_unsupported_feature(line):
+                    log('Predator encountered an unsupported feature, so the result is unknown')
+                    log('The report is based on this line:')
+                    log(line)
+                    proc.kill()
+                    return ('unknown', set())
+
+                if re.search(line, 'clEasyRun\(\) took'):
+                    log('Predator finished')
+                    return ('ok', error_locations)
+
             if proc.poll() != None:
                 break
 
@@ -101,8 +135,8 @@ def run_predator(timeout, clang, infile):
                 proc.kill()
                 return ('timeout', set())
 
-    log('Predator finished')
-    return ('ok', error_locations)
+        log('Predator has not finished gracefully')
+        return ('error', set())
 
 def write_logfile(res, errs, outfile):
     with open(outfile, 'w') as f:
