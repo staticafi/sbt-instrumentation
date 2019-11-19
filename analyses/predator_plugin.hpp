@@ -109,6 +109,13 @@ public:
             } else {
                 return "false";
             }
+        } else if (query == "safeForFree") {
+            assert(operands.size() == 1);
+            if (someUserHasErrorReport(operands[0], ErrorType::Free)) {
+                return "maybe";
+            } else {
+                return "true";
+            }
         }
 
         return "unsupported query";

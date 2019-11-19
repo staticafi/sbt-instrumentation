@@ -13,6 +13,7 @@ static const std::unordered_set<std::string> supportedQueries {
     "isInvalid",
     "mayBeLeaked",
     "mayBeLeakedOrFreed",
+    "safeForFree",
 };
 
 
