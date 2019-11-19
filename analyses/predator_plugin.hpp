@@ -13,6 +13,8 @@ private:
 
     enum class ErrorType {
         Invalid,
+        Leak,
+        Free,
     };
 
     struct PairHash {
@@ -92,6 +94,20 @@ public:
                 return "maybe";
             } else {
                 return "true";
+            }
+        } else if (query == "mayBeLeaked") {
+            assert(operands.size() == 1);
+            if (someUserHasErrorReport(operands[0], ErrorType::Leak)) {
+                return "true";
+            } else {
+                return "false";
+            }
+        } else if (query == "mayBeLeakedOrFreed") {
+            assert(operands.size() == 1);
+            if (someUserHasErrorReport(operands[0], ErrorType::Leak) || someUserHasErrorReport(operands[0], ErrorType::Free)) {
+                return "true";
+            } else {
+                return "false";
             }
         }
 

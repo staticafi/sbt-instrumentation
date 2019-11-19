@@ -99,6 +99,10 @@ void PredatorPlugin::loadPredatorOutput() {
 
         if (err == "invalid") {
             et = ErrorType::Invalid;
+        } else if (err == "leak") {
+            et = ErrorType::Leak;
+        } else if (err == "free") {
+            et = ErrorType::Free;
         } else {
             assert(false && "PredatorPlugin: got invalid error type");
             abort();
