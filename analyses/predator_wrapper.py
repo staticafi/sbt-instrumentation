@@ -8,6 +8,17 @@ from subprocess import PIPE, DEVNULL
 import sys
 import time
 
+class ErrorReport:
+    """
+    An error type and its location.
+    Location is given by integers @row and @col.
+    Type of the error is given by string @ty.
+        Current possible values for ty: "leak", "invalid"
+    """
+    def __init__(self, row, col, ty):
+        self.row = row
+        self.col = col
+        self.ty = ty
 
 def log(msg):
     print('wrapper: ' + str(msg))
@@ -19,6 +30,32 @@ def nstime():
     @return time in nanoseconds
     """
     return time.perf_counter()
+
+def parse_errors(line):
+    """
+    Parse all errors reported by Predator on this line of output
+    Return list, never return None
+    """
+    # we are not interested in traces
+    if 'TRACE' in line:
+        return []
+
+    if 'error:' in line and 'Pass has detected some errors' not in line:
+        [row, col] = line.split(':')[1:3]
+        try:
+            return [ErrorReport(int(row), int(col), 'invalid')]
+        except ValueError:
+            pass
+
+    if 'warning: memory leak detected' in line:
+        [row, col] = line.split(':')[1:3]
+        try:
+            return [ErrorReport(int(row), int(col), 'leak')]
+        except ValueError:
+            pass
+
+    return []
+
 
 def run_predator(timeout, clang, infile):
     """
@@ -51,18 +88,8 @@ def run_predator(timeout, clang, infile):
         while True:
             for key, mask in sel.select(timeout):
                 fd = key.fileobj
-                line = fd.readline()
-                line = str(line.strip())
-                if 'error:' in line and 'Pass has detected some errors' not in line:
-                    [row, col] = line.split(':')[1:3]
-                    try:
-                        error_locations.add((int(row), int(col)))
-                    except ValueError:
-                        pass
-
-                # we are not interested in traces
-                if 'TRACE' in line:
-                    break
+                line = str(fd.readline().strip())
+                error_locations.update(parse_errors(line))
 
             if proc.poll() != None:
                 break
@@ -80,8 +107,8 @@ def run_predator(timeout, clang, infile):
 def write_logfile(res, errs, outfile):
     with open(outfile, 'w') as f:
         f.write('{}\n'.format(res))
-        for (line, col) in errs:
-            f.write('{} {}\n'.format(line,col))
+        for err in errs:
+            f.write('{} {} {}\n'.format(err.row,err.col,err.ty))
 
 def assert_in_path(executable):
     ret = subprocess.call(['which', executable], stdout=DEVNULL, stderr=DEVNULL)

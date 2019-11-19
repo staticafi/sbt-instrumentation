@@ -1,20 +1,65 @@
 #ifndef PREDATOR_PLUGIN_H
 #define PREDATOR_PLUGIN_H
 
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <llvm/IR/Module.h>
 #include "instr_plugin.hpp"
 
 class PredatorPlugin : public InstrPlugin
 {
 private:
-    bool isPointerDangerous(const llvm::Value* deref) const;
-    bool isInstructionDangerous(const llvm::Instruction& deref) const;
+
+    enum class ErrorType {
+        Invalid,
+    };
+
+    struct PairHash {
+        template <class T1, class T2>
+        std::size_t operator() (const std::pair<T1, T2> &pair) const {
+            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+        }
+    };
+
+    template<typename T>
+    class ErrorContainer {
+        std::unordered_map<std::pair<unsigned, unsigned>, std::unordered_set<T>, PairHash> container;
+
+    public:
+        ErrorContainer() = default;
+
+        bool hasReport(size_t line, size_t col, const T& r) const {
+            auto it = container.find(std::make_pair(line, col));
+            if (it == container.end()) {
+                return false;
+            } else {
+                return it->second.find(r) != it->second.end();
+            }
+        }
+
+        void add(unsigned line, unsigned col, T r) {
+            auto it = container.find(std::make_pair(line, col));
+            if (it != container.end()) {
+                it->second.insert(std::move(r));
+            } else {
+                container[std::make_pair(line, col)].insert(r);
+            }
+        }
+    };
+
+    using ErrorReport = ErrorType;
+
+    ErrorContainer<ErrorReport> errors;
+
+    /**
+     * Return true if any user of @operand has an associated error report of type @et
+     */
+    bool someUserHasErrorReport(const llvm::Value* operand, ErrorType et) const;
 
     void loadPredatorOutput();
     void runPredator(llvm::Module* mod);
 
-    std::set<std::pair<unsigned, unsigned>> predatorErrors;
     bool predatorSuccess;
 
 public:
@@ -36,14 +81,14 @@ public:
 
         if (query == "isInvalid") {
             assert(operands.size() == 1);
-            if (isPointerDangerous(operands[0])) {
+            if (someUserHasErrorReport(operands[0], ErrorType::Invalid)) {
                 return "maybe";
             } else {
                 return "false";
             }
         } else if (query == "isValidPointer") {
             assert(operands.size() == 2);
-            if (isPointerDangerous(operands[0])) {
+            if (someUserHasErrorReport(operands[0], ErrorType::Invalid)) {
                 return "maybe";
             } else {
                 return "true";
