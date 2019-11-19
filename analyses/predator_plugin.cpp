@@ -11,6 +11,8 @@
 static const std::unordered_set<std::string> supportedQueries {
     "isValidPointer",
     "isInvalid",
+    "mayBeLeaked",
+    "mayBeLeakedOrFreed",
 };
 
 
