@@ -101,6 +101,7 @@ void PredatorPlugin::loadPredatorOutput() {
 
     if (result != "ok") {
         llvm::errs() << "PredatorPlugin: Predator failed with '" << result << "', always saying \"maybe\" \n";
+        return;
     }
 
     while (!is.eof()) {
