@@ -43,6 +43,9 @@ def nstime():
     """
     return time.perf_counter()
 
+class UnsupportedErrorLocation(Exception):
+    pass
+
 def parse_errors(line):
     """
     Parse all errors reported by Predator on this line of output
@@ -89,6 +92,9 @@ def parse_errors(line):
                     result += [ErrorReport(int(row), int(col), cl) for cl in classes]
                 except ValueError:
                     pass
+            else:
+                # the line matches but we don't know the format!
+                raise UnsupportedErrorLocation()
 
     return set(result)
 
@@ -133,7 +139,15 @@ def run_predator(timeout, clang, infile):
             for key, mask in sel.select(timeout):
                 fd = key.fileobj
                 line = fd.readline().strip().decode('utf-8')
-                line_errors = parse_errors(line)
+                try:
+                    line_errors = parse_errors(line)
+                except UnsupportedErrorLocation:
+                    log('Predator reported error in unsupported way')
+                    log('The report is based on this line:')
+                    log(line)
+                    proc.kill()
+                    return ('unknown', set())
+                    
                 error_locations.update(line_errors)
 
                 if line_reports_unsupported_feature(line):
