@@ -21,6 +21,26 @@ extern "C" InstrPlugin* create_object(llvm::Module* module) {
     return new PredatorPlugin(module);
 }
 
+bool PredatorPlugin::someUserHasSomeErrorReport(const llvm::Value* operand) const {
+    for (const auto& user : operand->users()) {
+        if (auto* inst = llvm::dyn_cast_or_null<llvm::Instruction>(user)) {
+            // there cannot be error report for instruction without debug location
+            if (!inst->getDebugLoc())
+                continue;
+
+            const unsigned line = inst->getDebugLoc().getLine();
+            const unsigned col = inst->getDebugLoc().getCol();
+
+            if (errors.hasAnyReport(line, col)) {
+                return true;
+            }
+
+        }
+    }
+
+    return false;
+}
+
 bool PredatorPlugin::someUserHasErrorReport(const llvm::Value* operand, ErrorType et) const {
     for (const auto& user : operand->users()) {
         if (auto* inst = llvm::dyn_cast_or_null<llvm::Instruction>(user)) {

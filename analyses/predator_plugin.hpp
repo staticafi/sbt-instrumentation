@@ -40,6 +40,15 @@ private:
             }
         }
 
+        bool hasAnyReport(size_t line, size_t col) const {
+            auto it = container.find(std::make_pair(line, col));
+            if (it != container.end()) {
+                return !it->second.empty();
+            }
+
+            return false;
+        }
+
         void add(unsigned line, unsigned col, T r) {
             auto it = container.find(std::make_pair(line, col));
             if (it != container.end()) {
@@ -58,6 +67,7 @@ private:
      * Return true if any user of @operand has an associated error report of type @et
      */
     bool someUserHasErrorReport(const llvm::Value* operand, ErrorType et) const;
+    bool someUserHasSomeErrorReport(const llvm::Value* operand) const;
 
     void loadPredatorOutput();
     void runPredator(llvm::Module* mod);
@@ -83,35 +93,35 @@ public:
 
         if (query == "isInvalid") {
             assert(operands.size() == 1);
-            if (someUserHasErrorReport(operands[0], ErrorType::Invalid)) {
+            if (someUserHasSomeErrorReport(operands[0])) {
                 return "maybe";
             } else {
                 return "false";
             }
         } else if (query == "isValidPointer") {
             assert(operands.size() == 2);
-            if (someUserHasErrorReport(operands[0], ErrorType::Invalid)) {
+            if (someUserHasSomeErrorReport(operands[0])) {
                 return "maybe";
             } else {
                 return "true";
             }
         } else if (query == "mayBeLeaked") {
             assert(operands.size() == 1);
-            if (someUserHasErrorReport(operands[0], ErrorType::Leak)) {
+            if (someUserHasSomeErrorReport(operands[0])) {
                 return "true";
             } else {
                 return "false";
             }
         } else if (query == "mayBeLeakedOrFreed") {
             assert(operands.size() == 1);
-            if (someUserHasErrorReport(operands[0], ErrorType::Leak) || someUserHasErrorReport(operands[0], ErrorType::Free)) {
+            if (someUserHasSomeErrorReport(operands[0])) {
                 return "true";
             } else {
                 return "false";
             }
         } else if (query == "safeForFree") {
             assert(operands.size() == 1);
-            if (someUserHasErrorReport(operands[0], ErrorType::Free)) {
+            if (someUserHasSomeErrorReport(operands[0])) {
                 return "maybe";
             } else {
                 return "true";
