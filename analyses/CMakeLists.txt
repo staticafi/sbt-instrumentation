@@ -40,6 +40,7 @@ add_library(PredatorPlugin MODULE
 install(TARGETS PredatorPlugin
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+install(PROGRAMS predator_wrapper.py DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_library(LLVMPointsToPlugin MODULE
 	llvm_points_to_plugin.cpp
