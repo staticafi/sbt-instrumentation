@@ -146,11 +146,12 @@ void PredatorPlugin::loadPredatorOutput() {
         llvm::errs() << "PredatorPlugin: Predator found no errors\n";
         abort();
     }
-
 }
 
 bool PredatorPlugin::supports(const std::string& query) {
-    return predatorSuccess && (supportedQueries.find(query) != supportedQueries.end());
+    // FIXME: this is just a test
+    return false;
+    //return predatorSuccess && (supportedQueries.find(query) != supportedQueries.end());
 }
 
 void PredatorPlugin::addReportsForLineErrors(llvm::Module* mod) {
