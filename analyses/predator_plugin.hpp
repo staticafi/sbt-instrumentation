@@ -57,6 +57,10 @@ private:
                 container[std::make_pair(line, col)].insert(r);
             }
         }
+
+        bool empty() const {
+            return container.empty();
+        }
     };
 
     using ErrorReport = ErrorType;

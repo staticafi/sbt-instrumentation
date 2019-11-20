@@ -134,6 +134,11 @@ void PredatorPlugin::loadPredatorOutput() {
         errors.add(lineNumber, colNumber, et);
     }
 
+    if (errors.empty()) {
+        llvm::errs() << "PredatorPlugin: Predator found no errors\n";
+        abort();
+    }
+
 }
 
 bool PredatorPlugin::supports(const std::string& query) {
