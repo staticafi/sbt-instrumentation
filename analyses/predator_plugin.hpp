@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include <llvm/IR/Module.h>
 #include "instr_plugin.hpp"
@@ -66,6 +67,8 @@ private:
     using ErrorReport = ErrorType;
 
     ErrorContainer<ErrorReport> errors;
+    std::vector<unsigned> lineOnlyErrors;
+    std::unordered_set<const llvm::Value *> dangerous;
 
     /**
      * Return true if any user of @operand has an associated error report of type @et
@@ -73,8 +76,14 @@ private:
     bool someUserHasErrorReport(const llvm::Value* operand, ErrorType et) const;
     bool someUserHasSomeErrorReport(const llvm::Value* operand) const;
 
+    void addReportsForLineErrors(llvm::Module* mod);
+
     void loadPredatorOutput();
     void runPredator(llvm::Module* mod);
+
+    bool isDangerous(const llvm::Value* v) const {
+        return dangerous.find(v) != dangerous.end();
+    }
 
     bool predatorSuccess;
 
@@ -84,6 +93,7 @@ public:
         llvm::errs() << "PredatorPlugin: Running Predator...\n";
         runPredator(module);
         loadPredatorOutput();
+        addReportsForLineErrors(module);
     }
 
     bool supports(const std::string& query) override;
@@ -97,35 +107,35 @@ public:
 
         if (query == "isInvalid") {
             assert(operands.size() == 1);
-            if (someUserHasSomeErrorReport(operands[0])) {
+            if (someUserHasSomeErrorReport(operands[0]) || isDangerous(operands[0])) {
                 return "maybe";
             } else {
                 return "false";
             }
         } else if (query == "isValidPointer") {
             assert(operands.size() == 2);
-            if (someUserHasSomeErrorReport(operands[0])) {
+            if (someUserHasSomeErrorReport(operands[0]) || isDangerous(operands[0])) {
                 return "maybe";
             } else {
                 return "true";
             }
         } else if (query == "mayBeLeaked") {
             assert(operands.size() == 1);
-            if (someUserHasSomeErrorReport(operands[0])) {
+            if (someUserHasSomeErrorReport(operands[0]) || isDangerous(operands[0])) {
                 return "true";
             } else {
                 return "false";
             }
         } else if (query == "mayBeLeakedOrFreed") {
             assert(operands.size() == 1);
-            if (someUserHasSomeErrorReport(operands[0])) {
+            if (someUserHasSomeErrorReport(operands[0]) || isDangerous(operands[0])) {
                 return "true";
             } else {
                 return "false";
             }
         } else if (query == "safeForFree") {
             assert(operands.size() == 1);
-            if (someUserHasSomeErrorReport(operands[0])) {
+            if (someUserHasSomeErrorReport(operands[0]) || isDangerous(operands[0])) {
                 return "maybe";
             } else {
                 return "true";

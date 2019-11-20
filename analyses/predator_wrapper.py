@@ -79,11 +79,16 @@ def parse_errors(line):
             print(regex)
             print(line)
         if match != None:
-            [row, col] = line.split(':')[1:3]
-            try:
-                result += [ErrorReport(int(row), int(col), cl) for cl in classes]
-            except ValueError:
-                pass
+            spl = line.split(':')
+            if len(spl) == 4:
+                row = spl[1]
+                result += [ErrorReport(int(row), 'none', cl) for cl in classes]
+            elif len(spl) == 5:
+                [row, col] = spl[1:3]
+                try:
+                    result += [ErrorReport(int(row), int(col), cl) for cl in classes]
+                except ValueError:
+                    pass
 
     return set(result)
 

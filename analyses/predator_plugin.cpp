@@ -2,6 +2,8 @@
 
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/Support/raw_os_ostream.h>
+#include <llvm/ADT/SmallVector.h>
+#include <llvm/IR/DebugInfoMetadata.h>
 
 #include <cstdlib>
 #include <fstream>
@@ -107,6 +109,7 @@ void PredatorPlugin::loadPredatorOutput() {
     while (!is.eof()) {
         unsigned lineNumber, colNumber;
         std::string err;
+        std::string col = "x";
         ErrorType et;
 
         is >> lineNumber;
@@ -114,7 +117,11 @@ void PredatorPlugin::loadPredatorOutput() {
         if (is.eof())
             break;
 
-        is >> colNumber;
+        is >> col;
+
+        if (col == "none") {
+            lineOnlyErrors.push_back(lineNumber);
+        }
 
         if (is.eof())
             break;
@@ -135,7 +142,7 @@ void PredatorPlugin::loadPredatorOutput() {
         errors.add(lineNumber, colNumber, et);
     }
 
-    if (errors.empty()) {
+    if (errors.empty() && lineOnlyErrors.empty()) {
         llvm::errs() << "PredatorPlugin: Predator found no errors\n";
         abort();
     }
@@ -144,4 +151,28 @@ void PredatorPlugin::loadPredatorOutput() {
 
 bool PredatorPlugin::supports(const std::string& query) {
     return predatorSuccess && (supportedQueries.find(query) != supportedQueries.end());
+}
+
+void PredatorPlugin::addReportsForLineErrors(llvm::Module* mod) {
+    for (unsigned lineNumber : lineOnlyErrors) {
+        bool found = false;
+        for (llvm::GlobalVariable& var : mod->globals()) {
+            llvm::SmallVector<llvm::DIGlobalVariableExpression *, 8> exprs;
+            var.getDebugInfo(exprs);
+
+            for (auto* e : exprs) {
+                auto* gv = e->getVariable();
+                if (gv) {
+                    if (gv->getLine() == lineNumber) {
+                        dangerous.insert(&var);
+                        found = true;
+                    }
+                }
+            }
+
+        }
+        if (!found) {
+            predatorSuccess = false;
+        }
+    }
 }
