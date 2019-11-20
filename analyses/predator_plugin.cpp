@@ -33,6 +33,7 @@ bool PredatorPlugin::someUserHasSomeErrorReport(const llvm::Value* operand) cons
             const unsigned line = inst->getDebugLoc().getLine();
             const unsigned col = inst->getDebugLoc().getCol();
 
+
             if (errors.hasAnyReport(line, col)) {
                 return true;
             }
@@ -125,6 +126,8 @@ void PredatorPlugin::loadPredatorOutput() {
 
         if (is.eof())
             break;
+
+        colNumber = std::stoi(col);
 
         is >> err;
 
