@@ -16,3 +16,8 @@ void __INSTR_mark_allocation(void)
 {
 	// this body will never by used
 }
+// Mark that this exit may leak memory
+void __INSTR_mark_exit(void)
+{
+	// this body will never by used
+}

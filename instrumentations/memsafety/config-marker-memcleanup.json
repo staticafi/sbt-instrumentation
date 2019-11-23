@@ -146,6 +146,54 @@
                 "conditions": [{"query":["mayBeLeaked", "<p>"],
 		                "expectedResults":["true"]}],
                 "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<val>", "__VERIFIER_exit"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_exit"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<val>", "exit"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_exit"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+	    {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "ret",
+                    "operands": ["*"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_exit"]
+                },
+                "where": "before",
+                "in": "main"
             }
 	]
         }
