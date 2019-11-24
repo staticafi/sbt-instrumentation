@@ -88,7 +88,10 @@ void PredatorPlugin::runPredator(llvm::Module* mod) {
     // run predator on that file
     auto str = cmd.str();
     llvm::errs() << "|> " << str << "\n";
-    std::system(str.c_str());
+    if (std::system(str.c_str()) != 0) {
+        llvm::errs() << "Predator wrapper finished with non-0 exit status\n";
+        predatorSuccess = false;
+    }
 }
 
 void PredatorPlugin::loadPredatorOutput() {

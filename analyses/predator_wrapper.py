@@ -221,3 +221,4 @@ if __name__ == '__main__':
     res, errs = run_predator(args.timeout, clang, args.infile)
     log('Writing logfile to {}'.format(args.out))
     write_logfile(res, errs, args.out)
+    sys.exit(0)
