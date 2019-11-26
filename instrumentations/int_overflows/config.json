@@ -291,42 +291,6 @@
                     "where": "before",
                     "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
                     "in": "*"
-                },
-                {
-                    "findInstructions": [
-                    {
-                        "returnValue": "<op>",
-                        "instruction": "shl",
-                        "operands": ["<t1>", "<t2>"],
-                        "type": "i32"
-                    }
-                    ],
-                    "newInstruction": {
-                        "returnValue": "*",
-                        "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_shl_i32"]
-                    },
-                    "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
-                    "in": "*"
-                },
-                {
-                    "findInstructions": [
-                    {
-                        "returnValue": "<op>",
-                        "instruction": "shl",
-                        "operands": ["<t1>", "<t2>"],
-                        "type": "i64"
-                    }
-                    ],
-                    "newInstruction": {
-                        "returnValue": "*",
-                        "instruction": "call",
-                        "operands": ["<t1>", "<t2>", "__INSTR_check_shl_i64"]
-                    },
-                    "where": "before",
-                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
-                    "in": "*"
                 }
             ]
         }
