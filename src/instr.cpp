@@ -793,12 +793,18 @@ bool checkAnalysis(Value *ins, const Condition& condition, bool forAll,
                                                  parameters, logger);
         if (answer && !forAll) {
             // Some plugin told us that we should instrument
+            logger.write_info("Query for '" + condition.name +
+                              "' got positive answer, instrumenting");
             return true;
         }
         if (!answer && forAll) {
             // Some plugin told us that we should not instrument
             return false;
         }
+    }
+
+    if (forAll) {
+      logger.write_info("Query for '" + condition.name + "' got no positive answer");
     }
 
     // no plugin told us that we should instrument

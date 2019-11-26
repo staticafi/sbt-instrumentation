@@ -106,36 +106,43 @@ std::string RangeAnalysisPlugin::canOverflow(Value* value) {
 
 
     // check shifts
-   //if (const auto* binOp = dyn_cast<ShlOperator>(inst)) {
-   //    Range a = getRange(CG, binOp->getOperand(0));
-   //    Range b = getRange(CG, binOp->getOperand(1));
-   //    return canOverflowShl(a, b, *intT);
-   //}
+    if (const auto* binOp = dyn_cast<ShlOperator>(inst)) {
+        Range a = getRange(CG, binOp->getOperand(0));
+        Range b = getRange(CG, binOp->getOperand(1));
+        return canOverflowShl(a, b, *intT);
+    }
 
     return "unknown";
 }
 
 std::string RangeAnalysisPlugin::canOverflowShl(const Range& a, const Range& b,
                                                 const IntegerType& Ty) {
-    //if (!a.isRegular() || !b.isRegular())
-    //    return "unknown";
-
-    //if (b.getUpper().getZExtValue() >= a.getLower().getBitWidth())
-    //    return "true";
-
-    //// a * 2^b >= 2^(t-1)-1 ?
-    //if (b.getUpper() >= APInt(Ty.getBitWidth()))
-    //    return "true";
-
-    // t < b
-    // check that a * 2^(b/t-1) >= 
-   //if ((a.getUpper() * (APInt(b.getUpper().getBitWidth(), 1) << b.getUpper())) >= 
-   //    (APInt(Ty.getBitWidth(), 1) << (Ty.getBitWidth() - 1) - 1)) {
-   //    return "true";
-   //}
-
-   //return "false";
+  assert(Ty.getBitWidth() <= 64);
+  if (!a.isRegular() || !b.isRegular())
     return "unknown";
+
+  if (b.getUpper().getZExtValue() >= a.getLower().getBitWidth())
+    return "true";
+
+  // invalid number of positions
+  if (b.getUpper().getZExtValue() >= Ty.getBitWidth())
+    return "true";
+
+  uint64_t max = (1UL << (Ty.getBitWidth() - 1)) - 1;
+  uint64_t e = 1UL << b.getUpper().getZExtValue();
+  llvm::errs() << "max: " << max << "\n";
+  if (a.getLower().isNegative()) {
+    auto l = a.getLower();
+    l.negate();
+    if (l.getZExtValue() > (max >> e))
+      return "true";
+  } else if (!a.getLower().isNegative()) {
+    if (a.getUpper().getZExtValue() > ((max - 1) >> e))
+      return "true";
+  }
+  // else a == 0, which is fine
+
+  return "false";
 }
 
 

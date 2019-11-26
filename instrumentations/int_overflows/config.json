@@ -307,6 +307,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_shl_i32"]
                     },
                     "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
@@ -324,6 +325,7 @@
                         "operands": ["<t1>", "<t2>", "__INSTR_check_shl_i64"]
                     },
                     "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
                     "in": "*"
                 }
             ]
