@@ -965,6 +965,7 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
             {
                 const string& func = *(--rw.newInstr.parameters.end());
                 ++statistics.suppresed_instr[func];
+                logger.write_info("Suppresed insertion of '" + func + "'");
                 continue;
             }
 

@@ -83,10 +83,9 @@ bool Analyzer::shouldInstrument(const RememberedValues& rememberedValues,
     assert(plugin->supports(condition.name)
             && "Plugin does not support the condition");
     answer = plugin->query(condition.name, operands);
+    logger.write_info("Condition '" + condition.name + "' got answer: " + answer);
     for (const auto& expV : condition.expectedValues) {
         if (answer == expV) {
-            logger.write_info("Condition '" + condition.name +
-                              "' got positive answer: " + answer);
             return true;
         }
     }
