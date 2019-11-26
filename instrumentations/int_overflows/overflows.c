@@ -196,3 +196,33 @@ void __INSTR_check_div_i8(int8_t op1, int8_t op2) {
     assert(0 && "Division: int8_t overflow!");
   }
 }
+
+void __INSTR_check_shl_i32(int32_t a, uint32_t e) {
+  if (e == 0)
+      return;
+
+  if (e >= 32) {
+      assert(0 && "Shift by >= sizeof(int)");
+  }
+
+  if (a > 0) {
+	assert((a <= (INT32_MAX >> e)) && "Invalid shift");
+  } else if (a < 0) {
+	assert((a >= (INT32_MIN >> e)) && "Invalid shift");
+  }
+}
+
+void __INSTR_check_shl_i64(int64_t a, uint64_t e) {
+  if (e == 0)
+      return;
+
+  if (e >= 64) {
+      assert(0 && "Shift by >= sizeof(int)");
+  }
+
+  if (a > 0) {
+	assert((a <= (INT64_MAX >> e)) && "Invalid shift");
+  } else if (a < 0) {
+	assert((a >= (INT64_MIN >> e)) && "Invalid shift");
+  }
+}

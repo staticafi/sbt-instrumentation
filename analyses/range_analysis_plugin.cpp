@@ -104,8 +104,40 @@ std::string RangeAnalysisPlugin::canOverflow(Value* value) {
         return canOverflowTrunc(a, *truncOp);
     }
 
+
+    // check shifts
+   //if (const auto* binOp = dyn_cast<ShlOperator>(inst)) {
+   //    Range a = getRange(CG, binOp->getOperand(0));
+   //    Range b = getRange(CG, binOp->getOperand(1));
+   //    return canOverflowShl(a, b, *intT);
+   //}
+
     return "unknown";
 }
+
+std::string RangeAnalysisPlugin::canOverflowShl(const Range& a, const Range& b,
+                                                const IntegerType& Ty) {
+    //if (!a.isRegular() || !b.isRegular())
+    //    return "unknown";
+
+    //if (b.getUpper().getZExtValue() >= a.getLower().getBitWidth())
+    //    return "true";
+
+    //// a * 2^b >= 2^(t-1)-1 ?
+    //if (b.getUpper() >= APInt(Ty.getBitWidth()))
+    //    return "true";
+
+    // t < b
+    // check that a * 2^(b/t-1) >= 
+   //if ((a.getUpper() * (APInt(b.getUpper().getBitWidth(), 1) << b.getUpper())) >= 
+   //    (APInt(Ty.getBitWidth(), 1) << (Ty.getBitWidth() - 1) - 1)) {
+   //    return "true";
+   //}
+
+   //return "false";
+    return "unknown";
+}
+
 
 std::string RangeAnalysisPlugin::canOverflowTrunc(const Range& a,
         const TruncInst& truncOp)
@@ -141,7 +173,7 @@ Range RangeAnalysisPlugin::getRange(ConstraintGraph& CG,
     return r;
 }
 
-bool checkOverflowAdd(APInt ax, APInt ay, const IntegerType& t) {
+bool checkOverflowAdd(const APInt& ax, const APInt& ay, const IntegerType& t) {
     double x = ax.signedRoundToDouble();
     double y = ay.signedRoundToDouble();
 

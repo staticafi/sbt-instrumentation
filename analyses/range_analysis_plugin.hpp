@@ -22,6 +22,8 @@ private:
                                const llvm::IntegerType&);
     std::string canOverflowDiv(const Range&, const Range&,
                                const llvm::IntegerType&);
+    std::string canOverflowShl(const Range&, const Range&,
+                               const llvm::IntegerType&);
     std::string canOverflow(llvm::Value*);
     std::string canBeZero(llvm::Value*);
 
