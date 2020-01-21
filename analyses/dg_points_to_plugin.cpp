@@ -570,6 +570,9 @@ std::string PointsToPlugin::storeMayLeak(llvm::Value *v) {
             auto alloc = PSNodeAlloc::get(obj);
             if (alloc && alloc->isHeap()) {
                 //llvm::errs() << "Leaking store:" << *SI << "\n";
+                //llvm::errs() << "leaking: "
+                //             << *alloc->getUserData<llvm::Value>() << "\n";
+                possiblyLeaked.insert(alloc);
                 return "true";
             }
         }
@@ -637,7 +640,15 @@ std::string PointsToPlugin::mayBeLeaked(llvm::Value* a) {
         auto *F = llvm::dyn_cast<llvm::Function>(
                     C->getCalledValue()->stripPointerCasts());
         if (F && F->isDeclaration()) {
-            return "false";
+            // of course, skip the calls that allocate memory...
+            const auto& name = F->getName();
+            if (!name.equals("malloc") &&
+                !name.equals("calloc") &&
+                !name.equals("realloc") &&
+                !name.startswith("__VERIFIER_malloc") &&
+                !name.startswith("__VERIFIER_calloc")) {
+                return "false";
+            }
         }
     }
 

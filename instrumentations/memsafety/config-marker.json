@@ -73,26 +73,6 @@
                 "findInstructions": [
                 {
                     "returnValue": "*",
-                    "instruction": "store",
-                    "operands": ["<val>", "<ptr>"]
-                }
-                ],
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["__INSTR_mark_pointer"]
-                },
-                "conditions": [{"query":["mayBeLeaked", "<val>"],
-                                "expectedResults":["true"]}],
-                "mustHoldForAll" : "true",
-                "setFlags": [["leakcheck", "true"]],
-                "where": "before",
-                "in": "*"
-            },
-            {
-                "findInstructions": [
-                {
-                    "returnValue": "*",
                     "instruction": "call",
                     "operands": ["<p>","*", "<len>","*", "llvm.memset.p0i8.i32"]
                 }
@@ -397,6 +377,26 @@
                 "findInstructions": [
                 {
                     "returnValue": "*",
+                    "instruction": "store",
+                    "operands": ["<val>", "<ptr>"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "conditions": [{"query":["mayBeLeaked", "<val>"],
+                                "expectedResults":["true"]}],
+                "mustHoldForAll" : "true",
+                "setFlags": [["leakcheck", "true"]],
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
                     "instruction": "call",
                     "operands": ["<p>", "free"]
                 }
@@ -407,7 +407,8 @@
                     "operands": ["<p>", "__INSTR_mark_free"]
                 },
                 "where": "before",
-                "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"], "expectedResults":["true"]}],
+                "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"],
+		                "expectedResults":["true"]}],
                 "in": "*"
             },
             {
@@ -424,7 +425,8 @@
                     "operands": ["__INSTR_mark_free"]
                 },
                 "where": "before",
-                "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"], "expectedResults":["false"]},
+                "conditions": [{"query":["mayBeLeakedOrFreed", "<p>"],
+		                "expectedResults":["false"]},
                                {"query":["safeForFree", "<p>"], "expectedResults":["maybe","false"]}],
                 "in": "*"
             },
