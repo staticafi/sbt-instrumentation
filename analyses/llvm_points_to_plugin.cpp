@@ -117,6 +117,29 @@ std::string LLVMPointsToPlugin::isValidPointer(Value* a, Value *len) {
     return "maybe";
 }
 
+std::string LLVMPointsToPlugin::mayBeLeaked(llvm::Value* a) {
+    if (llvm::isa<llvm::ConstantInt>(a)) {
+        return "false";
+    }
+
+    // assume that undefined functions
+    // do not return a pointer to leakable memory
+    if (auto *C = llvm::dyn_cast<llvm::CallInst>(a)) {
+        auto *F = llvm::dyn_cast<llvm::Function>(
+                    C->getCalledValue()->stripPointerCasts());
+        if (F && F->isDeclaration()) {
+            return "false";
+        }
+    }
+
+    if (llvm::isa<llvm::AllocaInst>(a)) {
+        return "false";
+    }
+
+    return "maybe";
+}
+
+
 static const std::string supportedQueries[] = {
     "isValidPointer",
     "isNull",

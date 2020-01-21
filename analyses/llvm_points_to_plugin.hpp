@@ -15,6 +15,7 @@ class LLVMPointsToPlugin : public InstrPlugin {
     std::string pointsToHeap(llvm::Value* a);
     std::string pointsToStack(llvm::Value* a);
     std::string pointsToGlobal(llvm::Value* a);
+    std::string mayBeLeaked(llvm::Value* a);
     // Use LLVM AA in the future
     //std::string pointsToSetsOverlap(llvm::Value* a, llvm::Value *b);
     //
@@ -38,6 +39,9 @@ public:
         } else if (query == "pointsToStack") {
             assert(operands.size() == 1 && "Wrong number of operands");
             return pointsToStack(operands[0]);
+        } else if (query == "mayBeLeaked") {
+            assert(operands.size() == 1 && "Wrong number of operands");
+            return mayBeLeaked(operands[0]);
         } else {
             return "unsupported query";
         }
