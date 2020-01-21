@@ -627,26 +627,45 @@ void PointsToPlugin::gatherPossiblyLeaked(llvm::Module *M) {
 }
 
 std::string PointsToPlugin::mayBeLeaked(llvm::Value* a) {
-    if (allMayBeLeaked)
+    if (llvm::isa<llvm::ConstantInt>(a)) {
+        return "false";
+    }
+
+    // assume that undefined functions
+    // do not return a pointer to leakable memory
+    if (auto *C = llvm::dyn_cast<llvm::CallInst>(a)) {
+        auto *F = llvm::dyn_cast<llvm::Function>(
+                    C->getCalledValue()->stripPointerCasts());
+        if (F && F->isDeclaration()) {
+            return "false";
+        }
+    }
+
+    if (allMayBeLeaked) {
         return "true";
+    }
 
     PSNode *psnode = PTA->getPointsToNode(a);
-    if (!psnode || psnode->pointsTo.empty())
+    if (!psnode || psnode->pointsTo.empty()) {
         return "true";
+    }
 
     for (const auto& ptr : psnode->pointsTo) {
-        if (ptr.isUnknown())
+        if (ptr.isUnknown()) {
             return "true";
-        if (possiblyLeaked.count(ptr.target) > 0)
+        }
+        if (possiblyLeaked.count(ptr.target) > 0) {
             return "true";
+        }
     }
 
     return "false";
 }
 
 std::string PointsToPlugin::mayBeLeakedOrFreed(llvm::Value* a) {
-    if (allMayBeLeaked)
+    if (allMayBeLeaked) {
         return "true";
+    }
 
     PSNode *psnode = PTA->getPointsToNode(a);
     if (!psnode || psnode->pointsTo.empty())
