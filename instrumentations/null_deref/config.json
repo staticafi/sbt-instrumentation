@@ -1,45 +1,335 @@
 {
-	"file": "null_deref.c",
-	"analyses": ["libdgPointsToPlugin.so"],
-	"instructionsRules":
-	[
-		{
-			"findInstructions": [
-						   {
-							  "returnValue": "*",
-							  "instruction": "load",
-							  "operands": ["<t1>"]
-						   }
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t1>", "__INSTR_check_pointer"]
-					  },
-			"where": "before",
-			"condition": ["null", "<t1>"],
-			"in": "*"
-		},
+    "file": "marker.c",
+    "analyses": ["libdgPointsToPlugin.so",
+                 "libPredatorPlugin.so",
+		 "libLLVMPointsToPlugin.so"],
+    "phases": [
         {
-			"findInstructions": [
-							{
-							  "returnValue": "*",
-							  "instruction": "store",
-							  "operands": ["<t1>", "<t2>"]
-						    }
-					   ],
-			"newInstruction": {
-					      "returnValue": "*",
-					      "instruction": "call",
-					      "operands": ["<t2>", "__INSTR_check_pointer"]
-					  },
-			"where": "before",
-			"condition": ["null", "<t2>"],
-			"in": "*"
-		}
-
-	]
+            "instructionsRules": [
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "load",
+                    "operands": ["<t1>"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "conditions": [{"query":["isNull", "<t1>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "store",
+                    "operands": ["<t1>", "<t2>"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "conditions": [{"query":["isNull", "<t2>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>","*", "<len>","*", "llvm.memset.p0i8.i32"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>","*", "<len>","*", "llvm.memset.p0i8.i64"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "*", "<len>", "memset"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>","*", "<len>","memcpy"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*","<p>", "<len>","memcpy"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>","*", "<len>","*", "llvm.memcpy.p0i8.p0i8.i32"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*", "<p>", "<len>","*", "llvm.memcpy.p0i8.p0i8.i32"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "*", "<len>", "*", "llvm.memcpy.p0i8.p0i8.i64"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*", "<p>", "<len>", "*", "llvm.memcpy.p0i8.p0i8.i64"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "*", "<len>","memmove"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*", "<p>", "<len>","memmove"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "*", "<len>", "*", "llvm.memmove.p0i8.p0i8.i32"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*", "<p>", "<len>", "*", "llvm.memmove.p0i8.p0i8.i32"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<p>", "*", "<len>", "*", "llvm.memmove.p0i8.p0i8.i64"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["*", "<p>", "<len>", "*","llvm.memmove.p0i8.p0i8.i64"]
+                }
+                ],
+                "conditions": [{"query":["isNull", "<p>"],
+                                "expectedResults":["true", "maybe"]}],
+                "mustHoldForAll" : "true",
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "where": "before",
+                "in": "*"
+            }
+            ]
+        }
+    ]
 }
-
-
-
