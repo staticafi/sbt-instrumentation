@@ -1,19 +1,21 @@
 #ifndef VALUE_RELATIONS_PLUGIN_H
 #define VALUE_RELATIONS_PLUGIN_H
 
-#include "dg/llvm/ValueRelations/ValueRelations.h"
+#include <vector> // just because instr_plugin doesn't include it itself
+#include <llvm/IR/Value.h> // just because instr_plugin doesn't include it itself
 #include "instr_plugin.hpp"
+#include "dg/llvm/ValueRelations/GraphElements.hpp"
 
-namespace llvm {
-    class Module;
-    class Value;
-}
-
-using dg::analysis::LLVMValueRelations;
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Module.h>
 
 class ValueRelationsPlugin : public InstrPlugin
 {
-    LLVMValueRelations VR;
+    std::map<const llvm::Instruction *, dg::analysis::vr::VRLocation *> locationMapping;
+    std::map<const llvm::BasicBlock *, std::unique_ptr<dg::analysis::vr::VRBBlock>> blockMapping;
+
+    const unsigned maxPass = 20;
+
     std::string isValidPointer(llvm::Value* ptr, llvm::Value *len);
 
 public:
