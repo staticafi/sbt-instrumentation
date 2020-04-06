@@ -287,10 +287,10 @@ bool compareType(const llvm::Instruction *I, BinOpType type) {
  * @param i1 the first instruction
  * @param i2 the second instruction without any metadata
  */
-void cloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2) {
+bool cloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2) {
     if (i1->hasMetadata()) {
         i2->setDebugLoc(i1->getDebugLoc());
-        return;
+        return true;
     }
 
     const llvm::Instruction *metadataI = nullptr;
@@ -312,8 +312,20 @@ void cloneMetadata(const llvm::Instruction *i1, llvm::Instruction *i2) {
         }
     }
 
-    assert(metadataI && "Did not find dbg in any instruction of a block");
-    i2->setDebugLoc(metadataI->getDebugLoc());
+    //assert(metadataI && "Did not find dbg in any instruction of a block");
+    if (metadataI) {
+        i2->setDebugLoc(metadataI->getDebugLoc());
+    } else if (auto pred = i1->getParent()->getUniquePredecessor()) {
+        return cloneMetadata(pred->getTerminator(), i2);
+    } else {
+      DebugLoc DL;
+      if (auto SP = i1->getParent()->getParent()->getSubprogram()) {
+        DL = DebugLoc::get(SP->getScopeLine(), 0, SP);
+      }
+      i2->setDebugLoc(DL);
+    }
+
+    return i2->hasMetadata();
 }
 
 /**
