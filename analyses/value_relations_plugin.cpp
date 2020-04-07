@@ -240,3 +240,7 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
     }
     return "true";
 }
+
+extern "C" InstrPlugin* create_object(llvm::Module* module) {
+    return new ValueRelationsPlugin(module);
+}
