@@ -5,9 +5,12 @@
 #include <llvm/IR/Value.h> // just because instr_plugin doesn't include it itself
 #include "instr_plugin.hpp"
 #include "dg/llvm/ValueRelations/GraphElements.hpp"
+#include "dg/llvm/ValueRelations/getValName.h"
 
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Module.h>
+
+#include <iostream>
 
 class ValueRelationsPlugin : public InstrPlugin
 {
@@ -20,15 +23,20 @@ class ValueRelationsPlugin : public InstrPlugin
 
 public:
     bool supports(const std::string& query) override {
-        return query == "isValidPointer";
+        return query == "isValidPointerMy";
     }
 
     std::string query(const std::string& query,
                       const std::vector<llvm::Value *>& operands)
     {
-        if (query == "isValidPointer") {
+        std::cerr << "query called" << std::endl;
+        if (query == "isValidPointerMy") {
             assert(operands.size() == 2 && "Wrong number of operands");
-            return isValidPointer(operands[0], operands[1]);
+            std::cerr << dg::debug::getValName(operands[0]) << ", ";
+            std::cerr << dg::debug::getValName(operands[1]) << std::endl;
+            std::string result = isValidPointer(operands[0], operands[1]);
+            std::cerr << "result " << result << std::endl;
+            return result;
         } else {
             return "unsupported query";
         }

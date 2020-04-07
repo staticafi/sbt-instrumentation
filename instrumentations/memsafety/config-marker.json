@@ -1,7 +1,7 @@
 {
     "file": "marker.c",
     "analyses": ["libdgPointsToPlugin.so",
-                 "libPredatorPlugin.so",
+                 "libValueRelationsPlugin.so",
 		 "libLLVMPointsToPlugin.so"],
     "flags": ["leakcheck"],
     "phases": [
@@ -44,6 +44,48 @@
                 },
                 "conditions": [{"query":["isValidPointer", "<t2>", "<t3>"],
                                 "expectedResults":["false","maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
+                "remember" : "<t2>",
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "load",
+                    "operands": ["<t1>"],
+                    "getTypeSize": "<t2>"
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "conditions": [{"query":["isValidPointerMy", "<t1>", "<t2>"],
+                                "expectedResults":["false", "maybe", "unknown"]}],
+                "mustHoldForAll" : "true",
+                "remember" : "<t1>",
+                "where": "before",
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "store",
+                    "operands": ["<t1>", "<t2>"],
+                    "getTypeSize": "<t3>"
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "conditions": [{"query":["isValidPointerMy", "<t2>", "<t3>"],
+                                "expectedResults":["false", "maybe", "unknown"]}],
                 "mustHoldForAll" : "true",
                 "remember" : "<t2>",
                 "where": "before",
