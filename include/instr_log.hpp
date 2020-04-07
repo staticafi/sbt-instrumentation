@@ -22,14 +22,14 @@ class Logger {
         stream.close();
     }
 
-    void write_error(const std::string &text, bool totty = false) {
+    void write_error(const std::string &text, bool totty = true) {
         stream << "Error: " << text << "\n";
         if (totty) {
             std::cerr << "Error: " << text << "\n";
         }
     }
 
-    void write_info(const std::string &text, bool totty = false) {
+    void write_info(const std::string &text, bool totty = true) {
         stream << "Info: " << text << "\n";
         if (totty) {
             std::cout << "Info: " << text << "\n";
