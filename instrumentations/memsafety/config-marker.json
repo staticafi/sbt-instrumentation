@@ -63,7 +63,7 @@
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-                "conditions": [{"query":["isValidPointerMy", "<t1>", "<t2>"],
+                "conditions": [{"query":["isValidIndexedPointer", "<t1>", "<t2>"],
                                 "expectedResults":["false", "maybe", "unknown"]}],
                 "mustHoldForAll" : "true",
                 "remember" : "<t1>",
@@ -84,7 +84,7 @@
                     "instruction": "call",
                     "operands": ["__INSTR_mark_pointer"]
                 },
-                "conditions": [{"query":["isValidPointerMy", "<t2>", "<t3>"],
+                "conditions": [{"query":["isValidIndexedPointer", "<t2>", "<t3>"],
                                 "expectedResults":["false", "maybe", "unknown"]}],
                 "mustHoldForAll" : "true",
                 "remember" : "<t2>",
