@@ -29,14 +29,9 @@ public:
     std::string query(const std::string& query,
                       const std::vector<llvm::Value *>& operands)
     {
-        std::cerr << "query called" << std::endl;
         if (query == "isValidIndexedPointer") {
             assert(operands.size() == 2 && "Wrong number of operands");
-            std::cerr << dg::debug::getValName(operands[0]) << ", ";
-            std::cerr << dg::debug::getValName(operands[1]) << std::endl;
-            std::string result = isValidIndexedPointer(operands[0], operands[1]);
-            std::cerr << "result " << result << std::endl;
-            return result;
+            return isValidIndexedPointer(operands[0], operands[1]);
         } else {
             return "unsupported query";
         }
