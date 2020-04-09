@@ -88,7 +88,7 @@ private:
 public:
     bool supports(const std::string& query) override;
     std::string query(const std::string& query,
-                      const std::vector<llvm::Value *>& operands)
+                      const std::vector<llvm::Value *>& operands) override
     {
         if (query == "isValidPointer") {
             assert(operands.size() == 2 && "Wrong number of operands");

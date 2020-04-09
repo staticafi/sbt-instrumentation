@@ -99,7 +99,7 @@ public:
     bool supports(const std::string& query) override;
 
     std::string query(const std::string& query,
-                      const std::vector<llvm::Value *>& operands) {
+                      const std::vector<llvm::Value *>& operands) override {
 
         if (!predatorSuccess) {
             return "maybe";
