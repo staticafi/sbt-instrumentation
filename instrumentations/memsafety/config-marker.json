@@ -53,48 +53,6 @@
                 "findInstructions": [
                 {
                     "returnValue": "*",
-                    "instruction": "load",
-                    "operands": ["<t1>"],
-                    "getTypeSize": "<t2>"
-                }
-                ],
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["__INSTR_mark_pointer"]
-                },
-                "conditions": [{"query":["isValidIndexedPointer", "<t1>", "<t2>"],
-                                "expectedResults":["false", "maybe", "unknown"]}],
-                "mustHoldForAll" : "true",
-                "remember" : "<t1>",
-                "where": "before",
-                "in": "*"
-            },
-            {
-                "findInstructions": [
-                {
-                    "returnValue": "*",
-                    "instruction": "store",
-                    "operands": ["<t1>", "<t2>"],
-                    "getTypeSize": "<t3>"
-                }
-                ],
-                "newInstruction": {
-                    "returnValue": "*",
-                    "instruction": "call",
-                    "operands": ["__INSTR_mark_pointer"]
-                },
-                "conditions": [{"query":["isValidIndexedPointer", "<t2>", "<t3>"],
-                                "expectedResults":["false", "maybe", "unknown"]}],
-                "mustHoldForAll" : "true",
-                "remember" : "<t2>",
-                "where": "before",
-                "in": "*"
-            },
-            {
-                "findInstructions": [
-                {
-                    "returnValue": "*",
                     "instruction": "store",
                     "operands": ["<val>", "<ptr>"]
                 }

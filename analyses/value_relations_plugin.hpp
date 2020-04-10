@@ -19,19 +19,19 @@ class ValueRelationsPlugin : public InstrPlugin
 
     const unsigned maxPass = 20;
 
-    std::string isValidIndexedPointer(llvm::Value* ptr, llvm::Value *len);
+    std::string isValidPointer(llvm::Value* ptr, llvm::Value *len);
 
 public:
     bool supports(const std::string& query) override {
-        return query == "isValidIndexedPointer";
+        return query == "isValidPointer";
     }
 
     std::string query(const std::string& query,
                       const std::vector<llvm::Value *>& operands)
     {
-        if (query == "isValidIndexedPointer") {
+        if (query == "isValidPointer") {
             assert(operands.size() == 2 && "Wrong number of operands");
-            return isValidIndexedPointer(operands[0], operands[1]);
+            return isValidPointer(operands[0], operands[1]);
         } else {
             return "unsupported query";
         }

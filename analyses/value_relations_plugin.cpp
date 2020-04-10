@@ -203,7 +203,7 @@ std::string isValidForGraph(
     return "maybe";
 }
 
-std::string ValueRelationsPlugin::isValidIndexedPointer(llvm::Value* ptr, llvm::Value *size) {
+std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *size) {
     // ptr is not a pointer
     if (! ptr->getType()->isPointerTy()) return "false";
 
