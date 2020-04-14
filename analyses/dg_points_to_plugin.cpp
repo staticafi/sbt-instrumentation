@@ -661,6 +661,13 @@ std::string PointsToPlugin::mayBeLeaked(llvm::Value* a) {
         return "true";
     }
 
+    // a number, not a pointer
+    if (a->getType()->isIntegerTy() &&
+        psnode->pointsTo.size() == 1 &&
+        (*psnode->pointsTo.begin()).isUnknown()) {
+        return "false";
+    }
+
     for (const auto& ptr : psnode->pointsTo) {
         if (ptr.isUnknown()) {
             return "true";
