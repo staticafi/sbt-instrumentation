@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 #include "instr_plugin.hpp"
 
 class PredatorPlugin : public InstrPlugin
