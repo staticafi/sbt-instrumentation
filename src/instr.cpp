@@ -787,6 +787,8 @@ bool checkAnalysis(Value *ins, const Condition& condition, bool forAll,
     }
 
     if (none_supports.count(condition.name) > 0) {
+        logger.write_info("No plugin supports the query " + condition.name +
+                          " I'm instrumenting");
         // none plugin supports this query, we should instrument since the condition
         // is speculatively satisfied
         return true;
@@ -816,7 +818,9 @@ bool checkAnalysis(Value *ins, const Condition& condition, bool forAll,
     }
 
     if (forAll) {
-      logger.write_info("Query for '" + condition.name + "' got no positive answer");
+      logger.write_info("Query for '" + condition.name + "' got no negative answer");
+    } else {
+      logger.write_info("Query for '" + condition.name + "' got only negative answers");
     }
 
     // no plugin told us that we should instrument
