@@ -1,18 +1,26 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(instr)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED on)
-
-# Compiler Options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -fno-rtti")
-
 find_package(LLVM REQUIRED CONFIG)
 if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}")
   include(LLVMConfig)
 endif()
 include(AddLLVM)
+
+# LLVM 10 and newer require at least C++14 standard
+if (${LLVM_PACKAGE_VERSION} VERSION_GREATER_EQUAL "10.0")
+  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+else()
+  # otherwise we need C++11 standard
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+set(CMAKE_CXX_STANDARD_REQUIRED on)
+
+# Compiler Options
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -fno-rtti")
 
 add_definitions(${LLVM_DEFINITIONS})
 include_directories(${LLVM_INCLUDE_DIRS})

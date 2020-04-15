@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 #include "instr_plugin.hpp"
 
 class PredatorPlugin : public InstrPlugin
@@ -99,7 +100,7 @@ public:
     bool supports(const std::string& query) override;
 
     std::string query(const std::string& query,
-                      const std::vector<llvm::Value *>& operands) {
+                      const std::vector<llvm::Value *>& operands) override {
 
         if (!predatorSuccess) {
             return "maybe";
