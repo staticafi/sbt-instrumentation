@@ -629,6 +629,14 @@ void PointsToPlugin::gatherPossiblyLeaked(llvm::Module *M) {
     }
 }
 
+static inline bool pointsToUnknownOrNull(const PSNode *node) {
+    for (const auto& ptr : node->pointsTo) {
+        if (!ptr.isNull() && !ptr.isUnknown())
+            return false;
+    }
+    return true;
+}
+
 std::string PointsToPlugin::mayBeLeaked(llvm::Value* a) {
     if (llvm::isa<llvm::ConstantInt>(a)) {
         return "false";
@@ -662,9 +670,7 @@ std::string PointsToPlugin::mayBeLeaked(llvm::Value* a) {
     }
 
     // a number, not a pointer
-    if (a->getType()->isIntegerTy() &&
-        psnode->pointsTo.size() == 1 &&
-        (*psnode->pointsTo.begin()).isUnknown()) {
+    if (a->getType()->isIntegerTy() && pointsToUnknownOrNull(psnode)) {
         return "false";
     }
 
