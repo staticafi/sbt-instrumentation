@@ -10,10 +10,6 @@ cd `dirname $`
 if [ ! -d jsoncpp ]; then
 	# checkout jsoncpp directory
 	git clone https://github.com/open-source-parsers/jsoncpp
-	# FIXME: until a bug in building is fixed in the upstream
-	cd jsoncpp
-	git checkout c51d718ead5b
-	cd -
 fi
 
 cd jsoncpp
