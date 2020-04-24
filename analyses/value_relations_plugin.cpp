@@ -28,7 +28,7 @@ uint64_t getBytes(const llvm::Type* type) {
 
 // returns number of allocated elements and element's size in bytes
 std::pair<const llvm::Value*, uint64_t> getAllocatedCountAndSize(
-        const dg::analysis::vr::RelationsGraph& relations,
+        const dg::analysis::vr::ValueRelations& relations,
         const llvm::GetElementPtrInst* gep) {
     for (const llvm::Value* equal : relations.getEqual(gep->getPointerOperand())) {
 
@@ -144,7 +144,7 @@ std::pair<const llvm::Value*, uint64_t> stripArithmeticOp(const llvm::Value* all
 
 // returns the verdict of gep validity for given relations graph
 std::string isValidForGraph(
-        dg::analysis::vr::RelationsGraph& relations,
+        dg::analysis::vr::ValueRelations& relations,
         const llvm::GetElementPtrInst* gep,
         uint64_t readSize) {    
     //std::cerr << "==== PROOF BEGINS =====" << std::endl;
@@ -228,8 +228,8 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
         return isValidForGraph(relations, gep, readSize);
 
     // else we have to check that access is valid in every case
-    for (const dg::analysis::vr::RelationsGraph::CallRelation& callRelation : relations.getCallRelations()) {
-        dg::analysis::vr::RelationsGraph merged = relations;
+    for (const dg::analysis::vr::ValueRelations::CallRelation& callRelation : relations.getCallRelations()) {
+        dg::analysis::vr::ValueRelations merged = relations;
         for (auto& equalPair : callRelation.equalPairs)
             merged.setEqual(equalPair.first, equalPair.second);
         merged.merge(*callRelation.callSiteRelations);
