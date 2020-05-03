@@ -232,10 +232,22 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
     // else we have to check that access is valid in every case
     for (const dg::analysis::vr::ValueRelations::CallRelation& callRelation : relations.getCallRelations()) {
         dg::analysis::vr::ValueRelations merged = relations;
-        for (auto& equalPair : callRelation.equalPairs)
+
+        bool hasConflict = false;
+        for (auto& equalPair : callRelation.equalPairs) {
+            if (merged.hasConflictingRelation(equalPair.first, equalPair.second, dg::analysis::vr::Relation::EQ)) {
+                hasConflict = true;
+                break; // this vrlocation is unreachable with given parameters
+            }
             merged.setEqual(equalPair.first, equalPair.second);
-        merged.merge(*callRelation.callSiteRelations);
+        }
+
+        // this vrlocation is unreachable with relations from given call relation
+        hasConflict = hasConflict || ! merged.merge(*callRelation.callSiteRelations);
         merged.getCallRelations().clear();
+
+        // since location is unreachable, it does not make sence to qualify the memory access
+        if (hasConflict) continue;
 
         std::string result = isValidForGraph(merged, gep, readSize);
         if (result != "true") return result;
