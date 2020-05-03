@@ -82,7 +82,9 @@ std::pair<const llvm::Value*, const llvm::Type*> getOnlyNonzeroIndex(const llvm:
 
         if (auto constIndex = llvm::dyn_cast<llvm::ConstantInt>(index)) {
             if (constIndex->isZero()) {
-                assert(readType->isArrayTy());
+                
+                if (! readType->isArrayTy()) return { nullptr, nullptr };
+
                 readType = readType->getArrayElementType();
                 continue;
             };
