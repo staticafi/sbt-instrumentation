@@ -18,7 +18,7 @@ class ValueRelationsPlugin : public InstrPlugin
     std::map<const llvm::Instruction *, dg::analysis::vr::VRLocation *> locationMapping;
     std::map<const llvm::BasicBlock *, std::unique_ptr<dg::analysis::vr::VRBBlock>> blockMapping;
 
-    std::vector<dg::analysis::vr::AllocatedArea> allocatedAreas;
+    dg::analysis::vr::StructureAnalyzer structure;
 
     const unsigned maxPass = 20;
 
