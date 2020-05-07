@@ -1025,19 +1025,12 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
  * @return size of global variable.
  */
 uint64_t getGlobalVarSize(GlobalVariable* GV, const Module& M) {
-
-    DataLayout* DL = new DataLayout(&M);
-
     Type* Ty = GV->getType()->getElementType();
 
     if (!Ty->isSized())
         return 0;
 
-    uint64_t size = DL->getTypeAllocSize(Ty);
-
-    delete DL;
-
-    return size;
+    return M.getDataLayout().getTypeAllocSize(Ty);
 }
 
 /**
