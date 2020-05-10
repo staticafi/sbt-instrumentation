@@ -5,19 +5,19 @@
 #include "dg/llvm/ValueRelations/RelationsAnalyzer.hpp"
 
 ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
-: InstrPlugin("ValueRelationsPlugin") {
+: InstrPlugin("ValueRelationsPlugin"), structure(*module, locationMapping, blockMapping) {
     using namespace dg::analysis::vr;
 
     assert(module);
     GraphBuilder gb(*module, locationMapping, blockMapping);
     gb.build();
 
-    structure.analyzeBeforeRelationsAnalysis(*module, locationMapping, blockMapping);
+    structure.analyzeBeforeRelationsAnalysis();
 
     RelationsAnalyzer ra(*module, locationMapping, blockMapping, structure);
     ra.analyze(maxPass);
 
-    structure.analyzeAfterRelationsAnalysis(*module, blockMapping);
+    structure.analyzeAfterRelationsAnalysis();
 }
 
 // if gep has any zero indices at the beginning, function returns first non-zero index
