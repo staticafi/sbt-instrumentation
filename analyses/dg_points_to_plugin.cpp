@@ -555,7 +555,7 @@ std::string PointsToPlugin::storeMayLeak(llvm::Value *v) {
 
     auto sobjects = gatherReachableObjects(mm);
 
-    for (auto *pred : snode->getPredecessors()) {
+    for (auto *pred : snode->predecessors()) {
         auto pm = pred->getData<dg::pta::PointerAnalysisFSInv::MemoryMapT>();
         if (!pm) {
             return "maybe";
