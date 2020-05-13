@@ -1,8 +1,9 @@
 {
     "file": "marker.c",
     "analyses": ["libdgPointsToPlugin.so",
+                 "libPredatorPlugin.so",
                  "libValueRelationsPlugin.so",
-		 "libLLVMPointsToPlugin.so"],
+		         "libLLVMPointsToPlugin.so"],
     "flags": ["leakcheck"],
     "phases": [
         {
