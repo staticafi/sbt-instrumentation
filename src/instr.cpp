@@ -8,7 +8,6 @@
 
 #include <llvm/IR/Constants.h>
 #include "llvm/Linker/Linker.h"
-#include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Instruction.h>
@@ -147,8 +146,6 @@ PointerInfo getPointerInfo(Instruction *I, const LLVMInstrumentation& instr,
  * @return size of allocated type.
  */
 uint64_t getAllocatedSize(Instruction *I, const Module& M) {
-    DataLayout* DL = new DataLayout(&M);
-
     Type* Ty;
 
     if (const AllocaInst *AI = dyn_cast<AllocaInst>(I)) {
@@ -161,20 +158,13 @@ uint64_t getAllocatedSize(Instruction *I, const Module& M) {
         Ty = LI->getType();
     }
     else {
-        delete DL;
         return 0;
     }
 
-    if(!Ty->isSized()) {
-        delete DL;
+    if(!Ty->isSized())
         return 0;
-    }
 
-    uint64_t size = DL->getTypeAllocSize(Ty);
-
-    delete DL;
-
-    return size;
+    return M.getDataLayout().getTypeAllocSize(Ty);
 }
 
 /**
