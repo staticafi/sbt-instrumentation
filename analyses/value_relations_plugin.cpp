@@ -6,7 +6,7 @@
 
 ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
 : InstrPlugin("ValueRelationsPlugin"), structure(*module, locationMapping, blockMapping) {
-    using namespace dg::analysis::vr;
+    using namespace dg::vr;
 
     assert(module);
     GraphBuilder gb(*module, locationMapping, blockMapping);
@@ -48,11 +48,11 @@ std::pair<const llvm::Value*, const llvm::Type*> getOnlyNonzeroIndex(const llvm:
 
 // returns the verdict of gep validity for given relations graph
 std::string ValueRelationsPlugin::isValidForGraph(
-            const dg::analysis::vr::ValueRelations& relations,
+            const dg::vr::ValueRelations& relations,
             const std::vector<bool> validMemory,
             const llvm::GetElementPtrInst* gep,
             uint64_t readSize) const {
-    using namespace dg::analysis::vr;
+    using namespace dg::vr;
     //std::cerr << "==== PROOF BEGINS =====" << std::endl;
     //std::cerr << dg::debug::getValName(gep) << std::endl << std::endl;
 
@@ -116,7 +116,7 @@ std::string ValueRelationsPlugin::isValidForGraph(
 }
 
 std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *size) {
-    using namespace dg::analysis::vr;
+    using namespace dg::vr;
     
     // ptr is not a pointer
     if (! ptr->getType()->isPointerTy()) return "false";

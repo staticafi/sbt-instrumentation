@@ -15,17 +15,17 @@
 
 class ValueRelationsPlugin : public InstrPlugin
 {
-    std::map<const llvm::Instruction *, dg::analysis::vr::VRLocation *> locationMapping;
-    std::map<const llvm::BasicBlock *, std::unique_ptr<dg::analysis::vr::VRBBlock>> blockMapping;
+    std::map<const llvm::Instruction *, dg::vr::VRLocation *> locationMapping;
+    std::map<const llvm::BasicBlock *, std::unique_ptr<dg::vr::VRBBlock>> blockMapping;
 
-    dg::analysis::vr::StructureAnalyzer structure;
+    dg::vr::StructureAnalyzer structure;
 
     const unsigned maxPass = 20;
 
     std::string isValidPointer(llvm::Value* ptr, llvm::Value *len);
 
     std::string isValidForGraph(
-            const dg::analysis::vr::ValueRelations& relations,
+            const dg::vr::ValueRelations& relations,
             const std::vector<bool> validMemory,
             const llvm::GetElementPtrInst* gep,
             uint64_t readSize) const;
