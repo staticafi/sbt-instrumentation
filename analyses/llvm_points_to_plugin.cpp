@@ -125,8 +125,12 @@ std::string LLVMPointsToPlugin::mayBeLeaked(llvm::Value* a) {
     // assume that undefined functions
     // do not return a pointer to leakable memory
     if (auto *C = llvm::dyn_cast<llvm::CallInst>(a)) {
-        auto *F = llvm::dyn_cast<llvm::Function>(
-                    C->getCalledValue()->stripPointerCasts());
+#if LLVM_VERSION_MAJOR >= 8
+        auto *V = C->getCalledOperand();
+#else
+        auto *V = C->getCalledValue();
+#endif
+        auto *F = llvm::dyn_cast<llvm::Function>(V->stripPointerCasts());
         if (F && F->isDeclaration()) {
             return "false";
         }

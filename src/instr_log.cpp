@@ -21,7 +21,11 @@ void Logger::log_insertion(const string& where,
     if (foundInstrOpName == "call") {
         if (const CallInst *ci = dyn_cast<CallInst>(foundInstr)) {
             // get called value and strip away any bitcasts
+#if LLVM_VERSION_MAJOR >= 8
+            const llvm::Value *calledVal = ci->getCalledOperand()->stripPointerCasts();
+#else
             const llvm::Value *calledVal = ci->getCalledValue()->stripPointerCasts();
+#endif
             string name;
             if (calledVal->hasName()) {
                 name = calledVal->getName().str();

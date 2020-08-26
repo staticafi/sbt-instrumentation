@@ -9,7 +9,7 @@ endif()
 include(AddLLVM)
 
 # LLVM 10 and newer require at least C++14 standard
-if (${LLVM_PACKAGE_VERSION} VERSION_GREATER_EQUAL "10.0")
+if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "9.0")
   set(CMAKE_CXX_STANDARD 14)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 else()
