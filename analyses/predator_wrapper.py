@@ -14,7 +14,7 @@ class ErrorReport:
     An error type and its location.
     Location is given by integers @row and @col.
     Type of the error is given by string @ty.
-        Current possible values for ty: "leak", "invalid"
+        Current possible values for ty: "leak", "invalid", "free"
     """
     def __init__(self, row, col, ty):
         self.row = row
@@ -98,11 +98,22 @@ def parse_errors(line):
 
     return set(result)
 
+def line_reports_ignorable_warning(line):
+    ignorable_warning_regexes = map(re.compile, [
+        ': warning: end of function .*\(\) has not been reached',
+        ': warning: unreachable label',
+        ': error: error label "ERROR" has been reached',
+        ': (error|warning): __VERIFIER_error\(\) reached',
+    ])
+
+    return any(map(lambda x: x.search(line) != None, ignorable_warning_regexes))
+
 def line_reports_unsupported_feature(line):
     unsupported_feature_regexes = map(re.compile, [
         ': warning: ignoring call of undefined function: ',
         ': warning: conditional jump depends on uninitialized value',
         ': warning: possible .*flow of .* integer',
+        ': warning: ignoring call of undefined function:',
     ])
 
     return any(map(lambda x: x.search(line) != None, unsupported_feature_regexes))
@@ -147,21 +158,24 @@ def run_predator(timeout, clang, infile):
                     log(line)
                     proc.kill()
                     return ('unknown', set())
-                    
+
                 error_locations.update(line_errors)
 
-                if line_reports_unsupported_feature(line):
-                    log('Predator encountered an unsupported feature, so the result is unknown')
-                    log('The report is based on this line:')
-                    log(line)
-                    proc.kill()
-                    return ('unknown', set())
-                elif len(line_errors) == 0 and ': error:' in line:
-                    log('Predator encountered an unknown error, so the result is error')
-                    log('That is based on this line:')
-                    log(line)
-                    proc.kill()
-                    return ('error', set())
+                if len(line_errors) == 0:
+                    if line_reports_ignorable_warning(line):
+                        pass
+                    elif line_reports_unsupported_feature(line):
+                        log('Predator encountered an unsupported feature, so the result is unknown')
+                        log('The report is based on this line:')
+                        log(line)
+                        proc.kill()
+                        return ('unknown', set())
+                    elif ': error:' in line:
+                        log('Predator encountered an unknown error, so the result is error')
+                        log('That is based on this line:')
+                        log(line)
+                        proc.kill()
+                        return ('error', set())
 
                 if re.search('clEasyRun\(\) took', line):
                     log('Predator finished')
