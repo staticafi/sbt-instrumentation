@@ -162,23 +162,33 @@ def run_predator(timeout, clang, infile):
                 error_locations.update(line_errors)
 
                 if len(line_errors) == 0:
+                    has_warning_class = (re.search(r'\[([^]])+\]', line) != None)
                     if line_reports_ignorable_warning(line):
+                        log('Ignore {}'.format(line))
                         pass
                     elif line_reports_unsupported_feature(line):
-                        log('Predator encountered an unsupported feature, so the result is unknown')
+                        err('Predator encountered an unsupported feature, so the result is unknown')
                         log('The report is based on this line:')
                         log(line)
                         proc.kill()
                         return ('unknown', set())
-                    elif ': error:' in line:
-                        log('Predator encountered an unknown error, so the result is error')
+                    elif not has_warning_class and re.search(r': error:', line):
+                        err('Predator encountered an unknown error, so the result is error')
                         log('That is based on this line:')
                         log(line)
                         proc.kill()
                         return ('error', set())
+                    elif not has_warning_class and re.search(r': warning:', line):
+                        err('Predator encountered an unknown error, so the result is error')
+                        log('That is based on this line:')
+                        log(line)
+                        proc.kill()
+                        return ('error', set())
+                else:
+                    log('line reports errors: {}'.format(line))
 
                 if re.search('clEasyRun\(\) took', line):
-                    log('Predator finished')
+                    err('Predator finished')
                     return ('ok', error_locations)
 
             if proc.poll() != None:
