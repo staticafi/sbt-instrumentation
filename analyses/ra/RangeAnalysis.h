@@ -47,7 +47,9 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/ConstantRange.h"
+#if LLVM_VERSION_MAJOR < 8
 #include "llvm/IR/CallSite.h"
+#endif
 #include "llvm/IR/InstIterator.h"
 #include "llvm/Support/Process.h"
 #include <deque>

@@ -345,15 +345,20 @@ void InterProceduralRA::MatchParametersAndReturnValues(Function &F,
 
 		Instruction *caller = cast<Instruction>(U);
 
+#if LLVM_VERSION_MAJOR >= 8
+		CallBase &CS = cast<CallBase>(*caller);
+#else
 		CallSite CS(caller);
+#endif
+
 		if (!CS.isCallee(const_cast<const Use *>(&(*UI))))
 			continue;
 
 		// Iterate over the real parameters and put them in the data structure
-		CallSite::arg_iterator AI;
-		CallSite::arg_iterator EI;
+		auto AI = CS.arg_begin();
+		auto EI = CS.arg_end();
 
-		for (i = 0, AI = CS.arg_begin(), EI = CS.arg_end(); AI != EI; ++i, ++AI)
+		for (i = 0; AI != EI; ++i, ++AI)
 			Parameters[i].second = *AI;
 
 		// // Do the interprocedural construction of CG
