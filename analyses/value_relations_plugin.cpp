@@ -1,8 +1,8 @@
 #include "value_relations_plugin.hpp"
 
-#include "dg/llvm/ValueRelations/GraphBuilder.hpp"
-#include "dg/llvm/ValueRelations/StructureAnalyzer.hpp"
-#include "dg/llvm/ValueRelations/RelationsAnalyzer.hpp"
+#include "dg/llvm/ValueRelations/GraphBuilder.h"
+#include "dg/llvm/ValueRelations/StructureAnalyzer.h"
+#include "dg/llvm/ValueRelations/RelationsAnalyzer.h"
 
 ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
 : InstrPlugin("ValueRelationsPlugin"), structure(*module, locationMapping, blockMapping) {

@@ -1,11 +1,11 @@
 #ifndef VALUE_RELATIONS_PLUGIN_H
 #define VALUE_RELATIONS_PLUGIN_H
 
-#include <vector> // just because instr_plugin doesn't include it itself
-#include <llvm/IR/Value.h> // just because instr_plugin doesn't include it itself
+#include <vector>
+#include <llvm/IR/Value.h>
 #include "instr_plugin.hpp"
-#include "dg/llvm/ValueRelations/GraphElements.hpp"
-#include "dg/llvm/ValueRelations/StructureAnalyzer.hpp"
+#include "dg/llvm/ValueRelations/GraphElements.h"
+#include "dg/llvm/ValueRelations/StructureAnalyzer.h"
 #include "dg/llvm/ValueRelations/getValName.h"
 
 #include <llvm/IR/Value.h>
