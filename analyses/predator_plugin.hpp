@@ -19,6 +19,18 @@ private:
         Free,
     };
 
+    // Due to a defect, enum classes cannot be used with std::hash directly.
+    // Should be fixed in C++14 though.
+    // See: http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2148
+    struct EnumClassHash {
+        template<class T, class U = typename std::underlying_type<T>::type>
+        // check that T is an enum (class)
+        typename std::enable_if<std::is_enum<T>::value, size_t>::type
+        operator() (const T& enum_class) const {
+            return std::hash<U>()(static_cast<U>(enum_class));
+        }
+    };
+
     struct PairHash {
         template <class T1, class T2>
         std::size_t operator() (const std::pair<T1, T2> &pair) const {
@@ -26,9 +38,10 @@ private:
         }
     };
 
-    template<typename T>
+    // TODO: remove the 2nd parameter when EnumClassHash is not needed anymore
+    template<typename T, typename Hash = std::hash<T>>
     class ErrorContainer {
-        std::unordered_map<std::pair<unsigned, unsigned>, std::unordered_set<T>, PairHash> container;
+        std::unordered_map<std::pair<unsigned, unsigned>, std::unordered_set<T, Hash>, PairHash> container;
 
     public:
         ErrorContainer() = default;
@@ -67,7 +80,7 @@ private:
 
     using ErrorReport = ErrorType;
 
-    ErrorContainer<ErrorReport> errors;
+    ErrorContainer<ErrorReport, EnumClassHash> errors;
     std::vector<unsigned> lineOnlyErrors;
     std::unordered_set<const llvm::Value *> dangerous;
 
