@@ -11,7 +11,6 @@
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Module.h>
 
-#include <iostream>
 
 class ValueRelationsPlugin : public InstrPlugin
 {
