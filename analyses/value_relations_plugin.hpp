@@ -1,20 +1,33 @@
 #ifndef VALUE_RELATIONS_PLUGIN_H
 #define VALUE_RELATIONS_PLUGIN_H
 
-#include "dg/llvm/ValueRelations/ValueRelations.h"
+#include <vector>
+#include <llvm/IR/Value.h>
 #include "instr_plugin.hpp"
+#include "dg/llvm/ValueRelations/GraphElements.h"
+#include "dg/llvm/ValueRelations/StructureAnalyzer.h"
+#include "dg/llvm/ValueRelations/getValName.h"
 
-namespace llvm {
-    class Module;
-    class Value;
-}
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Module.h>
 
-using dg::analysis::LLVMValueRelations;
 
 class ValueRelationsPlugin : public InstrPlugin
 {
-    LLVMValueRelations VR;
+    std::map<const llvm::Instruction *, dg::vr::VRLocation *> locationMapping;
+    std::map<const llvm::BasicBlock *, std::unique_ptr<dg::vr::VRBBlock>> blockMapping;
+
+    dg::vr::StructureAnalyzer structure;
+
+    const unsigned maxPass = 20;
+
     std::string isValidPointer(llvm::Value* ptr, llvm::Value *len);
+
+    std::string isValidForGraph(
+            const dg::vr::ValueRelations& relations,
+            const std::vector<bool> validMemory,
+            const llvm::GetElementPtrInst* gep,
+            uint64_t readSize) const;
 
 public:
     bool supports(const std::string& query) override {
