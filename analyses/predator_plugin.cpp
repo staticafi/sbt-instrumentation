@@ -20,7 +20,12 @@ static const std::unordered_set<std::string> supportedQueries {
 
 
 extern "C" InstrPlugin* create_object(llvm::Module* module) {
-    return new PredatorPlugin(module);
+    auto *plugin = new PredatorPlugin(module);
+    if (plugin->failed()) {
+        delete plugin;
+        return nullptr;
+    }
+    return plugin;
 }
 
 bool PredatorPlugin::someUserHasSomeErrorReport(const llvm::Value* operand) const {

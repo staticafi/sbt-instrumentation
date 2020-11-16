@@ -110,6 +110,7 @@ public:
         addReportsForLineErrors(module);
     }
 
+    bool failed() const { return !predatorSuccess; }
     bool supports(const std::string& query) override;
 
     std::string query(const std::string& query,

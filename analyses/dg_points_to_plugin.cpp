@@ -799,5 +799,10 @@ bool PointsToPlugin::supports(const std::string& query) {
 }
 
 extern "C" InstrPlugin* create_object(llvm::Module* module) {
-        return new PointsToPlugin(module);
+        auto *ptplugin = new PointsToPlugin(module);
+        if (ptplugin->failed()) {
+            delete ptplugin;
+            return nullptr;
+        }
+        return ptplugin;
 }
