@@ -148,6 +148,8 @@ public:
                                         std::vector<llvm::Value*>& ptset);
     virtual std::string notMinMemoryBlock(llvm::Value* min, llvm::Value* a);
 
+    bool failed() const { return false; }
+
     PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
         llvm::errs() << "Running DG points-to analysis with inv...\n";
 
@@ -160,6 +162,7 @@ public:
         if (!finished) {
             llvm::errs() << "DG PTA reached iteration threshold: "
                          << opts.maxIterations << " iterations\n";
+            // is this a fail?
         }
 
         gatherPossiblyLeaked(module);
