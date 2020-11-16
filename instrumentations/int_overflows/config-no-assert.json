@@ -1,6 +1,6 @@
 {
     "file": "overflows-no-assert.c",
-    "analyses": ["libRangeAnalysisPlugin.so"],
+    "analyses": [["libRangeAnalysisPlugin.so"]],
     "phases": [
         {
             "instructionsRules": [

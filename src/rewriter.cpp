@@ -171,8 +171,11 @@ void Rewriter::parseConfig(ifstream &config_file) {
 #endif
 
     // Load paths to analyses
-    for (const auto& analysis : json_rules["analyses"]) {
-        this->analysisPaths.push_back(analysis.asString());
+    for (const auto& analysis_list : json_rules["analyses"]) {
+        analysisPaths.emplace_back();
+        for (const auto& analysis : analysis_list) {
+            analysisPaths.back().push_back(analysis.asString());
+        }
     }
 
     // Load flags

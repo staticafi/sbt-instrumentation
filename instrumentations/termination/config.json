@@ -1,6 +1,6 @@
 {
     "file": "termination.c",
-    "analyses": ["libInfiniteLoopsPlugin.so"],
+    "analyses": [["libInfiniteLoopsPlugin.so"]],
     "phases": [
         {
             "instructionsRules":

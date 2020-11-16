@@ -1,7 +1,7 @@
 // staged configuration without constant-time checks
 {
     "file": "memsafety.c",
-    "analyses": ["libdgPointsToPlugin.so"],
+    "analyses": [["libdgPointsToPlugin.so"]],
     "flags": ["malloc"],
     "phases": [
         {

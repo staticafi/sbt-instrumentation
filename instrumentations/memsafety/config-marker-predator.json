@@ -1,6 +1,6 @@
 {
     "file": "marker.c",
-    "analyses": ["libPredatorPlugin.so"],
+    "analyses": [["libPredatorPlugin.so"]],
     "phases": [
         {
             "instructionsRules": [

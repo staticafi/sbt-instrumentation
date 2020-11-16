@@ -1,6 +1,6 @@
 {
     "file": "marker.c",
-    "analyses": ["libdgPointsToPlugin.so", "libPredatorPlugin.so"],
+    "analyses": [["libdgPointsToPlugin.so"], ["libPredatorPlugin.so"]],
     "phases": [
         {
             "instructionsRules": [
