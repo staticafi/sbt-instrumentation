@@ -1,6 +1,6 @@
 {
     "file": "overflows.c",
-    "analyses": ["libCheckNSWPlugin.so"],
+    "analyses": [["libCheckNSWPlugin.so"]],
     "phases": [
         {
             "instructionsRules": [

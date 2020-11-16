@@ -2,6 +2,7 @@
 #define REWRITER_H
 
 #include <list>
+#include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -94,7 +95,7 @@ class Rewriter {
     Phases phases;
     Flags flags;
     public:
-        std::list<std::string> analysisPaths;
+        std::vector<std::vector<std::string>> analysisPaths;
         const Phases& getPhases();
         void parseConfig(std::ifstream &config_file);
         void setFlag(std::string name, std::string value);

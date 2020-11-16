@@ -1321,20 +1321,21 @@ bool loadPlugins(LLVMInstrumentation& instr) {
         return true;
     }
 
-    for (const string& path : instr.rewriter.analysisPaths) {
-        auto plugin = Analyzer::analyze(path, &instr.module);
-        if (plugin) {
-            logger.write_info("Plugin " + plugin->getName() + " loaded " +
-                              "(" + path +").");
-            instr.plugins.push_back(std::move(plugin));
-        }
-        else {
-            logger.write_error("Failed loading plugin " + path);
-            cerr <<"Failed loading plugin: " << path << endl;
-            return false;
+    for (const auto& paths : instr.rewriter.analysisPaths) {
+        for (const auto& path : paths) {
+            auto plugin = Analyzer::analyze(path, &instr.module);
+            if (plugin) {
+                logger.write_info("Plugin " + plugin->getName() + " loaded " +
+                                  "(" + path +").");
+                instr.plugins.push_back(std::move(plugin));
+                break; // we got the first plugin from the list, we're done
+            } else {
+                logger.write_error("Failed loading plugin " + path);
+                cerr <<"Failed loading plugin: " << path << endl;
+            }
         }
     }
-    return true;
+    return !instr.plugins.empty();
 }
 
 static void dumpStatistics() {
