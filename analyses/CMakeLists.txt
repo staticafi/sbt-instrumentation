@@ -32,6 +32,7 @@ add_library(ValueRelationsPlugin MODULE
 )
 install(TARGETS ValueRelationsPlugin
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+target_link_libraries(ValueRelationsPlugin PRIVATE ${dg_libs})
 
 add_library(PredatorPlugin MODULE
     predator_plugin.cpp
