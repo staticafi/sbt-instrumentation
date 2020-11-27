@@ -220,7 +220,7 @@ def assert_in_path(executable):
 def create_parser():
     parser = argparse.ArgumentParser(description='Run Predator with timeout and process output')
     parser.add_argument('--debug', default=False, action='store_true', help='enable debugging of this script and Predator')
-    parser.add_argument('--timeout', '-t', default=20, type=int, metavar='SEC', help='number of seconds to wait until Predator produces result (default:20)')
+    parser.add_argument('--timeout', '-t', default=223, type=int, metavar='SEC', help='number of seconds to wait until Predator produces result (default:20)')
     parser.add_argument('infile', metavar='program.bc', help='path to LLVM bitcode file to process')
     parser.add_argument('--out', '-o', default='predator.log', metavar='FILE', help='where to save processed log output (default:"predator.log")')
     parser.add_argument('--32', dest='is32bit', action='store_true', default=False, help='use 32-bit mode (default: disabled)')
