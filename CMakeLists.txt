@@ -93,12 +93,23 @@ else()
     endif()
 endif()
 
-# Find the libraries that correspond to the LLVM components
-# that we wish to use
-if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
-  llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter linker)
+option(LLVM_LINK_DYLIB "Link with LLVM dynamically" ON)
+if (LLVM_LINK_DYLIB)
+	message(STATUS "LLVM linking: dynamic")
+	if (${LLVM_PACKAGE_VERSION} VERSION_LESS "3.8")
+		set(llvm_libs LLVM-${LLVM_PACKAGE_VERSION})
+	else()
+		# only LLVM 3.8+ provide unversioned library
+		set(llvm_libs LLVM)
+	endif()
 else()
-  llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter linker)
+	# Find the libraries that correspond to the LLVM components
+	# that we wish to use
+	if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
+		llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter linker)
+	else()
+		llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter linker)
+	endif()
 endif()
 
 enable_testing()
