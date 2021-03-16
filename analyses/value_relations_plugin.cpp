@@ -9,17 +9,17 @@
 #include "dg/llvm/ValueRelations/RelationsAnalyzer.h"
 
 ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
-: InstrPlugin("ValueRelationsPlugin"), structure(*module, locationMapping, blockMapping) {
+: InstrPlugin("ValueRelationsPlugin"), structure(*module, codeGraph) {
     using namespace dg::vr;
 
     assert(module);
-    GraphBuilder gb(*module, locationMapping, blockMapping);
+    GraphBuilder gb(*module, codeGraph);
     gb.build();
 
     structure.analyzeBeforeRelationsAnalysis();
 
-    RelationsAnalyzer ra(*module, locationMapping, blockMapping, structure);
-    ra.analyze(maxPass);
+    RelationsAnalyzer ra(*module, codeGraph, structure);
+    unsigned num_iter = ra.analyze(maxPass);
 
     structure.analyzeAfterRelationsAnalysis();
 }
@@ -144,7 +144,7 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
     if (!gep)
         return "unknown";
 
-    const ValueRelations& relations = locationMapping.at(gep)->relations;
+    const ValueRelations& relations = codeGraph.getVRLocation(gep).relations;
     const std::vector<CallRelation>& callRelations = structure.getCallRelationsFor(gep);
 
     if (callRelations.empty())
