@@ -92,7 +92,7 @@ std::string ValueRelationsPlugin::isValidForGraph(
     if (!gepIndex)
         return "unknown";
 
-    uint64_t gepElem = getBytes(gepType);
+    uint64_t gepElem = AllocatedArea::getBytes(gepType);
 
     // DANGER just an arbitrary type
     llvm::Type* i32 = llvm::Type::getInt32Ty(views[0].elementCount->getContext());
