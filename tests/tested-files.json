@@ -34,9 +34,9 @@
         ],
         "problematic" : [
             {
-                "name" : "busybox-1.22.0",
+                "name": "termination-crafted",
                 "benchmarks" : [
-                    "tac-1"
+                    "Arrays01-EquivalentConstantIndices-1"
                 ]
             }
         ],
@@ -183,7 +183,14 @@
                     "uthash_SAX_test5-3",
                     "uthash_SFH_test1-2"
                 ]
+            },
+            {
+                "name" : "busybox-1.22.0",
+                "benchmarks" : [
+                    "tac-1"
+                ]
             }
+
         ]
     }
 }

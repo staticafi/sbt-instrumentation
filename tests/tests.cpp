@@ -72,7 +72,13 @@ llvm::Value* getSize(llvm::Module& module, llvm::Instruction& inst) {
     return llvm::ConstantInt::get(llvm::Type::getInt64Ty(module.getContext()), getAllocatedSize(&inst, module));
 }
 
-void testBenchmark(const std::string& path, const std::string& benchmark, bool all_correct) {
+enum class CheckType {
+    REQUIRE_TRUE,
+    PRINT_ALL,
+    PRINT_NONE
+};
+
+void testBenchmark(const std::string& path, const std::string& benchmark, CheckType type) {
     auto targetFile = compileBenchmark(path, benchmark);
 
     llvm::LLVMContext context;
@@ -94,9 +100,15 @@ void testBenchmark(const std::string& path, const std::string& benchmark, bool a
 
                 std::string answer = plugin.query("isValidPointer", { ptr, size });
 
-                if (llvm::isa<llvm::GetElementPtrInst>(ptr) && all_correct) {
-                    DYNAMIC_SECTION(dg::debug::getValName(ptr)) {
-                        REQUIRE(answer == "true");
+                if (llvm::isa<llvm::GetElementPtrInst>(ptr)) {
+                    if (type == CheckType::REQUIRE_TRUE) {
+                        DYNAMIC_SECTION(dg::debug::getValName(ptr)) {
+                            REQUIRE(answer == "true");
+                        }
+                    } else if (type == CheckType::PRINT_ALL) {
+                        INFO(dg::debug::getValName(ptr));
+                        INFO(answer);
+                        CHECK(false); // force printing of info messages
                     }
                 }
             }
@@ -104,14 +116,14 @@ void testBenchmark(const std::string& path, const std::string& benchmark, bool a
     }
 }
 
-void testGroup(const std::string& benchmarksPath, Json::Value& group, bool all_correct = false) {
+void testGroup(const std::string& benchmarksPath, Json::Value& group, CheckType type) {
         Json::Value folder = GENERATE_REF(from_range(group.begin(), group.end()));
         std::string folderPath = benchmarksPath + folder["name"].asString();
 
         const Json::Value& benchmark = GENERATE_REF(from_range(folder["benchmarks"].begin(), folder["benchmarks"].end()));
 
         DYNAMIC_SECTION(folder["name"].asString() << "/" << benchmark.asString()) {
-            testBenchmark(folderPath, benchmark.asString(), all_correct);
+            testBenchmark(folderPath, benchmark.asString(), type);
         }
 }
 
@@ -127,14 +139,14 @@ TEST_CASE("main") {
     Json::Value groups = root["benchmark_groups"];
 
     SECTION("all_correct") {
-        testGroup(benchmarksPath, groups["all_correct"], true);
+        testGroup(benchmarksPath, groups["all_correct"], CheckType::REQUIRE_TRUE);
     }
 
     SECTION("problematic") {
-        testGroup(benchmarksPath, groups["problematic"]);
+        testGroup(benchmarksPath, groups["problematic"], CheckType::PRINT_ALL);
     }
 
     SECTION("many_01") {
-        testGroup(benchmarksPath, groups["many_01"]);
+        testGroup(benchmarksPath, groups["many_01"], CheckType::PRINT_NONE);
     }
 }
