@@ -152,7 +152,8 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
 
     // else we have to check that access is valid in every case
     for (const CallRelation& callRelation : callRelations) {
-        ValueRelations merged = relations;
+        ValueRelations merged;
+        merged.merge(relations);
 
         bool hasConflict = false;
         for (auto& equalPair : callRelation.equalPairs) {

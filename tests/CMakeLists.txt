@@ -16,7 +16,7 @@ if(NOT fetch_catch_POPULATED)
     add_subdirectory(${fetch_catch_SOURCE_DIR} ${fetch_catch_BINARY_DIR})
 endif()
 
-add_library(VRPlugin STATIC	${CMAKE_SOURCE_DIR}/analyses/value_relations_plugin.cpp)
+add_library(VRPlugin STATIC	${CMAKE_SOURCE_DIR}/analyses/value_relations_plugin.cpp ${CMAKE_SOURCE_DIR}/../dg/include/dg/llvm/ValueRelations/VR.cpp ${CMAKE_SOURCE_DIR}/../dg/include/dg/llvm/ValueRelations/Relations.cpp)
 target_link_libraries(VRPlugin PRIVATE ${dg_libs})
 target_compile_options(VRPlugin PRIVATE -Wall -Wextra -pedantic -g ${COLORS})
 
