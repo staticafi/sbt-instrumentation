@@ -436,7 +436,7 @@ std::string PointsToPlugin::pointsTo(llvm::Value* a, llvm::Value* b) {
 std::string PointsToPlugin::pointsToSetsOverlap(llvm::Value* a, llvm::Value* b) {
     assert(PTA);
     PSNode *nodeA = PTA->getPointsToNode(a);
-    PSNode *nodeB = PTA->getPointsToNode(a);
+    PSNode *nodeB = PTA->getPointsToNode(b);
     if (!nodeA || !nodeB)
         return "maybe";
     if (nodeA->pointsTo.empty() || nodeB->pointsTo.empty())
