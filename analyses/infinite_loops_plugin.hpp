@@ -27,7 +27,8 @@ public:
         }
     }
 
-    InfiniteLoopsPlugin(llvm::Module* module) : InstrPlugin("InfiniteLoopsPlugin") {}
+    InfiniteLoopsPlugin(llvm::Module* /*module*/)
+        : InstrPlugin("InfiniteLoopsPlugin") {}
 };
 
 #endif
