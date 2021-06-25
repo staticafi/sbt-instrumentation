@@ -33,7 +33,7 @@ std::string InfiniteLoopsPlugin::handleUnconditional(const BranchInst* br) {
     return "unknown";
 }
 
-std::string InfiniteLoopsPlugin::handleConditional(const BranchInst* br) {
+std::string InfiniteLoopsPlugin::handleConditional(const BranchInst* /*br*/) {
     return "unknown";
 }
 

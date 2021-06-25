@@ -23,7 +23,8 @@ class CheckNSWPlugin : public InstrPlugin
             }
         }
 
-        CheckNSWPlugin(llvm::Module* module) : InstrPlugin("CheckNSWPlugin") {}
+        CheckNSWPlugin(llvm::Module* /*module*/)
+            : InstrPlugin("CheckNSWPlugin") {}
 };
 
 #endif
