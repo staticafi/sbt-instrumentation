@@ -83,23 +83,22 @@ else()
   message(FATAL_ERROR "DG not found! Try specifying -DDG_PATH=<path>.")
 endif()
 
-option(LLVM_LINK_DYLIB "Link with LLVM dynamically" ON)
-if (LLVM_LINK_DYLIB)
-	message(STATUS "LLVM linking: dynamic")
-	if (${LLVM_PACKAGE_VERSION} VERSION_LESS "3.8")
-		set(llvm_libs LLVM-${LLVM_PACKAGE_VERSION})
-	else()
-		# only LLVM 3.8+ provide unversioned library
-		set(llvm_libs LLVM)
-	endif()
+# ------------------------------------------------
+# jsoncpp
+# ------------------------------------------------
+find_package(jsoncpp 1.9.2 QUIET CONFIG)
+if(jsoncpp_FOUND)
+  message(STATUS "Found jsoncpp (found version \"${jsoncpp_VERSION}\")")
+  set(JSON_LIBS jsoncpp_lib)
 else()
-	# Find the libraries that correspond to the LLVM components
-	# that we wish to use
-	if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
-		llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter linker)
-	else()
-		llvm_map_components_to_libraries(llvm_libs support core irreader bitwriter linker)
-	endif()
+  # Test if older jsoncpp is available
+  find_package(jsoncpp QUIET CONFIG)
+  if(jsoncpp_FOUND)
+    message(STATUS "System version is older than 1.9.2")
+  endif()
+
+  message(STATUS "Using bootsrapped jsoncpp library")
+  set(JSON_FILES jsoncpp.cpp)
 endif()
 
 # --------------------------------------------------
