@@ -1671,8 +1671,8 @@ void BinaryOp::print(raw_ostream& OS) const {
 
 // The ctor.
 PhiOp::PhiOp(BasicInterval* intersect, VarNode* sink, const Instruction* inst,
-		unsigned int opcode) :
-		BasicOp(intersect, sink, inst), opcode(opcode) {
+		unsigned int /*opcode*/) :
+		BasicOp(intersect, sink, inst) {
 }
 
 /// The dtor.

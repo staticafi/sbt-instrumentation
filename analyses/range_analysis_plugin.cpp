@@ -69,22 +69,16 @@ std::string RangeAnalysisPlugin::canOverflow(Value* value) {
             return "unknown";
 
         // check addition
-        if (const auto* binOp
-        = dyn_cast<AddOperator>(inst)) {
+        if (isa<AddOperator>(inst))
             return canOverflowAdd(a, b, *intT);
-        }
 
         // check subtraction
-        if (const auto* binOp
-        = dyn_cast<SubOperator>(inst)) {
+        if (isa<SubOperator>(inst))
             return canOverflowSub(a, b, *intT);
-        }
 
         // check multiplication
-        if (const auto* binOp
-        = dyn_cast<MulOperator>(inst)) {
+        if (isa<MulOperator>(inst))
             return canOverflowMul(a, b, *intT);
-        }
     }
 
     // check division
