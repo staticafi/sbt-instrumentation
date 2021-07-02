@@ -108,6 +108,12 @@ include_directories(include)
 include_directories(analyses)
 
 # --------------------------------------------------
+# Set correct install directories
+# --------------------------------------------------
+include(GNUInstallDirs)
+message(STATUS "CMAKE_INSTALL_BINDIR: \"${CMAKE_INSTALL_BINDIR}\"")
+
+# --------------------------------------------------
 # Subdirectories
 # --------------------------------------------------
 add_subdirectory(analyses)
