@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8.8)
-project(instr)
+cmake_minimum_required(VERSION 3.1.0)
+project(sbt-instrumentation CXX)
 
 find_package(LLVM REQUIRED CONFIG)
 if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")

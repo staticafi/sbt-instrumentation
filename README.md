@@ -8,7 +8,7 @@ The user needs to supply the tool with instrumentation rules in JSON format and 
  
 ### Building
 
-To compile and run *sbt-instrumentation*, it is necessary to have CMake (minimal version 2.8.8) and the LLVM minimum 3.9.1 together with Clang installed.
+To compile and run *sbt-instrumentation*, it is necessary to have CMake (minimal version 3.1.0) and the LLVM minimum 3.9.1 together with Clang installed.
 
 Before configuring the project, the json libraries and [dg library](https://github.com/mchalupa/dg) must be bootstrapped:
 ```
