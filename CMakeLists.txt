@@ -59,35 +59,28 @@ else()
                                             linker support)
 endif()
 
-find_library(LIBLP dgllvmpta PATHS ${DG_PATH}/lib/)
-find_library(LIBP dgpta PATHS ${DG_PATH}/lib/)
-find_library(LIBDGA dganalysis PATHS ${DG_PATH}/lib/)
+# --------------------------------------------------
+# DG
+# --------------------------------------------------
+add_definitions(-DHAVE_LLVM)
 
-if (LIBLP AND LIBP AND LIBDGA)
-	message(STATUS "Dg libraries found: ${LIBLP}, ${LIBP}, ${LIBDGA}")
-	# those libraries we'll use. We need to use whole LLVMdg,
-	# since we'll use the LLVM points-to analysis
-	set(dg_libs ${LIBLP} ${LIBP} ${LIBDGA})
+if(DG_PATH)
+  include_directories(${DG_PATH}/include/)
 else()
-	message(FATAL_ERROR "Dg not found! Try specifying -DDG_PATH=<path>.")
+  include_directories(${CMAKE_SOURCE_DIR}/dg/include)
+  set(DG_PATH ${CMAKE_SOURCE_DIR}/dg)
 endif()
 
-include(GNUInstallDirs)
-message(STATUS "CMAKE_INSTALL_LIBDIR: \"${CMAKE_INSTALL_LIBDIR}\"")
-message(STATUS "CMAKE_INSTALL_DATADIR: \"${CMAKE_INSTALL_FULL_DATADIR}\"")
+# Those libraries we'll use, since we want to use the LLVM points-to analysis
+find_library(libdganalysis dganalysis PATHS ${DG_PATH}/lib/)
+find_library(libdgllvmpta dgllvmpta PATHS ${DG_PATH}/lib/)
+find_library(libdgpta dgpta PATHS ${DG_PATH}/lib/)
 
-include(FindPkgConfig)
-pkg_search_module(JSON jsoncpp)
-set(JSONCPP_MIN_VERSION "1.9.1")
-set(JSONCPP_MAX_VERSION "2")
-if (JSON_FOUND AND (JSON_VERSION VERSION_GREATER JSONCPP_MIN_VERSION) AND (JSON_VERSION VERSION_LESS JSONCPP_MAX_VERSION))
-	set(JSON_LIBS ${JSON_LINK_LIBRARIES})
-	message(STATUS "Using system jsoncpp library")
+if(libdganalysis AND libdgllvmpta AND libdgpta)
+  message(STATUS "DG libraries found: ${libdganalysis}, ${libdgllvmpta}, ${libdgpta}")
+  set(DG_LIBS ${libdganalysis} ${libdgllvmpta} ${libdgpta})
 else()
-	set(JSON_FILES jsoncpp.cpp)
-    if (JSON_FOUND)
-      message(STATUS "System contains jsoncpp library version ${JSON_VERSION}, which is not compatible. Only versions between ${JSONCPP_MIN_VERSION} < v < ${JSONCPP_MAX_VERSION} are compatible.")
-    endif()
+  message(FATAL_ERROR "DG not found! Try specifying -DDG_PATH=<path>.")
 endif()
 
 option(LLVM_LINK_DYLIB "Link with LLVM dynamically" ON)
