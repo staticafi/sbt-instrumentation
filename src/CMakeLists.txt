@@ -17,14 +17,16 @@ set(GIT_VERSION ${GIT_VERSION} CACHE STRING "Git version hash" FORCE)
 configure_file(git-version.h.in git-version.h @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+# --------------------------------------------------
+# sbt-instr
+# --------------------------------------------------
 add_executable(sbt-instr
-	rewriter.cpp
-	instr_log.cpp
-	instr_analyzer.cpp
-	instr.cpp
-	${JSON_FILES}
+    instr.cpp
+    instr_analyzer.cpp
+    instr_log.cpp
+    rewriter.cpp
+    ${JSON_FILES}
 )
-target_link_libraries(sbt-instr ${llvm_libs} ${JSON_LIBS})
-
-install(TARGETS sbt-instr RUNTIME DESTINATION bin)
-
+target_link_libraries(sbt-instr ${LLVM_LIBS} ${JSON_LIBS})
+install(TARGETS sbt-instr
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
