@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.1.0)
 project(sbt-instrumentation CXX)
 
+# --------------------------------------------------
+# Build type
+# --------------------------------------------------
+if(NOT CMAKE_BUILD_TYPE)
+  message(STATUS "Build type not set. Setting default.")
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "" FORCE)
+endif()
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "RelWithDebInfo"
+                                                     "MinSizeRel" "Release")
+
 find_package(LLVM REQUIRED CONFIG)
 if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}")
