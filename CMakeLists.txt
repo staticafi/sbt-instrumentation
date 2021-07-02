@@ -12,15 +12,23 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "RelWithDebInfo"
                                                      "MinSizeRel" "Release")
 
-find_package(LLVM REQUIRED CONFIG)
-if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "3.4")
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}")
-  include(LLVMConfig)
-endif()
+# --------------------------------------------------
+# Compilation flags
+# --------------------------------------------------
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-rtti")
+
+# --------------------------------------------------
+# LLVM
+# --------------------------------------------------
+find_package(LLVM 3.9.1 REQUIRED CONFIG)
+list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
 include(AddLLVM)
 
+# TODO: Move this to the section above when we switch to C++14
 # LLVM 10 and newer require at least C++14 standard
-if (${LLVM_PACKAGE_VERSION} VERSION_GREATER "9.0")
+if(${LLVM_PACKAGE_VERSION} VERSION_GREATER "9.0")
   set(CMAKE_CXX_STANDARD 14)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 else()
@@ -28,50 +36,27 @@ else()
   set(CMAKE_CXX_STANDARD 11)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# Compiler Options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-rtti")
 
 add_definitions(${LLVM_DEFINITIONS})
 include_directories(${LLVM_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 
-include_directories(include)
-include_directories(analyses)
-
-find_path(LLVM_SRC_PATH include/llvm/Module.h)
-find_path(LLVM_BUILD_PATH include/llvm/Intrinsics.gen)
-
-if (LLVM_SRC_PATH)
-  include_directories(${LLVM_SRC_PATH}/include)
-  SET(LLVM_INCLUDE_DIRS ${LLVM_SRC_PATH}/include)
-  message(STATUS "Got LLVM_SRC_PATH ${LLVM_SRC_PATH}")
-endif(LLVM_SRC_PATH)
-if (LLVM_BUILD_PATH)
-  include_directories(${LLVM_BUILD_PATH}/include)
-  link_directories(${LLVM_BUILD_PATH}/lib)
-  SET(LLVM_LIBRARY_DIRS ${LLVM_BUILD_PATH}/lib)
-  message(STATUS "Got LLVM_BUILD_PATH ${LLVM_BUILD_PATH}")
-endif(LLVM_BUILD_PATH)
-
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "LLVM definitions: ${LLVM_DEFINITIONS}")
 message(STATUS "LLVM include dir: ${LLVM_INCLUDE_DIRS}")
 message(STATUS "LLVM libraries dir: ${LLVM_LIBRARY_DIRS}")
-message(STATUS "LLVM definitions: ${LLVM_DEFINITIONS}")
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/lib)
-include_directories(${CMAKE_SOURCE_DIR}/analyses)
-add_definitions(-DHAVE_LLVM)
-
-if (DG_PATH)
-	include_directories(${DG_PATH}/include/)
+option(LLVM_LINK_DYLIB "Link with LLVM dynamically" ON)
+if(LLVM_LINK_DYLIB)
+  message(STATUS "LLVM linking: dynamic")
+  set(LLVM_LIBS LLVM)
 else()
-	include_directories(${CMAKE_SOURCE_DIR}/dg/include)
-    set(DG_PATH ${CMAKE_SOURCE_DIR}/dg)
+  message(STATUS "LLVM linking: static")
+  # Find the libraries that correspond to the LLVM components
+  # that we wish to use
+  llvm_map_components_to_libnames(LLVM_LIBS bitwriter code irreader
+                                            linker support)
 endif()
 
 find_library(LIBLP dgllvmpta PATHS ${DG_PATH}/lib/)
@@ -124,8 +109,15 @@ else()
 	endif()
 endif()
 
-enable_testing()
+# --------------------------------------------------
+# Global includes
+# --------------------------------------------------
+include_directories(include)
+include_directories(analyses)
 
+# --------------------------------------------------
+# Subdirectories
+# --------------------------------------------------
 add_subdirectory(analyses)
 add_subdirectory(instrumentations)
 add_subdirectory(src)
