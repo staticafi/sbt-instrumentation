@@ -1,58 +1,62 @@
-add_library(dgPointsToPlugin MODULE
-	dg_points_to_plugin.cpp
-)
-target_link_libraries(dgPointsToPlugin PRIVATE ${dg_libs})
-install(TARGETS dgPointsToPlugin
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(PROGRAMS predator_wrapper.py
-  DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-add_library(RangeAnalysisPlugin MODULE
-	range_analysis_plugin.cpp
-	ra/RangeAnalysis.cpp
-)
-target_link_libraries(RangeAnalysisPlugin PRIVATE ${ra_libs})
-install(TARGETS RangeAnalysisPlugin
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
+# --------------------------------------------------
+# CheckNSWPlugin
+# --------------------------------------------------
 add_library(CheckNSWPlugin MODULE
-	check_nsw_plugin.cpp
+    check_nsw_plugin.cpp
 )
-install(TARGETS CheckNSWPlugin
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+# --------------------------------------------------
+# dgPointsToPlugin
+# --------------------------------------------------
+add_library(dgPointsToPlugin MODULE
+    dg_points_to_plugin.cpp
+)
+target_link_libraries(dgPointsToPlugin PRIVATE ${DG_LIBS})
+
+# --------------------------------------------------
+# InfiniteLoopsPlugin
+# --------------------------------------------------
 add_library(InfiniteLoopsPlugin MODULE
-	infinite_loops_plugin.cpp
+    infinite_loops_plugin.cpp
 )
-install(TARGETS InfiniteLoopsPlugin
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-add_library(ValueRelationsPlugin MODULE
-	value_relations_plugin.cpp
+# --------------------------------------------------
+# LLVMPointsToPlugin
+# --------------------------------------------------
+add_library(LLVMPointsToPlugin MODULE
+    llvm_points_to_plugin.cpp
 )
-install(TARGETS ValueRelationsPlugin
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-target_link_libraries(ValueRelationsPlugin PRIVATE ${dg_libs})
 
+# --------------------------------------------------
+# PredatorPlugin
+# --------------------------------------------------
 add_library(PredatorPlugin MODULE
     predator_plugin.cpp
 )
 
-install(TARGETS PredatorPlugin
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+# --------------------------------------------------
+# RangeAnalysisPlugin
+# --------------------------------------------------
+add_library(RangeAnalysisPlugin MODULE
+    range_analysis_plugin.cpp
+    ra/RangeAnalysis.cpp
 )
-install(PROGRAMS predator_wrapper.py DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-add_library(LLVMPointsToPlugin MODULE
-	llvm_points_to_plugin.cpp
+# --------------------------------------------------
+# ValueRelationsPlugin
+# --------------------------------------------------
+add_library(ValueRelationsPlugin MODULE
+    value_relations_plugin.cpp
 )
-install(TARGETS LLVMPointsToPlugin
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+target_link_libraries(ValueRelationsPlugin PRIVATE ${DG_LIBS})
 
-# We need all the symbols with dynamic libs. With static libs, we get errors.
-if (BUILD_SHARED_LIBS)
-	target_link_libraries(dgPointsToPlugin PRIVATE ${llvm_libs})
-	target_link_libraries(RangeAnalysisPlugin PRIVATE ${llvm_libs})
-	target_link_libraries(CheckNSWPlugin PRIVATE ${llvm_libs})
-	target_link_libraries(InfiniteLoopsPlugin PRIVATE ${llvm_libs})
-endif()
+# --------------------------------------------------
+# Install
+# --------------------------------------------------
+install(TARGETS CheckNSWPlugin dgPointsToPlugin InfiniteLoopsPlugin
+                LLVMPointsToPlugin PredatorPlugin RangeAnalysisPlugin
+                ValueRelationsPlugin
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(PROGRAMS predator_wrapper.py
+        DESTINATION ${CMAKE_INSTALL_BINDIR})
