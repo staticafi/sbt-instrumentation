@@ -10,11 +10,13 @@
 #include "llvm/Linker/Linker.h"
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/InstIterator.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/PassManager.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/MemoryBuffer.h>
@@ -23,23 +25,11 @@
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Transforms/Utils/Cloning.h>
 
-#if ((LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR < 5))
- #include <llvm/Analysis/Verifier.h>
-#else // >= 3.5
- #include <llvm/IR/Verifier.h>
-#endif
-
 #if LLVM_VERSION_MAJOR >= 4
 #include <llvm/Bitcode/BitcodeReader.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #else
 #include <llvm/Bitcode/ReaderWriter.h>
-#endif
-
-#if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 5)
-#include "llvm/IR/InstIterator.h"
-#else
-#include "llvm/Support/InstIterator.h"
 #endif
 
 #include "llvm_instr.hpp"
@@ -1283,14 +1273,7 @@ bool instrumentModule(LLVMInstrumentation& instr) {
         logger.write_info("End of the " + std::to_string(i) + ". phase.");
     }
 
-#if ((LLVM_VERSION_MAJOR >= 4) || (LLVM_VERSION_MINOR >= 5))
-    if (llvm::verifyModule(instr.module, &llvm::errs()))
-#else
-    if (llvm::verifyModule(instr.module, llvm::PrintMessageAction))
-#endif
-        return false;
-
-    return true;
+    return !llvm::verifyModule(instr.module, &llvm::errs());
 }
 
 void saveModule(LLVMInstrumentation& instr) {
@@ -1393,13 +1376,8 @@ int main(int argc, char *argv[]) {
     // Get module from LLVM file
     LLVMContext Context;
     SMDiagnostic Err;
-#if LLVM_VERSION_MAJOR >= 4 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 6)
     std::unique_ptr<Module> module = parseIRFile(argv[2], Err, Context);
     std::unique_ptr<Module> defModule = parseIRFile(argv[3], Err, Context);
-#else
-    std::unique_ptr<Module> module = std::unique_ptr<Module>(ParseIRFile(argv[2], Err, Context));
-    std::unique_ptr<Module> defModule = std::unique_ptr<Module>(ParseIRFile(argv[3], Err, Context));
-#endif
     if (!module) {
         logger.write_error("Error parsing .bc file.");
         Err.print(argv[0], errs());

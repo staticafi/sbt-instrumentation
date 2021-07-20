@@ -18,3 +18,4 @@ sbt-instr
 Makefile
 cmake_install.cmake
 tags
+build
