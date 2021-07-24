@@ -157,7 +157,7 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
 
         bool hasConflict = false;
         for (auto& equalPair : callRelation.equalPairs) {
-            if (merged.hasConflictingRelation(equalPair.first, equalPair.second, Relation::EQ)) {
+            if (merged.hasConflictingRelation(equalPair.first, equalPair.second, Relations::Type::EQ)) {
                 hasConflict = true;
                 break; // this vrlocation is unreachable with given parameters
             }
