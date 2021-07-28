@@ -1160,14 +1160,12 @@ bool instrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
             return false;
         }
 
-        // Create new call instruction
         std::vector<Value *> args;
-        CallInst *newInstr = CallInst::Create(CalleeF, args);
-
         bool inserted = false;
         for (auto& block : *F) {
             if (isa<ReturnInst>(block.getTerminator())) {
                 llvm::Instruction *termInst = block.getTerminator();
+                CallInst *newInstr = CallInst::Create(CalleeF, args);
                 newInstr->insertBefore(termInst);
                 inserted = true;
                 cloneMetadata(termInst, newInstr);
