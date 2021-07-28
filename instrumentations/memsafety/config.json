@@ -182,7 +182,7 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i32"]
+                    "operands": ["<t3>","*", "<t4>","*", "llvm.memset.p0i8.i32"]
                 }
                 ],
                 "newInstruction": {
@@ -200,7 +200,7 @@
                 {
                     "returnValue": "*",
                     "instruction": "call",
-                    "operands": ["<t3>","*", "<t4>","*","*", "llvm.memset.p0i8.i64"]
+                    "operands": ["<t3>","*", "<t4>","*", "llvm.memset.p0i8.i64"]
                 }
                 ],
                 "newInstruction": {
