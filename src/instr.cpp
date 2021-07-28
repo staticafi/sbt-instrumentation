@@ -1176,9 +1176,8 @@ bool instrumentReturns(LLVMInstrumentation& instr, Function* F, RewriterConfig r
         }
 
         if (!inserted) {
-            llvm::errs() << *F << "\n";
-            assert(0 && "Did not find any return");
-            abort();
+            llvm::errs() << "Did not find any return in function '"
+                         << F->getName() << "'\n";
         }
     }
     return true;
