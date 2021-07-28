@@ -22,9 +22,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-rtti")
 # --------------------------------------------------
 # LLVM
 # --------------------------------------------------
-find_package(LLVM 3.9.1 REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
 include(AddLLVM)
+
+if(${LLVM_PACKAGE_VERSION} VERSION_LESS "3.9.1")
+  message(FATAL_ERROR "Need LLVM in version at least 3.9.1")
+endif()
 
 # TODO: Move this to the section above when we switch to C++14
 # LLVM 10 and newer require at least C++14 standard
