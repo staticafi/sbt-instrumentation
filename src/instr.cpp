@@ -733,15 +733,23 @@ bool checkAnalysis(Value *ins, const Condition& condition, bool forAll,
     // check whether the query is supported by some plugin at all
     static std::set<std::string> none_supports;
     static std::set<std::string> some_supports;
+
     if (some_supports.count(condition.name) == 0 &&
         none_supports.count(condition.name) == 0) {
 
         // we haven't run into this query yet...
         bool issupported = false;
         static std::set<std::pair<InstrPlugin *, const std::string>> unsupported;
+        std::string query = condition.name;
+        // we support these internal queries if we support "pointsTo" or
+        // "pointsToSetsOverlap"
+        if (query == "isRemembered")
+            query = "pointsTo";
+        else if (query == "pointsToRemembered")
+            query = "pointsToSetsOverlap";
 
         for (auto& plugin : instr.plugins) {
-            if (plugin->supports(condition.name)) {
+            if (plugin->supports(query)) {
                 // yay!
                 issupported = true;
                 // do not break to let the user know which plugins does support the query
@@ -777,7 +785,9 @@ bool checkAnalysis(Value *ins, const Condition& condition, bool forAll,
             && "BUG: Supported conditions check failed");
 
     for (auto& plugin : instr.plugins) {
-        if (!plugin->supports(condition.name)) {
+        if (!(plugin->supports(condition.name) ||
+              condition.name == "isRemembered" ||
+              condition.name == "pointsToRemembered")) {
             continue;
         }
 
