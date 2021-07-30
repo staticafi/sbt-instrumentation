@@ -1,5 +1,9 @@
 #include "value_relations_plugin.hpp"
 
+#if LLVM_VERSION_MAJOR < 5
+#include <llvm/ADT/iterator_range.h>
+#endif
+
 #include "dg/llvm/ValueRelations/GraphBuilder.h"
 #include "dg/llvm/ValueRelations/StructureAnalyzer.h"
 #include "dg/llvm/ValueRelations/RelationsAnalyzer.h"
@@ -27,7 +31,11 @@ std::pair<const llvm::Value*, const llvm::Type*> getOnlyNonzeroIndex(const llvm:
     const llvm::Value* firstIndex = nullptr;
     const llvm::Type* readType = gep->getSourceElementType();
 
+#if LLVM_VERSION_MAJOR < 5
+    for (const llvm::Value* index : llvm::make_range(gep->idx_begin(), gep->idx_end())) {
+#else
     for (const llvm::Value* index : gep->indices()) {
+#endif
         // consider only cases when nonzero index is the last
         if (firstIndex)
             return { nullptr, nullptr };
