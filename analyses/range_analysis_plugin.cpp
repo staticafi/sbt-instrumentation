@@ -127,7 +127,12 @@ std::string RangeAnalysisPlugin::canOverflowShl(const Range& a, const Range& b,
   llvm::errs() << "max: " << max << "\n";
   if (a.getLower().isNegative()) {
     auto l = a.getLower();
+#if LLVM_MAJOR_VERSION < 5
+    l.flipAllBits();
+    ++l;
+#else
     l.negate();
+#endif
     if (l.getZExtValue() > (max >> e))
       return "true";
   } else if (!a.getLower().isNegative()) {

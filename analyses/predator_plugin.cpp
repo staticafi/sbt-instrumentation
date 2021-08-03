@@ -1,9 +1,14 @@
 #include "predator_plugin.hpp"
 
-#include <llvm/Bitcode/BitcodeWriter.h>
-#include <llvm/Support/raw_os_ostream.h>
 #include <llvm/ADT/SmallVector.h>
+#if LLVM_VERSION_MAJOR >= 4
+#include <llvm/Bitcode/BitcodeReader.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
+#else
+#include <llvm/Bitcode/ReaderWriter.h>
+#endif
 #include <llvm/IR/DebugInfoMetadata.h>
+#include <llvm/Support/raw_os_ostream.h>
 
 #include <cstdlib>
 #include <fstream>
@@ -168,11 +173,25 @@ void PredatorPlugin::addReportsForLineErrors(llvm::Module* mod) {
     for (unsigned lineNumber : lineOnlyErrors) {
         bool found = false;
         for (llvm::GlobalVariable& var : mod->globals()) {
+#if LLVM_VERSION_MAJOR < 4
+            llvm::SmallVector<llvm::DIGlobalVariable *, 8> exprs;
+
+            // taken from https://github.com/llvm/llvm-project/commit/d4135bbc
+            llvm::SmallVector<llvm::MDNode *, 1> MDs;
+            var.getMetadata(llvm::LLVMContext::MD_dbg, MDs);
+            for (llvm::MDNode *MD : MDs)
+              exprs.push_back(llvm::cast<llvm::DIGlobalVariable>(MD));
+#else
             llvm::SmallVector<llvm::DIGlobalVariableExpression *, 8> exprs;
             var.getDebugInfo(exprs);
+#endif
 
             for (auto* e : exprs) {
+#if LLVM_VERSION_MAJOR < 4
+                auto* gv = e;
+#else
                 auto* gv = e->getVariable();
+#endif
                 if (gv) {
                     if (gv->getLine() == lineNumber) {
                         dangerous.insert(&var);
