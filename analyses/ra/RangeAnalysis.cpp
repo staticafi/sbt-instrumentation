@@ -2995,7 +2995,11 @@ void ConstraintGraph::print(const Function& F, raw_ostream& OS) const {
 
 void ConstraintGraph::printToFile(const Function& F, Twine FileName) {
 	std::error_code ErrorInfo;
+#if LLVM_VERSION_MAJOR >= 7
+	raw_fd_ostream file(FileName.getSingleStringRef() , ErrorInfo,sys::fs::OF_None);
+#else
 	raw_fd_ostream file(FileName.getSingleStringRef() , ErrorInfo,sys::fs::F_None);
+#endif
 	if(!file.has_error()){
 		print(F, file);
 		file.close();
