@@ -18,31 +18,16 @@ if(NOT fetch_catch_POPULATED)
     add_subdirectory(${fetch_catch_SOURCE_DIR} ${fetch_catch_BINARY_DIR})
 endif()
 
-find_library(LIBVRA dgllvmvra PATHS ${DG_PATH}/lib/)
+find_library(LIBVRA_TEST dgllvmvra PATHS ${DG_PATH}/lib/)
+message("vra" ${LIBVRA_TEST})
 add_library(VRPlugin SHARED
 	${CMAKE_SOURCE_DIR}/analyses/value_relations_plugin.cpp
 )
-target_link_libraries(VRPlugin PRIVATE ${LIBVRA} ${dg_libs})
+target_link_libraries(VRPlugin PRIVATE ${LIBVRA_TEST} ${dg_libs})
 
 add_executable(${PROJECT_NAME} tests-main.cpp tests.cpp ../src/jsoncpp.cpp)
 include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/../dg/include/dg/llvm/ValueRelations/)
 target_link_libraries(${PROJECT_NAME} PUBLIC Catch2::Catch2 ${llvm_libs} VRPlugin)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -g ${COLORS})
-
-add_custom_target(test_all ./${PROJECT_NAME} --use-colour yes
-                      DEPENDS ${PROJECT_NAME}
-                      COMMENT "Running tests"
-                      WORKING_DIRECTORY ${CMAKE_BUILD_DIR}
-                      VERBATIM)
-add_custom_target(test_correct ./${PROJECT_NAME} -c all_correct --use-colour yes
-                      DEPENDS ${PROJECT_NAME}
-                      COMMENT "Running tests"
-                      WORKING_DIRECTORY ${CMAKE_BUILD_DIR}
-                      VERBATIM)
-add_custom_target(test_problematic ./${PROJECT_NAME} -c problematic --use-colour yes
-                      DEPENDS ${PROJECT_NAME}
-                      COMMENT "Running tests"
-                      WORKING_DIRECTORY ${CMAKE_BUILD_DIR}
-                      VERBATIM)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tested-files.json ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
