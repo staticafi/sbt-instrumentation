@@ -119,6 +119,16 @@ std::string ValueRelationsPlugin::isValidForGraph(
     return "maybe";
 }
 
+const llvm::Value* getRealArg(const dg::vr::CallRelation& callRels, const llvm::Value* formalArg) {
+    const llvm::Value* arg = nullptr;
+    for (auto& pair : callRels.equalPairs) {
+        if (formalArg == pair.first)
+            arg = pair.second;
+    }
+    assert(arg);
+    return arg;
+}
+
 std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *size) {
     using namespace dg::vr;
     
@@ -150,8 +160,22 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
     if (callRelations.empty())
         return isValidForGraph(relations, relations.getValidAreas(), gep, readSize);
 
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR <= 7
+    const llvm::Function* function = gep->getParent()->getParent();
+#else
+    const llvm::Function* function = gep->getFunction();
+#endif
+
     // else we have to check that access is valid in every case
     for (const CallRelation& callRelation : callRelations) {
+        if (structure.hasPreconditions(function)) {
+            for (auto& prec : structure.getPreconditionsFor(function)) {
+                assert(callRelation.callSite);
+                const llvm::Value* arg = getRealArg(callRelation, prec.arg);
+                if (!callRelation.callSite->relations.are(arg, prec.rel, prec.val))
+                    return "unknown";
+            }
+        }
         ValueRelations merged;
         merged.merge(relations);
 
