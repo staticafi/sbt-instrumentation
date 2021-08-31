@@ -24,7 +24,7 @@ std::string compileBenchmark(const std::string& path, const std::string& benchma
     std::string targetFile = "tmp/" + benchmark + ".ll";
 
     if (! fileExists(targetFile)) {
-        std::string command = "clang-10 -S -emit-llvm " + path + "/" + benchmark + ".c -o " + targetFile;
+        std::string command = "clang-10 -S -emit-llvm " + path + "/" + benchmark + ".i -o " + targetFile;
 
         int returnCode = system(command.c_str());
         if (returnCode != 0)
@@ -80,6 +80,11 @@ enum class CheckType {
 
 void testBenchmark(const std::string& path, const std::string& benchmark, CheckType type) {
     auto targetFile = compileBenchmark(path, benchmark);
+    if (targetFile.empty()) {
+        INFO("benchmark " << benchmark << " not found");
+        CHECK(false);
+        return;
+    }
 
     llvm::LLVMContext context;
     llvm::SMDiagnostic SMD;
@@ -102,13 +107,14 @@ void testBenchmark(const std::string& path, const std::string& benchmark, CheckT
 
                 if (llvm::isa<llvm::GetElementPtrInst>(ptr)) {
                     if (type == CheckType::REQUIRE_TRUE) {
-                        DYNAMIC_SECTION(dg::debug::getValName(ptr)) {
-                            REQUIRE(answer == "true");
-                        }
+                        INFO(dg::debug::getValName(ptr));
+                        CHECK(answer == "true");
                     } else if (type == CheckType::PRINT_ALL) {
                         INFO(dg::debug::getValName(ptr));
                         INFO(answer);
                         CHECK(false); // force printing of info messages
+                    } else {
+                        CHECK(true); // count success
                     }
                 }
             }
@@ -122,9 +128,9 @@ void testGroup(const std::string& benchmarksPath, Json::Value& group, CheckType 
 
         const Json::Value& benchmark = GENERATE_REF(from_range(folder["benchmarks"].begin(), folder["benchmarks"].end()));
 
-        DYNAMIC_SECTION(folder["name"].asString() << "/" << benchmark.asString()) {
-            testBenchmark(folderPath, benchmark.asString(), type);
-        }
+        std::cerr << benchmark.asString() << "\n";
+        INFO(folder["name"].asString() << "/" << benchmark.asString());
+        testBenchmark(folderPath, benchmark.asString(), type);
 }
 
 TEST_CASE("main") {
@@ -144,6 +150,10 @@ TEST_CASE("main") {
 
     SECTION("problematic") {
         testGroup(benchmarksPath, groups["problematic"], CheckType::PRINT_ALL);
+    }
+
+    SECTION("old_problematic") {
+        testGroup(benchmarksPath, groups["old_problematic"], CheckType::PRINT_NONE);
     }
 
     SECTION("many_01") {
