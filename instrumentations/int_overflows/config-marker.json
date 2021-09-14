@@ -1,0 +1,298 @@
+{
+    "file": "overflows-marker.c",
+    "analyses": [["libRangeAnalysisPlugin.so"]],
+    "phases": [
+        {
+            "instructionsRules": [
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "add",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i32"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "add",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i64"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "add",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i16"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "add",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i8"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "sub",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i32"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "sub",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i64"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<t1>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "sub",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i16"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "sub",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i8"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "mul",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i32"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "mul",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i64"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "mul",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i16"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "mul",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i8"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "div",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i32"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "div",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i64"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "div",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i16"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                },
+                {
+                    "findInstructions": [
+                    {
+                        "returnValue": "<op>",
+                        "instruction": "div",
+                        "operands": ["<t1>", "<t2>"],
+                        "type": "i8"
+                    }
+                    ],
+                    "newInstruction": {
+                        "returnValue": "*",
+                        "instruction": "call",
+                        "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
+                    },
+                    "where": "before",
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
+                    "in": "*"
+                }
+            ]
+        }
+    ]
+}
