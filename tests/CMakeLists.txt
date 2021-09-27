@@ -18,12 +18,14 @@ if(NOT fetch_catch_POPULATED)
     add_subdirectory(${fetch_catch_SOURCE_DIR} ${fetch_catch_BINARY_DIR})
 endif()
 
-find_library(LIBVRA_TEST dgllvmvra PATHS ${DG_PATH}/lib/)
-message("vra" ${LIBVRA_TEST})
 add_library(VRPlugin SHARED
 	${CMAKE_SOURCE_DIR}/analyses/value_relations_plugin.cpp
 )
-target_link_libraries(VRPlugin PRIVATE ${LIBVRA_TEST} ${dg_libs})
+
+target_link_directories(VRPlugin PRIVATE ${CMAKE_INSTALL_LIBDIR})
+target_link_libraries(VRPlugin PRIVATE
+    dgllvmvra dgvra dganalysis
+)
 
 add_executable(${PROJECT_NAME} tests-main.cpp tests.cpp ../src/jsoncpp.cpp)
 include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/../dg/include/dg/llvm/ValueRelations/)
