@@ -57,7 +57,6 @@ uint64_t getAllocatedSize(llvm::Instruction* I, const llvm::Module& M) {
 }
 
 llvm::Value* getPtr(llvm::Instruction& inst) {
-    llvm::Value* result;
     if (auto load = llvm::dyn_cast<llvm::LoadInst>(&inst)) {
         assert(load->getNumOperands() == 1 && "load has only operand");
         return load->getPointerOperand();
