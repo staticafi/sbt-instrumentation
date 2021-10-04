@@ -74,7 +74,7 @@ std::string ValueRelationsPlugin::isValidForGraph(
     }
     if (!area)
         return "maybe"; // memory was not allocated by ordinary means (or at all)
-    if (!validMemory[index])
+    if (index > validMemory.size() || !validMemory[index])
         return "maybe"; // memory is not valid at given location
 
     const std::vector<AllocatedSizeView>& views = area->getAllocatedSizeViews();
