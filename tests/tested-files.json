@@ -20,17 +20,16 @@
             {
                 "name" : "termination-crafted",
                 "benchmarks" : [
-                    "Arrays01-EquivalentConstantIndices-1"
+                    "Arrays01-EquivalentConstantIndices-1",
+                    "LexIndexValue-Array-1"
                 ]
             }
         ],
         "problematic" : [
             {
-                "name" : "array-memsafety-realloc",
+                "name" : "array-memsafety",
                 "benchmarks" : [
-                    "array-realloc-1",
-                    "array-realloc-2",
-                    "array-realloc-3"
+                    "cstrlen-alloca-2"
                 ]
             }
         ],
@@ -96,7 +95,11 @@
                     "touch-2",
                     "usleep-2",
                     "wc-2",
-                    "who-2"
+                    "who-2",
+                    "test-incomplete-1",
+                    "od-1",
+                    "sleep-1",
+                    "uniq-2"
                 ]
             }
         ],
