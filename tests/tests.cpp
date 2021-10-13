@@ -8,7 +8,7 @@
 #include <llvm/IRReader/IRReader.h>
 
 #include "value_relations_plugin.hpp"
-#include "getValName.h"
+#include "dg/llvm/ValueRelations/getValName.h"
 
 #include <string>
 #include <iostream>
