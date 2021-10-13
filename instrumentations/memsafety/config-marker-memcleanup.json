@@ -4,6 +4,30 @@
     "phases": [
         {   "instructionsRules":
             [
+ 	    {
+                "findInstructions": [
+                {
+                    "returnValue": "*",
+                    "instruction": "store",
+                    "operands": ["<val>", "<ptr>"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_pointer"]
+                },
+                "conditions": [{"query":["storeMayLeak", "<this>"],
+                                "expectedResults":["true","maybe","unknown"]}],
+                "mustHoldForAll" : "true",
+                "setFlags": [["leakcheck", "true"]],
+                "where": "before",
+                "in": "*"
+            }
+	    ]
+	},
+        {   "instructionsRules":
+            [
             {
                 "findInstructions": [
                 {
@@ -259,7 +283,6 @@
                 "where": "before",
                 "in": "*"
             }
-
 	]
         }
     ]
