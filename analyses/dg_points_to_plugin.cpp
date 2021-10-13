@@ -582,8 +582,8 @@ std::string PointsToPlugin::storeMayLeak(llvm::Value *v) {
 }
 
 
-void PointsToPlugin::gatherPossiblyLeaked(llvm::ReturnInst *RI) {
-    PSNode *ret = PTA->getPointsToNode(RI);
+void PointsToPlugin::gatherPossiblyLeaked(llvm::Instruction *I) {
+    PSNode *ret = PTA->getPointsToNode(I);
     if (!ret) {
         allMayBeLeaked = true;
         return;
@@ -610,17 +610,15 @@ void PointsToPlugin::gatherPossiblyLeaked(llvm::ReturnInst *RI) {
     }
 }
 
-void PointsToPlugin::gatherPossiblyLeaked(llvm::Module *M) {
-    auto Main = M->getFunction("main");
-    if (!Main) {
-        allMayBeLeaked = true;
-        return;
-    }
-
-    for (auto& B : *Main) {
-        auto term = B.getTerminator();
-        if (auto RI = llvm::dyn_cast<llvm::ReturnInst>(term)) {
-            gatherPossiblyLeaked(RI);
+void PointsToPlugin::gatherPossiblyLeaked(llvm::Module *) {
+    for (auto &nodeptr : PTA->getNodes()) {
+        if (!nodeptr)
+            continue;
+        if (nodeptr->successorsNum() == 0) {
+            auto *val = nodeptr->getUserData<llvm::Value>();
+            if (!val || !llvm::isa<llvm::Instruction>(val))
+                continue;
+            gatherPossiblyLeaked(llvm::cast<llvm::Instruction>(val));
             if (allMayBeLeaked) {
                 possiblyLeaked.clear();
                 return;

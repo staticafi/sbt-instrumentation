@@ -80,7 +80,7 @@ private:
     std::string storeMayLeak(llvm::Value* S);
 
     void gatherPossiblyLeaked(llvm::Module *);
-    void gatherPossiblyLeaked(llvm::ReturnInst *);
+    void gatherPossiblyLeaked(llvm::Instruction *);
 
     void computeRecursiveFuns(llvm::Module *module);
     bool isRecursive(const llvm::Function *F);
