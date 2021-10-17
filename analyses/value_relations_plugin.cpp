@@ -19,7 +19,7 @@ ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
     structure.analyzeBeforeRelationsAnalysis();
 
     RelationsAnalyzer ra(*module, codeGraph, structure);
-    unsigned num_iter = ra.analyze(maxPass);
+    ra.analyze(maxPass);
 
     structure.analyzeAfterRelationsAnalysis();
 }
