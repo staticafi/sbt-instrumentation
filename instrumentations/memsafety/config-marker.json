@@ -1,6 +1,6 @@
 {
     "file": "marker.c",
-    "analyses": [["libPredatorPlugin.so", "libdgPointsToPlugin.so"],
+    "analyses": [["libPredatorPlugin.so"], ["libdgPointsToPlugin.so"],
                  ["libValueRelationsPlugin.so"],
                  ["libLLVMPointsToPlugin.so"]],
     "flags": ["leakcheck"],
