@@ -449,6 +449,159 @@
                                {"query":["pointsToRemembered", "<p>"],
                                 "expectedResults":["true", "maybe"]}],
                 "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "<p>",
+                    "instruction": "call",
+                    "operands": ["<size>", "malloc"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_allocation"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeaked", "<p>"],
+                                "expectedResults":["true"]}],
+                "setFlags": [["leakcheck", "true"]],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "<p>",
+                    "instruction": "call",
+                    "operands": ["<size>", "__VERIFIER_malloc"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_allocation"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeaked", "<p>"],
+                                "expectedResults":["true"]}],
+                "setFlags": [["leakcheck", "true"]],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "<p>",
+                    "instruction": "call",
+                    "operands": ["<size>", "__VERIFIER_malloc0"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_allocation"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeaked", "<p>"],
+                                "expectedResults":["true"]}],
+                "setFlags": [["leakcheck", "true"]],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "<p>",
+                    "instruction": "call",
+                    "operands": ["<size1>", "<size2>", "calloc"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_allocation"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeaked", "<p>"],
+                                "expectedResults":["true"]}],
+                "setFlags": [["leakcheck", "true"]],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "<p>",
+                    "instruction": "call",
+                    "operands": ["<size1>", "<size2>", "__VERIFIER_calloc"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_allocation"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeaked", "<p>"],
+                                "expectedResults":["true"]}],
+                "setFlags": [["leakcheck", "true"]],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "<p>",
+                    "instruction": "call",
+                    "operands": ["<size1>", "<size2>", "__VERIFIER_calloc0"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_allocation"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeaked", "<p>"],
+                                "expectedResults":["true"]}],
+                "setFlags": [["leakcheck", "true"]],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "<p>",
+                    "instruction": "call",
+                    "operands": ["<size1>", "<size2>", "realloc"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_allocation"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeaked", "<p>"],
+                                "expectedResults":["true"]}],
+                "setFlags": [["leakcheck", "true"]],
+                "in": "*"
+            },
+            {
+                "findInstructions": [
+                {
+                    "returnValue": "<p>",
+                    "instruction": "call",
+                    "operands": ["<oldmem>", "<size2>", "realloc"]
+                }
+                ],
+                "newInstruction": {
+                    "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["__INSTR_mark_allocation"]
+                },
+                "where": "before",
+                "conditions": [{"query":["mayBeLeaked", "<p>"],
+                                "expectedResults":["false"]},
+                               {"query":["isInvalid", "<oldmem>"],
+                                "expectedResults":["maybe", "false"]}],
+                "in": "*"
             }
             ]
         },
