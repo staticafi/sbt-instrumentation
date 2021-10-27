@@ -677,6 +677,8 @@ std::string PointsToPlugin::mayBeLeaked(llvm::Value* a) {
     }
 
     for (const auto& ptr : psnode->pointsTo) {
+        if (ptr.isInvalidated())
+            continue; // freed memory cannot be leaked
         if (ptr.isUnknown()) {
             return "true";
         }
