@@ -21,17 +21,22 @@ bool fileExists(const std::string& path) {
 }
 
 std::string compileBenchmark(const std::string& path, const std::string& benchmark) {
-    std::string targetFile = "tmp/" + benchmark + ".ll";
+    std::string targetFile = "ll-files/" + benchmark + ".ll";
 
-    if (! fileExists(targetFile)) {
-        std::string command = "clang-10 -S -emit-llvm " + path + "/" + benchmark + ".i -o " + targetFile;
+    if (fileExists(targetFile))
+        return targetFile;
 
-        int returnCode = system(command.c_str());
-        if (returnCode != 0)
-            return {};
+    for (const auto &extension : {"i", "c"}) {
+        std::string completePath = path + "/" + benchmark + "." + extension;
+
+        if (fileExists(completePath)) {
+            std::string command = "clang-10 -S -emit-llvm " + completePath + " -o " + targetFile;
+            int returnCode = system(command.c_str());
+            if (returnCode == 0)
+                return targetFile;
+        }
     }
-
-    return targetFile;
+    return "";
 }
 
 uint64_t getAllocatedSize(llvm::Instruction* inst, const llvm::Module& module) {
