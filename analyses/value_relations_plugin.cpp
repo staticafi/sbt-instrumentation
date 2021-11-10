@@ -160,11 +160,7 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
     if (callRelations.empty())
         return isValidForGraph(relations, relations.getValidAreas(), gep, readSize);
 
-#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR <= 7
-    const llvm::Function* function = gep->getParent()->getParent();
-#else
     const llvm::Function* function = gep->getFunction();
-#endif
 
     // else we have to check that access is valid in every case
     for (const CallRelation& callRelation : callRelations) {

@@ -34,33 +34,34 @@ std::string compileBenchmark(const std::string& path, const std::string& benchma
     return targetFile;
 }
 
-uint64_t getAllocatedSize(llvm::Instruction* I, const llvm::Module& M) {
-    llvm::Type* Ty;
+uint64_t getAllocatedSize(llvm::Instruction* inst, const llvm::Module& module) {
+    llvm::Type* type;
 
-    if (const llvm::AllocaInst *AI = llvm::dyn_cast<llvm::AllocaInst>(I)) {
-        Ty = AI->getAllocatedType();
+    if (const auto *alloca = llvm::dyn_cast<llvm::AllocaInst>(inst)) {
+        type = alloca->getAllocatedType();
     }
-    else if (const llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(I)) {
-        Ty = SI->getOperand(0)->getType();
+    else if (const auto *store = llvm::dyn_cast<llvm::StoreInst>(inst)) {
+        type = store->getOperand(0)->getType();
     }
-    else if (const llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(I)) {
-        Ty = LI->getType();
+    else if (const auto *load = llvm::dyn_cast<llvm::LoadInst>(inst)) {
+        type = load->getType();
     }
     else {
         return 0;
     }
 
-    if(!Ty->isSized())
+    if(!type->isSized())
         return 0;
 
-    return M.getDataLayout().getTypeAllocSize(Ty);
+    return module.getDataLayout().getTypeAllocSize(type);
 }
 
 llvm::Value* getPtr(llvm::Instruction& inst) {
-    if (auto load = llvm::dyn_cast<llvm::LoadInst>(&inst)) {
+    if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&inst)) {
         assert(load->getNumOperands() == 1 && "load has only operand");
         return load->getPointerOperand();
-    } else if (auto store = llvm::dyn_cast<llvm::StoreInst>(&inst)) {
+    }
+    if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&inst)) {
         assert(store->getNumOperands() == 2 && "store has two operands");
         return store->getPointerOperand();
     }
