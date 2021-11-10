@@ -30,7 +30,7 @@ std::string compileBenchmark(const std::string& path, const std::string& benchma
         std::string completePath = path + "/" + benchmark + "." + extension;
 
         if (fileExists(completePath)) {
-            std::string command = "clang-10 -S -emit-llvm " + completePath + " -o " + targetFile;
+            std::string command = std::string(LLVMCC) + " -S -emit-llvm " + completePath + " -o " + targetFile;
             int returnCode = system(command.c_str());
             if (returnCode == 0)
                 return targetFile;

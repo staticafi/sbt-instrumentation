@@ -27,6 +27,27 @@ else()
 endif()
 
 # --------------------------------------------------
+# find compatible clang
+# --------------------------------------------------
+
+# clang binary uses only major version as suffix since 7.0
+if(${LLVM_PACKAGE_VERSION} VERSION_LESS "7.0")
+    set(CLANG_BINARY clang-${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR})
+else()
+    set(CLANG_BINARY clang-${LLVM_VERSION_MAJOR})
+endif()
+
+# REQUIRED available with CMake 3.18+
+find_program(LLVMCC ${CLANG_BINARY} HINTS ${LLVM_TOOLS_BINARY_DIR}
+                                    # do not use ccache
+                                    NO_SYSTEM_ENVIRONMENT_PATH)
+if(NOT LLVMCC)
+    message(FATAL_ERROR "Bitcode compiler: version compatible with \
+                         LLVM ${LLVM_PACKAGE_VERSION} not found")
+endif()
+message(STATUS "Bitcode compiler: ${LLVMCC}")
+
+# --------------------------------------------------
 # Tests
 # --------------------------------------------------
 
@@ -35,6 +56,7 @@ add_executable(${PROJECT_NAME} tests-main.cpp
                                ${JSON_FILES}
                                ${CMAKE_SOURCE_DIR}/analyses/value_relations_plugin.cpp
 )
+target_compile_options(${PROJECT_NAME} PUBLIC -DLLVMCC="${LLVMCC}")
 target_link_libraries(${PROJECT_NAME} PUBLIC ${libdgvra}
                                              ${libdgllvmvra}
                                       PRIVATE ${LLVM_LIBS} ${JSON_LIBS}
