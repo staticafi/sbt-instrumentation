@@ -23,6 +23,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-rtti")
 # LLVM
 # --------------------------------------------------
 find_package(LLVM REQUIRED CONFIG)
+message(STATUS "LLVM_DIR: " ${LLVM_DIR})
 list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
 include(AddLLVM)
 
@@ -69,6 +70,7 @@ endif()
 add_definitions(-DHAVE_LLVM)
 
 if(DG_PATH)
+  message(STATUS "DG path " ${DG_PATH})
   include_directories(${DG_PATH}/include/)
 else()
   include_directories(${CMAKE_SOURCE_DIR}/dg/include)
@@ -103,8 +105,8 @@ else()
     message(STATUS "System version is older than 1.9.2")
   endif()
 
-  message(STATUS "Using bootsrapped jsoncpp library")
-  set(JSON_FILES jsoncpp.cpp)
+  message(STATUS "Using bootstrapped jsoncpp library")
+  set(JSON_FILES ${CMAKE_SOURCE_DIR}/src/jsoncpp.cpp)
 endif()
 
 # --------------------------------------------------

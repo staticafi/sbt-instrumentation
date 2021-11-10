@@ -32,7 +32,7 @@ endif()
 
 add_executable(${PROJECT_NAME} tests-main.cpp
                                tests.cpp
-                               ../src/jsoncpp.cpp
+                               ${JSON_FILES}
                                ${CMAKE_SOURCE_DIR}/analyses/value_relations_plugin.cpp
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC ${libdgvra}
