@@ -5,11 +5,11 @@
 #endif
 
 #include "dg/llvm/ValueRelations/GraphBuilder.h"
-#include "dg/llvm/ValueRelations/StructureAnalyzer.h"
 #include "dg/llvm/ValueRelations/RelationsAnalyzer.h"
+#include "dg/llvm/ValueRelations/StructureAnalyzer.h"
 
-ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
-: InstrPlugin("ValueRelationsPlugin"), structure(*module, codeGraph) {
+ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module *module)
+        : InstrPlugin("ValueRelationsPlugin"), structure(*module, codeGraph) {
     using namespace dg::vr;
 
     assert(module);
@@ -27,24 +27,24 @@ ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
 // if gep has any zero indices at the beginning, function returns first non-zero index
 // which is not followed by any other index
 // else it returns nullptr instead of the index
-std::pair<const llvm::Value*, const llvm::Type*> getOnlyNonzeroIndex(const llvm::GetElementPtrInst* gep) {
-    const llvm::Value* firstIndex = nullptr;
-    const llvm::Type* readType = gep->getSourceElementType();
+std::pair<const llvm::Value *, const llvm::Type *>
+getOnlyNonzeroIndex(const llvm::GetElementPtrInst *gep) {
+    const llvm::Value *firstIndex = nullptr;
+    const llvm::Type *readType = gep->getSourceElementType();
 
 #if LLVM_VERSION_MAJOR < 5
-    for (const llvm::Value* index : llvm::make_range(gep->idx_begin(), gep->idx_end())) {
+    for (const llvm::Value *index : llvm::make_range(gep->idx_begin(), gep->idx_end())) {
 #else
-    for (const llvm::Value* index : gep->indices()) {
+    for (const llvm::Value *index : gep->indices()) {
 #endif
         // consider only cases when nonzero index is the last
         if (firstIndex)
-            return { nullptr, nullptr };
+            return {nullptr, nullptr};
 
-        if (auto constIndex = llvm::dyn_cast<llvm::ConstantInt>(index)) {
+        if (const auto *constIndex = llvm::dyn_cast<llvm::ConstantInt>(index)) {
             if (constIndex->isZero()) {
-                
                 if (!readType->isArrayTy())
-                    return { nullptr, nullptr };
+                    return {nullptr, nullptr};
 
                 readType = readType->getArrayElementType();
                 continue;
@@ -53,21 +53,20 @@ std::pair<const llvm::Value*, const llvm::Type*> getOnlyNonzeroIndex(const llvm:
 
         firstIndex = index;
     }
-    return { firstIndex, readType };
+    return {firstIndex, readType};
 }
 
 // returns the verdict of gep validity for given relations graph
-std::string ValueRelationsPlugin::isValidForGraph(
-            const dg::vr::ValueRelations& relations,
-            const std::vector<bool> validMemory,
-            const llvm::GetElementPtrInst* gep,
-            uint64_t readSize) const {
+std::string ValueRelationsPlugin::isValidForGraph(const dg::vr::ValueRelations &relations,
+                                                  const std::vector<bool> &validMemory,
+                                                  const llvm::GetElementPtrInst *gep,
+                                                  uint64_t readSize) const {
     using namespace dg::vr;
 
-    const AllocatedArea* area = nullptr;
+    const AllocatedArea *area = nullptr;
     unsigned index = 0;
 
-    for (const llvm::Value* equal : relations.getEqual(gep->getPointerOperand())) {
+    for (const llvm::Value *equal : relations.getEqual(gep->getPointerOperand())) {
         std::tie(index, area) = structure.getAllocatedAreaFor(equal);
         if (area)
             break;
@@ -77,7 +76,7 @@ std::string ValueRelationsPlugin::isValidForGraph(
     if (index > validMemory.size() || !validMemory[index])
         return "maybe"; // memory is not valid at given location
 
-    const std::vector<AllocatedSizeView>& views = area->getAllocatedSizeViews();
+    const std::vector<AllocatedSizeView> &views = area->getAllocatedSizeViews();
     if (views.empty())
         return "unknown"; // the size of allocated memory cannot be determined
 
@@ -85,8 +84,8 @@ std::string ValueRelationsPlugin::isValidForGraph(
         return readSize <= views[0].elementSize ? "true" : "maybe";
     // maybe, because can read i64 from an array of two i32
 
-    const llvm::Value* gepIndex;
-    const llvm::Type* gepType;
+    const llvm::Value *gepIndex;
+    const llvm::Type *gepType;
     std::tie(gepIndex, gepType) = getOnlyNonzeroIndex(gep);
     // if gep has more indices than one, or there are zeros after
     if (!gepIndex)
@@ -95,8 +94,8 @@ std::string ValueRelationsPlugin::isValidForGraph(
     uint64_t gepElem = AllocatedArea::getBytes(gepType);
 
     // DANGER just an arbitrary type
-    llvm::Type* i32 = llvm::Type::getInt32Ty(views[0].elementCount->getContext());
-    const llvm::Constant* zero = llvm::ConstantInt::getSigned(i32, 0);
+    llvm::Type *i32 = llvm::Type::getInt32Ty(views[0].elementCount->getContext());
+    const llvm::Constant *zero = llvm::ConstantInt::getSigned(i32, 0);
 
     // check if index doesnt point before memory
     if (relations.isLesser(gepIndex, zero))
@@ -106,8 +105,7 @@ std::string ValueRelationsPlugin::isValidForGraph(
         return "maybe";
 
     // check if index doesnt point after memory
-    for (const AllocatedSizeView& view : views) {
-
+    for (const AllocatedSizeView &view : views) {
         if (relations.isLesser(gepIndex, view.elementCount)) {
             if (gepElem <= view.elementSize)
                 return readSize <= view.elementSize ? "true" : "maybe";
@@ -119,9 +117,9 @@ std::string ValueRelationsPlugin::isValidForGraph(
     return "maybe";
 }
 
-const llvm::Value* getRealArg(const dg::vr::CallRelation& callRels, const llvm::Value* formalArg) {
-    const llvm::Value* arg = nullptr;
-    for (auto& pair : callRels.equalPairs) {
+const llvm::Value *getRealArg(const dg::vr::CallRelation &callRels, const llvm::Value *formalArg) {
+    const llvm::Value *arg = nullptr;
+    for (const auto &pair : callRels.equalPairs) {
         if (formalArg == pair.first)
             arg = pair.second;
     }
@@ -129,15 +127,15 @@ const llvm::Value* getRealArg(const dg::vr::CallRelation& callRels, const llvm::
     return arg;
 }
 
-std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *size) {
+std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *size) {
     using namespace dg::vr;
-    
+
     // ptr is not a pointer
     if (!ptr->getType()->isPointerTy())
         return "false";
 
     uint64_t readSize = 0;
-    if (auto* constant = llvm::dyn_cast<llvm::ConstantInt>(size)) {
+    if (auto *constant = llvm::dyn_cast<llvm::ConstantInt>(size)) {
         readSize = constant->getLimitedValue();
 
         // size cannot be expressed as uint64_t
@@ -148,26 +146,26 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
         return "maybe";
     }
 
-    assert (readSize > 0 && readSize < ~((uint64_t) 0));
+    assert(readSize > 0 && readSize < ~((uint64_t) 0));
 
-    auto gep = llvm::dyn_cast<llvm::GetElementPtrInst>(ptr);
+    const auto *gep = llvm::dyn_cast<llvm::GetElementPtrInst>(ptr);
     if (!gep)
         return "unknown";
 
-    const ValueRelations& relations = codeGraph.getVRLocation(gep).relations;
-    const std::vector<CallRelation>& callRelations = structure.getCallRelationsFor(gep);
+    const ValueRelations &relations = codeGraph.getVRLocation(gep).relations;
+    const std::vector<CallRelation> &callRelations = structure.getCallRelationsFor(gep);
 
     if (callRelations.empty())
         return isValidForGraph(relations, relations.getValidAreas(), gep, readSize);
 
-    const llvm::Function* function = gep->getFunction();
+    const llvm::Function *function = gep->getFunction();
 
     // else we have to check that access is valid in every case
-    for (const CallRelation& callRelation : callRelations) {
+    for (const CallRelation &callRelation : callRelations) {
         if (structure.hasPreconditions(function)) {
-            for (auto& prec : structure.getPreconditionsFor(function)) {
+            for (const auto &prec : structure.getPreconditionsFor(function)) {
                 assert(callRelation.callSite);
-                const llvm::Value* arg = getRealArg(callRelation, prec.arg);
+                const llvm::Value *arg = getRealArg(callRelation, prec.arg);
                 if (!callRelation.callSite->relations.are(arg, prec.rel, prec.val))
                     return "unknown";
             }
@@ -176,15 +174,16 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
         merged.merge(relations);
 
         bool hasConflict = false;
-        for (auto& equalPair : callRelation.equalPairs) {
-            if (merged.hasConflictingRelation(equalPair.first, equalPair.second, Relations::Type::EQ)) {
+        for (const auto &equalPair : callRelation.equalPairs) {
+            if (merged.hasConflictingRelation(equalPair.first, equalPair.second,
+                                              Relations::Type::EQ)) {
                 hasConflict = true;
                 break; // this vrlocation is unreachable with given parameters
             }
             merged.setEqual(equalPair.first, equalPair.second);
         }
 
-        const ValueRelations& callSiteRelations = callRelation.callSite->relations;
+        const ValueRelations &callSiteRelations = callRelation.callSite->relations;
 
         // this vrlocation is unreachable with relations from given call relation
         hasConflict = hasConflict || !merged.merge(callSiteRelations);
@@ -207,6 +206,6 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
     return "true";
 }
 
-extern "C" InstrPlugin* create_object(llvm::Module* module) {
+extern "C" InstrPlugin *create_object(llvm::Module *module) {
     return new ValueRelationsPlugin(module);
 }
