@@ -43,4 +43,12 @@ if(Catch2_FOUND)
     target_link_libraries(${PROJECT_NAME} PUBLIC Catch2::Catch2)
 endif()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tested-files.json ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+if(SV_BENCHMARKS_PATH)
+    message(STATUS "sv-benchmarks path: " ${SV_BENCHMARKS_PATH})
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tested-files.json.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/tested-files.json @ONLY)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ll-files)
+else()
+    message(WARNING "tests configuration needs SV_BENCHMARKS_PATH"
+                    "set to path to the sv-benchmarks folder")
+endif()

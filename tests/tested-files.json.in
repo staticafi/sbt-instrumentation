@@ -1,5 +1,5 @@
 {
-    "benchmarks_path" : "~/formela/sv-benchmarks/c/",
+    "benchmarks_path" : "@SV_BENCHMARKS_PATH@/c/",
     "benchmark_groups" : {
         "all_correct" : [
             {

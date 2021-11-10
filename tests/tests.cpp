@@ -136,6 +136,7 @@ void testGroup(const std::string& benchmarksPath, Json::Value& group, CheckType 
 TEST_CASE("main") {
 
     std::ifstream tests("tested-files.json");
+    INFO("failed opening tested-files.json")
     REQUIRE(tests.good());
 
     Json::Value root;
