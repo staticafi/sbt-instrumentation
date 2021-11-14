@@ -78,8 +78,68 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            const llvm::GetElementPtrInst *gep,
                                            uint64_t readSize) const {
     const auto *alloca = relations.getInstance<llvm::AllocaInst>(gep->getPointerOperand());
-    if (!alloca || !isValidForGraph(relations, validMemory, alloca, readSize))
+    if (!alloca || !isValidForGraph(relations, validMemory, alloca, readSize)) {
+        const VRLocation *gepLoc = codeGraph.getVRLocation(gep).getSuccLocation(0);
+        const llvm::Value *index = nullptr;
+        for (auto handleRel : relations.getRelated(gep, Relations().slt())) {
+            auto gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first);
+            if (!gep)
+                continue;
+            auto possible = relations.getInstance<llvm::AllocaInst>(
+                    relations.getHandle(gep->getPointerOperand()));
+            if (possible) {
+                alloca = possible;
+                index = *gep->indices().begin();
+            }
+        }
+        if (!alloca)
+            return false;
+        if (!gepLoc->join)
+            return false;
+        const llvm::Type *gepType = gep->getType()->getPointerElementType();
+        uint64_t gepElemSize = AllocatedArea::getBytes(gepType);
+
+        const auto &views = getAllocatedViews(relations, validMemory, alloca);
+
+        auto decisivePairs = getDecisive(*gepLoc);
+
+        for (auto pair : decisivePairs) {
+            const llvm::Value *from;
+            const llvm::Value *decisive;
+            std::tie(from, decisive) = pair;
+
+            if (!relations.contains(decisive) && !relations.has(from, Relations::PT))
+                continue;
+
+            auto &decisiveH = relations.contains(decisive) ? relations.getHandle(decisive)
+                                                           : relations.getPointedTo(from);
+
+            for (auto handleRel : relations.getRelated(decisiveH, Relations().sle())) {
+                if (handleRel.second.has(Relations::EQ))
+                    continue;
+
+                auto &relatedH = handleRel.first;
+
+                auto zero =
+                        llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(gep->getContext()), 0);
+                if (relations.are(zero, Relations::SLT, decisiveH)) {
+                    for (auto view : views) {
+                        if (relations.are(relatedH, Relations::SLE, view.elementCount) &&
+                            relations.are(index, Relations::SLE, view.elementCount)) {
+                            if (gepElemSize <= view.elementSize) {
+                                if (readSize <= view.elementSize) {
+                                    // std::cerr << "    smaller than same-increment value\n";
+                                    return true;
+                                }
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return false;
+    }
 
     const llvm::Value *gepIndex = getRelevantIndex(gep);
     // if gep has more indices than one, or there are zeros after
@@ -126,10 +186,9 @@ ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
     std::vector<std::pair<const llvm::Value *, const llvm::Value *>> result;
     for (auto *leaveEdge : loadLoc.join->loopEnds) {
         assert(leaveEdge->op->isAssumeBool());
-
         for (const llvm::ICmpInst *icmp :
              structure.getRelevantConditions(static_cast<VRAssumeBool *>(leaveEdge->op.get()))) {
-            const ValueRelations &forkRels = leaveEdge->source->relations;
+            const ValueRelations &forkRels = codeGraph.getVRLocation(icmp).relations;
 
             for (const auto &op : icmp->operands()) {
                 if (const auto *inst = llvm::dyn_cast<llvm::Instruction>(&op)) {
@@ -148,7 +207,7 @@ ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
                         auto related = forkRels.getRelated(decisive, Relations().pf());
                         if (related.size() != 1)
                             continue;
-                        from = forkRels.getAny(related.begin()->first);
+                        from = *forkRels.getEqual(related.begin()->first).begin();
                     }
                     assert(from);
                     if (storedToInLoop(*loadLoc.join, from))
@@ -182,7 +241,7 @@ bool ValueRelationsPlugin::isValidForGraph(const Borders &borders, const ValueRe
         else if (highest && !relations.are(handleRel.first, Relations::SLE, *highest))
             return false;
     }
-    if (!highest || !alloc)
+    if (!highest || !alloc || !isValidForGraph(relations, validMemory, alloc, readSize))
         return false;
     if (auto foo = relations.getInstance<llvm::AllocaInst>(*highest)) {
         if (!isValidForGraph(relations, validMemory, foo, readSize))
@@ -232,28 +291,23 @@ bool ValueRelationsPlugin::isValidForGraph(const Borders &borders, const ValueRe
             auto &relatedH = handleRel.first;
 
             if (auto gep = relations.getInstance<llvm::GetElementPtrInst>(relatedH)) {
-                if (relations.are(load->getPointerOperand(), Relations::EQ,
-                                  gep->getPointerOperand()))
-                    return isValidForGraph(relations, validMemory, gep, readSize);
-
+                if (!isValidForGraph(relations, validMemory, gep, readSize))
+                    continue;
                 auto index = getRelevantIndex(gep);
                 for (auto view : views) {
-                    for (auto &smallerSizePair :
-                         relations.getRelated(view.elementCount, Relations().sge())) {
-                        if (relations.getInstance<llvm::AllocaInst>(*highest)) {
-                            if (relations.are(index, Relations::EQ, smallerSizePair.first))
-                                return readSize <= view.elementSize;
-                        } else {
-                            // TODO handle cstrcat
+                    if (relations.getInstance<llvm::AllocaInst>(*highest)) {
+                        if (relations.are(index, Relations::SLE, view.elementCount)) {
+                            return readSize <= view.elementSize;
                         }
+                    } else {
+                        // TODO handle cstrcat
                     }
                 }
             }
 
             auto zero =
                     llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(load->getContext()), 0);
-            if (relations.are(zero, Relations::SLT, relatedH) &&
-                relations.getInstance<llvm::AllocaInst>(*highest)) {
+            if (relations.are(zero, Relations::SLT, decisiveH)) { // TODO check alloca
                 for (auto view : views) {
                     if (relations.are(relatedH, Relations::SLE, view.elementCount)) {
                         if (loadSize <= view.elementSize) {
