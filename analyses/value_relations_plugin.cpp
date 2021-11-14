@@ -76,6 +76,10 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            const std::vector<bool> &validMemory,
                                            const llvm::GetElementPtrInst *gep,
                                            uint64_t readSize) const {
+    const auto *alloca = relations.getInstance<llvm::AllocaInst>(gep->getPointerOperand());
+    if (!alloca || !isValidForGraph(relations, validMemory, alloca, readSize))
+        return false;
+
     const llvm::Value *gepIndex = getRelevantIndex(gep);
     // if gep has more indices than one, or there are zeros after
     if (!gepIndex)
@@ -116,7 +120,9 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
         return isValidForGraph(relations, validMemory, gep, readSize);
     if (const auto *load = llvm::dyn_cast<llvm::LoadInst>(inst))
         return isValidForGraph(relations, validMemory, load, readSize);
-    assert(0 && "unreachable");
+    if (const auto *alloca = llvm::dyn_cast<llvm::AllocaInst>(inst))
+        return isValidForGraph(relations, validMemory, alloca, readSize);
+    return false;
 }
 
 const llvm::Value *getRealArg(const CallRelation &callRels, const llvm::Value *formalArg) {
