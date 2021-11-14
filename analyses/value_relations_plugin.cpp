@@ -246,11 +246,12 @@ bool ValueRelationsPlugin::fillInBorderValues(const std::vector<BorderValue> &bo
                                               ValueRelations &target) const {
     const ValueRelations &entryRels = codeGraph.getEntryLocation(*func).relations;
 
+    VectorSet<const llvm::Value *> paired;
     for (const auto &borderVal : borderValues) {
         for (auto stored : entryRels.getEqual(entryRels.getPointedTo(borderVal.handle))) {
             for (auto from : target.getRelated(stored, Relations().pf())) {
                 const auto *gep = target.getInstance<llvm::GetElementPtrInst>(from.first);
-                if (!gep)
+                if (!gep || paired.contains(gep))
                     continue;
 
                 if (target.are(gep->getPointerOperand(), Relations::EQ, borderVal.from)) {
@@ -259,6 +260,7 @@ bool ValueRelationsPlugin::fillInBorderValues(const std::vector<BorderValue> &bo
                         return false;
 
                     target.set(*h, Relations::EQ, gep);
+                    paired.emplace(gep);
                 }
             }
         }
