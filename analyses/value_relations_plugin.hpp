@@ -47,6 +47,10 @@ class ValueRelationsPlugin : public InstrPlugin {
     dg::vr::ValueRelations::Handle getInitialInThis(const dg::vr::ValueRelations &relations,
                                                     const llvm::Instruction *val) const;
 
+    bool rangeLimitedBy(const dg::vr::ValueRelations &relations, const llvm::Instruction *load,
+                        const llvm::Value *from, const llvm::Value *lower,
+                        dg::vr::ValueRelations::Handle h, const llvm::Value *upper) const;
+
     std::vector<std::pair<const llvm::Value *, const llvm::Value *>>
     getDecisive(const dg::vr::VRLocation &loadLoc) const;
 

@@ -289,6 +289,100 @@ ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
     return result;
 }
 
+bool rangeLimitedBy(const ValueRelations &relations, const llvm::Value *lower,
+                    const ValueRelations::Handle &h, const llvm::Value *upper) {
+    return (relations.are(lower, Relations::SLT, h) && relations.are(h, Relations::SLE, upper)) ||
+           (relations.are(lower, Relations::SLE, h) && relations.are(h, Relations::SLT, upper));
+}
+
+bool rangeLimitedByAny(const ValueRelations &relations, const llvm::Value *lower,
+                       ValueRelations::Handle h, const VectorSet<const llvm::Value *> &uppers) {
+    for (const auto *upper : uppers) {
+        if (rangeLimitedBy(relations, lower, h, upper))
+            return true;
+    }
+    return false;
+}
+
+bool ValueRelationsPlugin::rangeLimitedBy(const ValueRelations &relations,
+                                          const llvm::Instruction *inst, const llvm::Value *from,
+                                          const llvm::Value *lower, ValueRelations::Handle h,
+                                          const llvm::Value *upper) const {
+    auto &initLoadH = getInitialInThis(relations, inst);
+    const auto &loadLoc = *codeGraph.getVRLocation(inst).getSuccLocation(0);
+    if (!loadLoc.join)
+        return false;
+    if (relations.getInstance<llvm::AllocaInst>(initLoadH))
+        return ::rangeLimitedBy(relations, lower, h, upper);
+
+    auto initNPair = getInitial(relations, h);
+    assert(initNPair.first && initNPair.second);
+    const ValueRelations &predRels = *initNPair.first;
+    const auto &initNH = *initNPair.second;
+
+    auto eqvals = predRels.getEqual(initNH);
+    if (eqvals.empty()) {
+        for (const auto *inloopVal : structure.getInloopValues(*loadLoc.join)) {
+            if (inloopVal == inst)
+                break;
+
+            const VRLocation &inloopLoc = *codeGraph.getVRLocation(inloopVal).getSuccLocation(0);
+            if (!inloopLoc.relations.has(from, Relations::PT))
+                break;
+
+            const auto &eqInloops =
+                    inloopLoc.relations.getEqual(inloopLoc.relations.getPointedTo(from));
+            if (!eqInloops.empty()) {
+                eqvals = eqInloops;
+                break;
+            }
+        }
+    }
+    assert(!eqvals.empty());
+    // verify range in this loop
+    if (!rangeLimitedByAny(relations, lower, h, eqvals))
+        return false;
+
+    // verify previous changes
+    for (const auto *initVal : relations.getEqual(initLoadH)) {
+        const auto *initInst = llvm::cast<llvm::Instruction>(initVal);
+        const VRLocation &initLoc = *codeGraph.getVRLocation(initInst).getSuccLocation(0);
+        const ValueRelations &initRels = initLoc.relations;
+
+        for (const auto *splitN : predRels.getEqual(initNH)) {
+            for (const auto &fromPair : predRels.getRelated(splitN, Relations().pf())) {
+                for (const auto *initFrom : predRels.getEqual(fromPair.first)) {
+                    if (!initRels.has(initFrom, Relations::PT))
+                        continue;
+
+                    const auto &otherRelatedH = initRels.getPointedTo(initFrom);
+                    if (rangeLimitedByAny(initRels, splitN, otherRelatedH,
+                                          relations.getEqual(upper)))
+                        return true;
+                }
+            }
+        }
+
+        if (predRels.getEqual(initNH).empty()) {
+            if (!initRels.has(from, Relations::PT) ||
+                !rangeLimitedByAny(initRels, lower, initRels.getPointedTo(from),
+                                   relations.getEqual(upper)))
+                continue;
+
+            for (auto it = codeGraph.backward_dfs_begin(*inst->getFunction(),
+                                                        loadLoc.join->getTreePredecessor());
+                 it != codeGraph.backward_dfs_end(); ++it) {
+                if (!it->relations.has(from, Relations::PT) ||
+                    !it->relations.getEqual(it->relations.getPointedTo(from)).empty())
+                    break;
+                if (it->id == initLoc.id)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            const std::vector<bool> &validMemory,
                                            const llvm::LoadInst *load, uint64_t readSize) const {
@@ -309,16 +403,6 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
         if (!highest || relations.are(*highest, Relations::SLE, handleRel.first))
             highest = &handleRel.first.get();
         else if (highest && !relations.are(handleRel.first, Relations::SLE, *highest))
-            return false;
-    }
-    if (!highest || !alloc || !isValidForGraph(relations, validMemory, alloc, readSize))
-        return false;
-    if (auto foo = relations.getInstance<llvm::AllocaInst>(*highest)) {
-        if (!isValidForGraph(relations, validMemory, foo, readSize))
-            return false;
-    }
-    if (auto foo = relations.getInstance<llvm::GetElementPtrInst>(*highest)) {
-        if (!isValidForGraph(relations, validMemory, foo, readSize))
             return false;
     }
 
