@@ -27,6 +27,18 @@ class ValueRelationsPlugin : public InstrPlugin {
                          const std::vector<bool> &validMemory, const llvm::GetElementPtrInst *gep,
                          uint64_t readSize) const;
 
+    bool satisfiesPreconditions(const dg::vr::CallRelation &callRels,
+                                const llvm::Function *function) const;
+
+    // returns true if all relations were merged without conflict
+    // conflict signifies, that relations' location is not reachable from given
+    // call site
+    bool merge(const dg::vr::ValueRelations &relations, const dg::vr::CallRelation &callRels,
+               dg::vr::ValueRelations &merged) const;
+
+    std::vector<bool> getValidMemory(const dg::vr::ValueRelations &relations,
+                                     const dg::vr::ValueRelations &callRels) const;
+
   public:
     bool supports(const std::string &query) override { return query == "isValidPointer"; }
 

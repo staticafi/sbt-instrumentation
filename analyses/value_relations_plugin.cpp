@@ -113,25 +113,67 @@ const llvm::Value *getRealArg(const CallRelation &callRels, const llvm::Value *f
     return arg;
 }
 
-std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *size) {
-    using namespace dg::vr;
-
-    // ptr is not a pointer
-    if (!ptr->getType()->isPointerTy())
-        return "false";
-
-    uint64_t readSize = 0;
+std::pair<bool, uint64_t> getReadSize(const llvm::Value *size) {
     if (auto *constant = llvm::dyn_cast<llvm::ConstantInt>(size)) {
-        readSize = constant->getLimitedValue();
+        uint64_t readSize = constant->getLimitedValue();
 
-        // size cannot be expressed as uint64_t
-        if (readSize == ~((uint64_t) 0))
-            return "maybe";
-    } else {
-        // size is not constant int
-        return "maybe";
+        // size may not be expressible as uint64_t
+        return {readSize != ~((uint64_t) 0), readSize};
     }
+    return {false, 0};
+}
 
+bool ValueRelationsPlugin::satisfiesPreconditions(const CallRelation &callRels,
+                                                  const llvm::Function *function) const {
+    if (!structure.hasPreconditions(function))
+        return true;
+
+    assert(callRels.callSite);
+    for (auto &prec : structure.getPreconditionsFor(function)) {
+        const llvm::Value *arg = getRealArg(callRels, prec.arg);
+        if (!callRels.callSite->relations.are(arg, prec.rel, prec.val))
+            return false;
+    }
+    return true;
+}
+
+bool ValueRelationsPlugin::merge(const ValueRelations &relations, const CallRelation &callRels,
+                                 ValueRelations &merged) const {
+    merged.merge(relations);
+    for (auto &equalPair : callRels.equalPairs) {
+        if (merged.hasConflictingRelation(equalPair.first, equalPair.second, Relations::EQ)) {
+            return false; // this vrlocation is unreachable with given parameters
+        }
+        merged.setEqual(equalPair.first, equalPair.second);
+    }
+    return merged.merge(callRels.callSite->relations);
+}
+
+std::vector<bool> ValueRelationsPlugin::getValidMemory(const ValueRelations &relations,
+                                                       const ValueRelations &callRels) const {
+    std::vector<bool> validMemory(structure.getNumberOfAllocatedAreas());
+
+    const auto &relationsValidAreas = relations.getValidAreas();
+    const auto &callsiteValidAreas = callRels.getValidAreas();
+
+    if (relationsValidAreas.empty() || callsiteValidAreas.empty())
+        return {};
+
+    assert(relationsValidAreas.size() == callsiteValidAreas.size());
+    for (unsigned i = 0; i < structure.getNumberOfAllocatedAreas(); ++i)
+        validMemory[i] = relationsValidAreas[i] || callsiteValidAreas[i];
+
+    return validMemory;
+}
+
+std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *size) {
+    assert(ptr->getType()->isPointerTy());
+
+    bool correct;
+    uint64_t readSize;
+    std::tie(correct, readSize) = getReadSize(size);
+    if (!correct)
+        return "unknown";
     assert(readSize > 0 && readSize < ~((uint64_t) 0));
 
     const auto *gep = llvm::dyn_cast<llvm::GetElementPtrInst>(ptr);
@@ -148,48 +190,23 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
     const llvm::Function *function = gep->getFunction();
 
     // else we have to check that access is valid in every case
-    for (const CallRelation &callRelation : callRelations) {
-        if (structure.hasPreconditions(function)) {
-            for (const auto &prec : structure.getPreconditionsFor(function)) {
-                assert(callRelation.callSite);
-                const llvm::Value *arg = getRealArg(callRelation, prec.arg);
-                if (!callRelation.callSite->relations.are(arg, prec.rel, prec.val))
-                    return "unknown";
-            }
-        }
+    for (const CallRelation &callRels : callRelations) {
+        if (!satisfiesPreconditions(callRels, function))
+            return "unknown";
+
+        auto validMemory = getValidMemory(relations, callRels.callSite->relations);
+        if (validMemory.empty())
+            return "unknown";
+
         ValueRelations merged;
-        merged.merge(relations);
-
-        bool hasConflict = false;
-        for (const auto &equalPair : callRelation.equalPairs) {
-            if (merged.hasConflictingRelation(equalPair.first, equalPair.second,
-                                              Relations::Type::EQ)) {
-                hasConflict = true;
-                break; // this vrlocation is unreachable with given parameters
-            }
-            merged.setEqual(equalPair.first, equalPair.second);
-        }
-
-        const ValueRelations &callSiteRelations = callRelation.callSite->relations;
-
-        // this vrlocation is unreachable with relations from given call relation
-        hasConflict = hasConflict || !merged.merge(callSiteRelations);
-
-        // since location is unreachable, it does not make sence to qualify the memory access
-        if (hasConflict)
+        // conflict during merge -> location is unreachable from call
+        // therefore it does not make sense to validate a memory access
+        if (!merge(relations, callRels, merged))
             continue;
 
-        std::vector<bool> validMemory(structure.getNumberOfAllocatedAreas());
-
-        if (relations.getValidAreas().empty() || callSiteRelations.getValidAreas().empty())
+        bool result = isValidForGraph(merged, validMemory, gep, readSize);
+        if (!result)
             return "unknown";
-        for (unsigned i = 0; i < structure.getNumberOfAllocatedAreas(); ++i)
-            validMemory[i] = relations.getValidAreas()[i] || callSiteRelations.getValidAreas()[i];
-
-        std::string result =
-                isValidForGraph(merged, validMemory, gep, readSize) ? "true" : "unknown";
-        if (result != "true")
-            return result;
     }
     return "true";
 }
