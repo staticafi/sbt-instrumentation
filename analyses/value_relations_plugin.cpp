@@ -248,14 +248,16 @@ bool ValueRelationsPlugin::fillInBorderValues(const std::vector<BorderValue> &bo
 
     VectorSet<const llvm::Value *> paired;
     for (const auto &borderVal : borderValues) {
-        for (auto stored : entryRels.getEqual(entryRels.getPointedTo(borderVal.handle))) {
+        assert(entryRels.getBorderH(borderVal.id));
+        auto &entryH = *entryRels.getBorderH(borderVal.id);
+        for (auto stored : entryRels.getEqual(entryRels.getPointedTo(entryH))) {
             for (auto from : target.getRelated(stored, Relations().pf())) {
                 const auto *gep = target.getInstance<llvm::GetElementPtrInst>(from.first);
                 if (!gep || paired.contains(gep))
                     continue;
 
                 if (target.are(gep->getPointerOperand(), Relations::EQ, borderVal.from)) {
-                    auto h = target.getCorrespondingBorder(entryRels, borderVal.handle);
+                    auto h = target.getBorderH(borderVal.id);
                     if (!h)
                         return false;
 
