@@ -30,6 +30,29 @@
                 ]
             }
         ],
+        "negative" : [
+            {
+                "name" : "array-memsafety",
+                "benchmarks" : [
+                    "add_last_unsafe",
+                    "bubblesort_unsafe",
+                    "count_down_unsafe",
+                    "cstrcat_unsafe",
+                    "cstrchr_unsafe",
+                    "cstrlen_unsafe",
+                    "cstrncat_unsafe",
+                    "cstrncpy_unsafe",
+                    "cstrpbrk_unsafe",
+                    "knapsack_alloca_unsafe",
+                    "lis_unsafe",
+                    "mult_array_unsafe",
+                    "reverse_array_alloca_unsafe",
+                    "reverse_array_unsafe",
+                    "selectionsort_unsafe",
+                    "stroeder1_unsafe"
+                ]
+            }
+        ],
         "problematic" : [
             {
                 "name" : "array-memsafety",
