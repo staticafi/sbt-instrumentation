@@ -86,7 +86,7 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
             if (!gep)
                 continue;
             auto possible = relations.getInstance<llvm::AllocaInst>(
-                    relations.getHandle(gep->getPointerOperand()));
+                    *relations.getHandle(gep->getPointerOperand()));
             if (possible) {
                 alloca = possible;
                 index = *gep->indices().begin();
@@ -111,7 +111,7 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
             if (!relations.contains(decisive) && !relations.has(from, Relations::PT))
                 continue;
 
-            auto &decisiveH = relations.contains(decisive) ? relations.getHandle(decisive)
+            auto &decisiveH = relations.contains(decisive) ? *relations.getHandle(decisive)
                                                            : relations.getPointedTo(from);
 
             for (auto handleRel : relations.getRelated(decisiveH, Relations().sle())) {
@@ -281,7 +281,7 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
         if (!relations.contains(decisive) && !relations.has(from, Relations::PT))
             continue;
 
-        auto &decisiveH = relations.contains(decisive) ? relations.getHandle(decisive)
+        auto &decisiveH = relations.contains(decisive) ? *relations.getHandle(decisive)
                                                        : relations.getPointedTo(from);
 
         for (auto handleRel : relations.getRelated(decisiveH, Relations().sle())) {
