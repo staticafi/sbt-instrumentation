@@ -103,6 +103,22 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
     return false;
 }
 
+bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
+                                           const std::vector<bool> &validMemory,
+                                           const llvm::LoadInst *load, uint64_t readSize) const {
+    return false;
+}
+
+bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
+                                           const std::vector<bool> &validMemory,
+                                           const llvm::Instruction *inst, uint64_t readSize) const {
+    if (const auto *gep = llvm::dyn_cast<llvm::GetElementPtrInst>(inst))
+        return isValidForGraph(relations, validMemory, gep, readSize);
+    if (const auto *load = llvm::dyn_cast<llvm::LoadInst>(inst))
+        return isValidForGraph(relations, validMemory, load, readSize);
+    assert(0 && "unreachable");
+}
+
 const llvm::Value *getRealArg(const CallRelation &callRels, const llvm::Value *formalArg) {
     const llvm::Value *arg = nullptr;
     for (const auto &pair : callRels.equalPairs) {
@@ -168,6 +184,9 @@ std::vector<bool> ValueRelationsPlugin::getValidMemory(const ValueRelations &rel
 
 std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *size) {
     assert(ptr->getType()->isPointerTy());
+    auto inst = llvm::dyn_cast<llvm::Instruction>(ptr);
+    if (!inst)
+        return "unknown";
 
     bool correct;
     uint64_t readSize;
@@ -176,18 +195,21 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
         return "unknown";
     assert(readSize > 0 && readSize < ~((uint64_t) 0));
 
-    const auto *gep = llvm::dyn_cast<llvm::GetElementPtrInst>(ptr);
-    if (!gep)
+    if (!llvm::isa<llvm::GetElementPtrInst>(inst) && !llvm::isa<llvm::LoadInst>(inst))
         return "unknown";
 
-    const ValueRelations &relations = codeGraph.getVRLocation(gep).relations;
-    const std::vector<CallRelation> &callRelations = structure.getCallRelationsFor(gep);
+    const ValueRelations &relations = codeGraph.getVRLocation(inst).relations;
+    const std::vector<CallRelation> &callRelations = structure.getCallRelationsFor(inst);
 
     if (callRelations.empty())
-        return isValidForGraph(relations, relations.getValidAreas(), gep, readSize) ? "true"
-                                                                                    : "unknown";
+        return isValidForGraph(relations, relations.getValidAreas(), inst, readSize) ? "true"
+                                                                                     : "unknown";
 
-    const llvm::Function *function = gep->getFunction();
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR <= 7
+    const llvm::Function *function = inst->getParent()->getParent();
+#else
+    const llvm::Function *function = inst->getFunction();
+#endif
 
     // else we have to check that access is valid in every case
     for (const CallRelation &callRels : callRelations) {
@@ -204,7 +226,7 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
         if (!merge(relations, callRels, merged))
             continue;
 
-        bool result = isValidForGraph(merged, validMemory, gep, readSize);
+        bool result = isValidForGraph(merged, validMemory, inst, readSize);
         if (!result)
             return "unknown";
     }

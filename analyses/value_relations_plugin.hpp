@@ -26,6 +26,12 @@ class ValueRelationsPlugin : public InstrPlugin {
     bool isValidForGraph(const dg::vr::ValueRelations &relations,
                          const std::vector<bool> &validMemory, const llvm::GetElementPtrInst *gep,
                          uint64_t readSize) const;
+    bool isValidForGraph(const dg::vr::ValueRelations &relations,
+                         const std::vector<bool> &validMemory, const llvm::LoadInst *load,
+                         uint64_t readSize) const;
+    bool isValidForGraph(const dg::vr::ValueRelations &relations,
+                         const std::vector<bool> &validMemory, const llvm::Instruction *inst,
+                         uint64_t readSize) const;
 
     bool satisfiesPreconditions(const dg::vr::CallRelation &callRels,
                                 const llvm::Function *function) const;
