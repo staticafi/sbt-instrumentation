@@ -110,6 +110,76 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
 bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            const std::vector<bool> &validMemory,
                                            const llvm::LoadInst *load, uint64_t readSize) const {
+    for (auto handleRel : relations.getRelated(load, Relations().sge())) {
+        if (handleRel.second.has(Relations::EQ))
+            continue;
+
+        auto maybeBaseH = handleRel.first;
+        auto foo = relations.getInstance<llvm::AllocaInst>(maybeBaseH);
+        if (!foo)
+            continue;
+
+        if (!isValidForGraph(relations, validMemory, foo, readSize))
+            continue;
+        assert(!relations.getEqual(maybeBaseH).empty());
+        const llvm::Value *any = *relations.getEqual(maybeBaseH).begin();
+
+        const llvm::Type *loadType = load->getType();
+        uint64_t loadSize = AllocatedArea::getBytes(loadType);
+
+        const auto &views = getAllocatedViews(relations, validMemory, any);
+
+        for (auto greaterRel : relations.getRelated(load, Relations().sle())) {
+            if (handleRel.second.has(Relations::EQ))
+                continue;
+
+            auto maybeCeilH = greaterRel.first;
+            auto bar = relations.getInstance<llvm::GetElementPtrInst>(maybeCeilH);
+            if (!bar)
+                continue;
+
+            if (!isValidForGraph(relations, validMemory, bar, readSize))
+                continue;
+
+            return true;
+        }
+
+        auto zero = llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(load->getContext()), 0);
+        for (auto related : relations.getRelated(zero, Relations().slt())) {
+            auto equal = relations.getEqual(related.first);
+            if (equal.empty())
+                continue;
+
+            auto val = *relations.getEqual(related.first).begin();
+            const llvm::Instruction *anyRelated = llvm::dyn_cast<llvm::Instruction>(val);
+            if (!anyRelated || anyRelated->getFunction() != load->getFunction())
+                continue;
+
+            for (const AllocatedSizeView &view : views) {
+                if (relations.are(related.first, Relations::SLE, view.elementCount)) {
+                    if (loadSize <= view.elementSize)
+                        return readSize <= view.elementSize;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool ValueRelationsPlugin::isValidForGraph(const dg::vr::ValueRelations &relations,
+                                           const std::vector<bool> &validMemory,
+                                           const llvm::AllocaInst *alloca,
+                                           uint64_t readSize) const {
+    const llvm::Constant *zero = llvm::ConstantInt::getSigned(alloca->getOperand(0)->getType(), 0);
+    const auto &views = getAllocatedViews(relations, validMemory, alloca);
+
+    for (const AllocatedSizeView &view : views) {
+        if (view.elementSize != readSize)
+            continue;
+
+        if (relations.are(zero, Relations::SLT, view.elementCount))
+            return true;
+    }
     return false;
 }
 
@@ -171,6 +241,31 @@ bool ValueRelationsPlugin::merge(const ValueRelations &relations, const CallRela
     return merged.merge(callRels.callSite->relations);
 }
 
+bool ValueRelationsPlugin::fillInBorderValues(const std::vector<BorderValue> &borderValues,
+                                              const llvm::Function *func,
+                                              ValueRelations &target) const {
+    const ValueRelations &entryRels = codeGraph.getEntryLocation(*func).relations;
+
+    for (const auto &borderVal : borderValues) {
+        for (auto stored : entryRels.getEqual(entryRels.getPointedTo(borderVal.handle))) {
+            for (auto from : target.getRelated(stored, Relations().pf())) {
+                const auto *gep = target.getInstance<llvm::GetElementPtrInst>(from.first);
+                if (!gep)
+                    continue;
+
+                if (target.are(gep->getPointerOperand(), Relations::EQ, borderVal.from)) {
+                    auto h = target.getCorrespondingBorder(entryRels, borderVal.handle);
+                    if (!h)
+                        return false;
+
+                    target.set(*h, Relations::EQ, gep);
+                }
+            }
+        }
+    }
+    return true;
+}
+
 std::vector<bool> ValueRelationsPlugin::getValidMemory(const ValueRelations &relations,
                                                        const ValueRelations &callRels) const {
     std::vector<bool> validMemory(structure.getNumberOfAllocatedAreas());
@@ -204,7 +299,7 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
     if (!llvm::isa<llvm::GetElementPtrInst>(inst) && !llvm::isa<llvm::LoadInst>(inst))
         return "unknown";
 
-    const ValueRelations &relations = codeGraph.getVRLocation(inst).relations;
+    const ValueRelations &relations = codeGraph.getVRLocation(inst).getSuccLocation(0)->relations;
     const std::vector<CallRelation> &callRelations = structure.getCallRelationsFor(inst);
 
     if (callRelations.empty())
@@ -231,6 +326,13 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
         // therefore it does not make sense to validate a memory access
         if (!merge(relations, callRels, merged))
             continue;
+
+        if (structure.hasBorderValues(function)) {
+            bool result =
+                    fillInBorderValues(structure.getBorderValuesFor(function), function, merged);
+            if (!result)
+                return "unknown";
+        }
 
         bool result = isValidForGraph(merged, validMemory, inst, readSize);
         if (!result)

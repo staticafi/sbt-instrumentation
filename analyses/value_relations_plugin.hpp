@@ -28,6 +28,9 @@ class ValueRelationsPlugin : public InstrPlugin {
                          const std::vector<bool> &validMemory, const llvm::LoadInst *load,
                          uint64_t readSize) const;
     bool isValidForGraph(const dg::vr::ValueRelations &relations,
+                         const std::vector<bool> &validMemory, const llvm::AllocaInst *alloca,
+                         uint64_t readSize) const;
+    bool isValidForGraph(const dg::vr::ValueRelations &relations,
                          const std::vector<bool> &validMemory, const llvm::Instruction *inst,
                          uint64_t readSize) const;
 
@@ -39,6 +42,9 @@ class ValueRelationsPlugin : public InstrPlugin {
     // call site
     bool merge(const dg::vr::ValueRelations &relations, const dg::vr::CallRelation &callRels,
                dg::vr::ValueRelations &merged) const;
+
+    bool fillInBorderValues(const std::vector<dg::vr::BorderValue> &borderValues,
+                            const llvm::Function *func, dg::vr::ValueRelations &target) const;
 
     std::vector<bool> getValidMemory(const dg::vr::ValueRelations &relations,
                                      const dg::vr::ValueRelations &callRels) const;
