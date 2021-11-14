@@ -1,6 +1,5 @@
 {
-    "benchmarks_path" : "@SV_BENCHMARKS_PATH@/c/",
-    "benchmark_groups" : {
+    "benchmarks_path" : "@SV_BENCHMARKS_PATH@/c/", "benchmark_groups" : {
         "all_correct" : [
             {
                 "name" : "array-memsafety",
@@ -104,12 +103,6 @@
             }
         ],
         "many_01" : [
-            {
-                "name" : "busybox-1.22.0",
-                "benchmarks" : [
-                    "test-incomplete-1"
-                ]
-            },
             {
                 "name" : "uthash-2.0.2",
                 "benchmarks" : [
@@ -252,14 +245,7 @@
                     "uthash_SAX_test5-3",
                     "uthash_SFH_test1-2"
                 ]
-            },
-            {
-                "name" : "busybox-1.22.0",
-                "benchmarks" : [
-                    "tac-1"
-                ]
             }
-
         ]
     }
 }
