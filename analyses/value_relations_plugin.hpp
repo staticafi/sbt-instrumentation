@@ -39,6 +39,14 @@ class ValueRelationsPlugin : public InstrPlugin {
                          uint64_t readSize) const;
 
     bool storedToInLoop(const dg::vr::VRLocation &join, const llvm::Value *from) const;
+    std::pair<const dg::vr::ValueRelations *, dg::vr::ValueRelations::HandlePtr>
+    getInitial(const dg::vr::ValueRelations &relations,
+               const dg::vr::ValueRelations::Handle &h) const;
+    std::pair<const dg::vr::ValueRelations *, dg::vr::ValueRelations::HandlePtr>
+    getInitial(const dg::vr::ValueRelations &relations, const llvm::Instruction *val) const;
+    dg::vr::ValueRelations::Handle getInitialInThis(const dg::vr::ValueRelations &relations,
+                                                    const llvm::Instruction *val) const;
+
     std::vector<std::pair<const llvm::Value *, const llvm::Value *>>
     getDecisive(const dg::vr::VRLocation &loadLoc) const;
 

@@ -181,6 +181,76 @@ bool ValueRelationsPlugin::storedToInLoop(const VRLocation &join, const llvm::Va
     return false;
 }
 
+std::pair<const ValueRelations *, ValueRelations::HandlePtr>
+ValueRelationsPlugin::getInitial(const ValueRelations &relations,
+                                 const ValueRelations::Handle &h) const {
+    std::pair<const ValueRelations *, ValueRelations::HandlePtr> result{nullptr, nullptr};
+
+    for (const auto *val : relations.getEqual(h)) {
+        if (const auto *inst = llvm::dyn_cast<llvm::Instruction>(val)) {
+            auto thisH = getInitial(relations, inst);
+            if (!thisH.second)
+                continue;
+            if (!result.second || result.second == thisH.second)
+                result = thisH;
+            else
+                assert(0);
+        }
+    }
+    return result;
+}
+
+size_t countIntoLoopEdges(const VRLocation &loc) {
+    assert(loc.join);
+    size_t count = 0;
+    for (size_t i = 0; i < loc.succsSize(); ++i) {
+        const auto *succEdge = loc.getSuccEdge(i);
+        if (succEdge->target->join == loc.join)
+            ++count;
+    }
+    return count;
+}
+
+std::pair<const ValueRelations *, ValueRelations::HandlePtr>
+ValueRelationsPlugin::getInitial(const ValueRelations &relations,
+                                 const llvm::Instruction *val) const {
+    const VRLocation *valLoc = codeGraph.getVRLocation(val).getSuccLocation(0);
+    assert(valLoc->join);
+
+    const VRLocation &predLoc = valLoc->join->getTreePredecessor();
+    const ValueRelations &predGraph = predLoc.relations;
+
+    const auto &valFroms = RelationsAnalyzer::getFroms(relations, val);
+    if (valFroms.empty())
+        return {nullptr, nullptr};
+    if (predGraph.has(valFroms.back(), Relations::PT))
+        return {&predGraph, RelationsAnalyzer::getHandleFromFroms(predGraph, valFroms)};
+
+    for (auto it = ++codeGraph.dfs_begin(*val->getFunction(), *valLoc->join);
+         it != codeGraph.dfs_end(); ++it) {
+        if (it->join != valLoc->join) {
+            it.skipSuccessors();
+            continue;
+        }
+        if (countIntoLoopEdges(*it) > 1)
+            break;
+        if (it->relations.has(valFroms.back(), Relations::PT))
+            return {&it->relations, RelationsAnalyzer::getHandleFromFroms(it->relations, valFroms)};
+    }
+    return {nullptr, nullptr};
+}
+
+ValueRelations::Handle ValueRelationsPlugin::getInitialInThis(const ValueRelations &relations,
+                                                              const llvm::Instruction *val) const {
+    auto pair = getInitial(relations, val);
+    assert(pair.first && pair.second);
+
+    auto *result =
+            RelationsAnalyzer::getCorrespondingByContent(relations, *pair.first, *pair.second);
+    assert(result);
+    return *result;
+}
+
 std::vector<std::pair<const llvm::Value *, const llvm::Value *>>
 ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
     std::vector<std::pair<const llvm::Value *, const llvm::Value *>> result;
