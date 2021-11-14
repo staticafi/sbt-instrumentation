@@ -104,13 +104,12 @@ void testBenchmark(const std::string &path, const std::string &benchmark, CheckT
                     continue;
 
                 std::string answer = plugin.query("isValidPointer", {ptr, size});
+                INFO(dg::debug::getValName(ptr));
 
-                if (llvm::isa<llvm::GetElementPtrInst>(ptr)) {
+                if (!llvm::isa<llvm::AllocaInst>(ptr)) {
                     if (type == CheckType::REQUIRE_TRUE) {
-                        INFO(dg::debug::getValName(ptr));
                         CHECK(answer == "true");
                     } else if (type == CheckType::PRINT_ALL) {
-                        INFO(dg::debug::getValName(ptr));
                         INFO(answer);
                         CHECK(false); // force printing of info messages
                     } else {
