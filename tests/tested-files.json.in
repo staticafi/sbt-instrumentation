@@ -13,7 +13,13 @@
                     "java_BubbleSort-alloca-1",
                     "lis-alloca-1",
                     "mult_array-alloca-1",
-                    "selectionsort-alloca-1"
+                    "selectionsort-alloca-1",
+                    "cstrlen-alloca-2",
+                    "openbsd_cbzero-alloca-2",
+                    "openbsd_cmemchr-alloca-2",
+                    "openbsd_cmemset-alloca-1",
+                    "openbsd_cstrlen-alloca-1",
+                    "strreplace-alloca-2"
                 ]
             },
             {
