@@ -126,34 +126,34 @@ ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
     std::vector<std::pair<const llvm::Value *, const llvm::Value *>> result;
     for (auto *leaveEdge : loadLoc.join->loopEnds) {
         assert(leaveEdge->op->isAssumeBool());
-        const llvm::ICmpInst *icmp = llvm::dyn_cast<llvm::ICmpInst>(
-                static_cast<VRAssumeBool *>(leaveEdge->op.get())->getValue());
-        if (!icmp)
-            continue;
 
-        const ValueRelations &forkRels = leaveEdge->source->relations;
-        for (const auto &op : icmp->operands()) {
-            if (const auto *inst = llvm::dyn_cast<llvm::Instruction>(&op)) {
-                auto load = forkRels.getInstance<llvm::LoadInst>(inst);
-                const llvm::Value *decisive = nullptr;
-                if (load && !forkRels.getInstance<llvm::AllocaInst>(load->getPointerOperand()))
-                    decisive = load->getPointerOperand();
-                else
-                    decisive = inst;
-                assert(decisive);
+        for (const llvm::ICmpInst *icmp :
+             structure.getRelevantConditions(static_cast<VRAssumeBool *>(leaveEdge->op.get()))) {
+            const ValueRelations &forkRels = leaveEdge->source->relations;
 
-                const llvm::Value *from = nullptr;
-                if (auto load = llvm::dyn_cast<llvm::LoadInst>(decisive))
-                    from = load->getPointerOperand();
-                else {
-                    auto related = forkRels.getRelated(decisive, Relations().pf());
-                    if (related.size() != 1)
-                        continue;
-                    from = forkRels.getAny(related.begin()->first);
+            for (const auto &op : icmp->operands()) {
+                if (const auto *inst = llvm::dyn_cast<llvm::Instruction>(&op)) {
+                    auto load = forkRels.getInstance<llvm::LoadInst>(inst);
+                    const llvm::Value *decisive = nullptr;
+                    if (load && !forkRels.getInstance<llvm::AllocaInst>(load->getPointerOperand()))
+                        decisive = load->getPointerOperand();
+                    else
+                        decisive = inst;
+                    assert(decisive);
+
+                    const llvm::Value *from = nullptr;
+                    if (auto load = llvm::dyn_cast<llvm::LoadInst>(decisive))
+                        from = load->getPointerOperand();
+                    else {
+                        auto related = forkRels.getRelated(decisive, Relations().pf());
+                        if (related.size() != 1)
+                            continue;
+                        from = forkRels.getAny(related.begin()->first);
+                    }
+                    assert(from);
+                    if (storedToInLoop(*loadLoc.join, from))
+                        result.emplace_back(from, decisive);
                 }
-                assert(from);
-                if (storedToInLoop(*loadLoc.join, from))
-                    result.emplace_back(from, decisive);
             }
         }
     }
