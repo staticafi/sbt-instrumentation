@@ -219,7 +219,7 @@ ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
     return result;
 }
 
-bool ValueRelationsPlugin::isValidForGraph(const Borders &borders, const ValueRelations &relations,
+bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            const std::vector<bool> &validMemory,
                                            const llvm::LoadInst *load, uint64_t readSize) const {
     auto *loadLoc = codeGraph.getVRLocation(load).getSuccLocation(0);
@@ -341,13 +341,13 @@ bool ValueRelationsPlugin::isValidForGraph(const dg::vr::ValueRelations &relatio
     return false;
 }
 
-bool ValueRelationsPlugin::isValidForGraph(const Borders &borders, const ValueRelations &relations,
+bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            const std::vector<bool> &validMemory,
                                            const llvm::Instruction *inst, uint64_t readSize) const {
     if (const auto *gep = llvm::dyn_cast<llvm::GetElementPtrInst>(inst))
         return isValidForGraph(relations, validMemory, gep, readSize);
     if (const auto *load = llvm::dyn_cast<llvm::LoadInst>(inst))
-        return isValidForGraph(borders, relations, validMemory, load, readSize);
+        return isValidForGraph(relations, validMemory, load, readSize);
     if (const auto *alloca = llvm::dyn_cast<llvm::AllocaInst>(inst))
         return isValidForGraph(relations, validMemory, alloca, readSize);
     return false;
@@ -399,25 +399,33 @@ bool ValueRelationsPlugin::merge(const ValueRelations &relations, const CallRela
     return merged.merge(callRels.callSite->relations);
 }
 
-Borders getBorderVals(const std::vector<BorderValue> &borderValues,
-                      const ValueRelations &relations) {
-    Borders result;
+bool ValueRelationsPlugin::fillInBorderVals(const llvm::Function *function,
+                                            ValueRelations &relations) const {
+    if (!structure.hasBorderValues(function))
+        return true;
 
-    for (const auto &borderVal : borderValues) {
+    for (const auto &borderVal : structure.getBorderValuesFor(function)) {
         auto *idH = relations.getBorderH(borderVal.id);
         if (!idH)
             continue;
         for (auto from : relations.getRelated(borderVal.stored, Relations().pf())) {
             const auto *gep = relations.getInstance<llvm::GetElementPtrInst>(from.first);
-            if (!gep)
+            if (!gep || !relations.are(gep->getPointerOperand(), Relations::EQ, borderVal.from))
                 continue;
 
-            if (relations.are(gep->getPointerOperand(), Relations::EQ, borderVal.from))
-                // TODO check whether value may have been overwritten
-                result.emplace(borderVal.id, gep);
+            for (const auto *val : relations.getEqual(gep->getPointerOperand())) {
+                if (const auto *arg = llvm::dyn_cast<llvm::Argument>(val)) {
+                    // each passed pointer must be derived
+                    // from different memory
+                    if (arg != borderVal.from)
+                        return false;
+                }
+            }
+
+            relations.set(borderVal.id, Relations::EQ, gep);
         }
     }
-    return result;
+    return true;
 }
 
 std::vector<bool> ValueRelationsPlugin::getValidMemory(const ValueRelations &relations,
@@ -457,9 +465,8 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
     const std::vector<CallRelation> &callRelations = structure.getCallRelationsFor(inst);
 
     if (callRelations.empty())
-        return isValidForGraph({}, relations, relations.getValidAreas(), inst, readSize)
-                       ? "true"
-                       : "unknown";
+        return isValidForGraph(relations, relations.getValidAreas(), inst, readSize) ? "true"
+                                                                                     : "unknown";
 
 #if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR <= 7
     const llvm::Function *function = inst->getParent()->getParent();
@@ -482,14 +489,12 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
         if (!merge(relations, callRels, merged))
             continue;
 
-        Borders borders;
-        if (structure.hasBorderValues(function)) {
-            borders = getBorderVals(structure.getBorderValuesFor(function), merged);
-            for (auto pair : borders)
-                merged.set(*merged.getBorderH(pair.first), Relations::EQ, pair.second);
-        }
+        bool result = fillInBorderVals(function, merged);
+        if (!result)
+            return "unknown";
 
-        bool result = isValidForGraph(borders, merged, validMemory, inst, readSize);
+
+        result = isValidForGraph(merged, validMemory, inst, readSize);
         if (!result)
             return "unknown";
     }
