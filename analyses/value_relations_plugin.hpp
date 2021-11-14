@@ -17,11 +17,15 @@ class ValueRelationsPlugin : public InstrPlugin {
 
     const unsigned maxPass = 20;
 
-    std::string isValidPointer(llvm::Value *ptr, llvm::Value *size);
+    std::vector<dg::vr::AllocatedSizeView>
+    getAllocatedViews(const dg::vr::ValueRelations &relations, const std::vector<bool> &validMemory,
+                      const llvm::Value *ptr) const;
 
-    std::string isValidForGraph(const dg::vr::ValueRelations &relations,
-                                const std::vector<bool> &validMemory,
-                                const llvm::GetElementPtrInst *gep, uint64_t readSize) const;
+    std::string isValidPointer(llvm::Value *ptr, llvm::Value *len);
+
+    bool isValidForGraph(const dg::vr::ValueRelations &relations,
+                         const std::vector<bool> &validMemory, const llvm::GetElementPtrInst *gep,
+                         uint64_t readSize) const;
 
   public:
     bool supports(const std::string &query) override { return query == "isValidPointer"; }
