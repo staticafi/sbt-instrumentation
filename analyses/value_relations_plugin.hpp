@@ -21,8 +21,6 @@ class ValueRelationsPlugin : public InstrPlugin {
     getAllocatedViews(const dg::vr::ValueRelations &relations, const std::vector<bool> &validMemory,
                       const llvm::Value *ptr) const;
 
-    std::string isValidPointer(llvm::Value *ptr, llvm::Value *len);
-
     bool isValidForGraph(const dg::vr::ValueRelations &relations,
                          const std::vector<bool> &validMemory, const llvm::GetElementPtrInst *gep,
                          uint64_t readSize) const;
@@ -44,6 +42,8 @@ class ValueRelationsPlugin : public InstrPlugin {
 
     std::vector<bool> getValidMemory(const dg::vr::ValueRelations &relations,
                                      const dg::vr::ValueRelations &callRels) const;
+
+    std::string isValidPointer(llvm::Value *ptr, llvm::Value *len);
 
   public:
     bool supports(const std::string &query) override { return query == "isValidPointer"; }
