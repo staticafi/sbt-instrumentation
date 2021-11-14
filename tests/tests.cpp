@@ -152,6 +152,8 @@ TEST_CASE("main") {
         testGroup(benchmarksPath, groups["problematic"], CheckType::PRINT_ALL);
     }
 
+    SECTION("cstr") { testGroup(benchmarksPath, groups["all_cstr"], CheckType::REQUIRE_TRUE); }
+
     SECTION("old_problematic") {
         testGroup(benchmarksPath, groups["old_problematic"], CheckType::PRINT_NONE);
     }
