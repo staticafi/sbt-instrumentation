@@ -386,44 +386,29 @@ bool ValueRelationsPlugin::rangeLimitedBy(const ValueRelations &relations,
 bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            const std::vector<bool> &validMemory,
                                            const llvm::LoadInst *load, uint64_t readSize) const {
+    const auto *alloca = RelationsAnalyzer::getOrigin(relations, load);
+    if (!alloca || !isValidForGraph(relations, validMemory, alloca, readSize))
+        return false;
+
     auto *loadLoc = codeGraph.getVRLocation(load).getSuccLocation(0);
-
-    ValueRelations::HandlePtr highest = nullptr;
-    const llvm::AllocaInst *alloc = nullptr;
-    for (auto handleRel : relations.getRelated(load, Relations().sge())) {
-        if (handleRel.second.has(Relations::EQ))
-            continue;
-
-        auto possible = relations.getInstance<llvm::AllocaInst>(handleRel.first);
-        if (possible) {
-            assert(!alloc);
-            alloc = possible;
-        }
-
-        if (!highest || relations.are(*highest, Relations::SLE, handleRel.first))
-            highest = &handleRel.first.get();
-        else if (highest && !relations.are(handleRel.first, Relations::SLE, *highest))
-            return false;
-    }
-
     if (!loadLoc->join) {
         for (auto handleRel : relations.getRelated(load, Relations().sle())) {
-            if (handleRel.second.has(Relations::EQ))
-                continue;
-
-            // check same origin
-            if (auto foo = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first)) {
-                if (isValidForGraph(relations, validMemory, foo, readSize))
+            if (const auto *gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first)) {
+                if (relations.are(gep->getPointerOperand(), Relations::EQ, alloca) &&
+                    isValidForGraph(relations, validMemory, gep, readSize)) {
                     return true;
+                }
             }
         }
         return false;
     }
 
+    const auto &init = getInitialInThis(relations, load);
+
     const llvm::Type *loadType = load->getType();
     uint64_t loadSize = AllocatedArea::getBytes(loadType);
 
-    const auto &views = getAllocatedViews(relations, validMemory, alloc);
+    const auto &views = getAllocatedViews(relations, validMemory, alloca);
 
     auto decisivePairs = getDecisive(*loadLoc);
 
@@ -449,7 +434,7 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                     continue;
                 auto index = getRelevantIndex(gep);
                 for (auto view : views) {
-                    if (relations.getInstance<llvm::AllocaInst>(*highest)) {
+                    if (relations.getInstance<llvm::AllocaInst>(init)) {
                         if (relations.are(index, Relations::SLE, view.elementCount)) {
                             return readSize <= view.elementSize;
                         }
@@ -458,19 +443,17 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                     }
                 }
             }
+        }
 
-            auto zero =
-                    llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(load->getContext()), 0);
-            if (relations.are(zero, Relations::SLT, decisiveH)) { // TODO check alloca
-                for (auto view : views) {
-                    if (relations.are(relatedH, Relations::SLE, view.elementCount)) {
-                        if (loadSize <= view.elementSize) {
-                            if (readSize <= view.elementSize) {
-                                return true;
-                            }
-                            return false;
-                        }
-                    }
+        const auto *zero =
+                llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(load->getContext()), 0);
+
+        for (auto view : views) {
+            if (rangeLimitedBy(relations, load, from, zero, decisiveH, view.elementCount)) {
+                if (loadSize <= view.elementSize) {
+                    if (readSize <= view.elementSize)
+                        return true;
+                    return false;
                 }
             }
         }
