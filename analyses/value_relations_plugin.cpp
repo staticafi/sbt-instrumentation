@@ -9,6 +9,7 @@
 #include "dg/llvm/ValueRelations/StructureAnalyzer.h"
 
 using namespace dg::vr;
+using Borders = ValueRelationsPlugin::Borders;
 
 ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module *module)
         : InstrPlugin("ValueRelationsPlugin"), structure(*module, codeGraph) {
@@ -100,65 +101,168 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
             continue;
 
         if (relations.are(gepIndex, Relations::SLT, view.elementCount)) {
-            if (gepElemSize <= view.elementSize)
-                return readSize <= view.elementSize;
+            if (gepElemSize <= view.elementSize) {
+                if (readSize <= view.elementSize) {
+                    return true;
+                }
+                return false;
+            }
         }
     }
     return false;
 }
 
+bool ValueRelationsPlugin::storedToInLoop(const VRLocation &join, const llvm::Value *from) const {
+    for (const auto *val : structure.getInloopValues(join)) {
+        const auto *store = llvm::dyn_cast<llvm::LoadInst>(val);
+        if (store && store->getPointerOperand() == from)
+            return true;
+    }
+    return false;
+}
+
+std::vector<std::pair<const llvm::Value *, const llvm::Value *>>
+ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
+    std::vector<std::pair<const llvm::Value *, const llvm::Value *>> result;
+    for (auto *leaveEdge : loadLoc.join->loopEnds) {
+        assert(leaveEdge->op->isAssumeBool());
+        const llvm::ICmpInst *icmp = llvm::dyn_cast<llvm::ICmpInst>(
+                static_cast<VRAssumeBool *>(leaveEdge->op.get())->getValue());
+        if (!icmp)
+            continue;
+
+        const ValueRelations &forkRels = leaveEdge->source->relations;
+        for (const auto &op : icmp->operands()) {
+            if (const auto *inst = llvm::dyn_cast<llvm::Instruction>(&op)) {
+                auto load = forkRels.getInstance<llvm::LoadInst>(inst);
+                const llvm::Value *decisive = nullptr;
+                if (load && !forkRels.getInstance<llvm::AllocaInst>(load->getPointerOperand()))
+                    decisive = load->getPointerOperand();
+                else
+                    decisive = inst;
+                assert(decisive);
+
+                const llvm::Value *from = nullptr;
+                if (auto load = llvm::dyn_cast<llvm::LoadInst>(decisive))
+                    from = load->getPointerOperand();
+                else {
+                    auto related = forkRels.getRelated(decisive, Relations().pf());
+                    if (related.size() != 1)
+                        continue;
+                    from = forkRels.getAny(related.begin()->first);
+                }
+                assert(from);
+                if (storedToInLoop(*loadLoc.join, from))
+                    result.emplace_back(from, decisive);
+            }
+        }
+    }
+    return result;
+}
+
 bool ValueRelationsPlugin::isValidForGraph(const Borders &borders, const ValueRelations &relations,
                                            const std::vector<bool> &validMemory,
                                            const llvm::LoadInst *load, uint64_t readSize) const {
+    auto *loadLoc = codeGraph.getVRLocation(load).getSuccLocation(0);
+
+    ValueRelations::HandlePtr highest = nullptr;
+    const llvm::AllocaInst *alloc = nullptr;
     for (auto handleRel : relations.getRelated(load, Relations().sge())) {
         if (handleRel.second.has(Relations::EQ))
             continue;
 
-        auto maybeBaseH = handleRel.first;
-        auto foo = relations.getInstance<llvm::AllocaInst>(maybeBaseH);
-        if (!foo)
-            continue;
+        auto possible = relations.getInstance<llvm::AllocaInst>(handleRel.first);
+        if (possible) {
+            assert(!alloc);
+            alloc = possible;
+        }
 
+        if (!highest || relations.are(*highest, Relations::SLE, handleRel.first))
+            highest = &handleRel.first.get();
+        else if (highest && !relations.are(handleRel.first, Relations::SLE, *highest))
+            return false;
+    }
+    if (!highest || !alloc)
+        return false;
+    if (auto foo = relations.getInstance<llvm::AllocaInst>(*highest)) {
         if (!isValidForGraph(relations, validMemory, foo, readSize))
-            continue;
-        assert(!relations.getEqual(maybeBaseH).empty());
-        const llvm::Value *any = *relations.getEqual(maybeBaseH).begin();
+            return false;
+    }
+    if (auto foo = relations.getInstance<llvm::GetElementPtrInst>(*highest)) {
+        if (!isValidForGraph(relations, validMemory, foo, readSize))
+            return false;
+    }
 
-        const llvm::Type *loadType = load->getType();
-        uint64_t loadSize = AllocatedArea::getBytes(loadType);
-
-        const auto &views = getAllocatedViews(relations, validMemory, any);
-
-        for (auto greaterRel : relations.getRelated(load, Relations().sle())) {
+    if (!loadLoc->join) {
+        for (auto handleRel : relations.getRelated(load, Relations().sle())) {
             if (handleRel.second.has(Relations::EQ))
                 continue;
 
-            auto maybeCeilH = greaterRel.first;
-            auto bar = relations.getInstance<llvm::GetElementPtrInst>(maybeCeilH);
-            if (!bar)
-                continue;
-
-            if (!isValidForGraph(relations, validMemory, bar, readSize))
-                continue;
-
-            return true;
+            // check same origin
+            if (auto foo = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first)) {
+                if (isValidForGraph(relations, validMemory, foo, readSize))
+                    return true;
+            }
         }
+        return false;
+    }
 
-        auto zero = llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(load->getContext()), 0);
-        for (auto related : relations.getRelated(zero, Relations().slt())) {
-            auto equal = relations.getEqual(related.first);
-            if (equal.empty())
+    const llvm::Type *loadType = load->getType();
+    uint64_t loadSize = AllocatedArea::getBytes(loadType);
+
+    const auto &views = getAllocatedViews(relations, validMemory, alloc);
+
+    auto decisivePairs = getDecisive(*loadLoc);
+
+    for (auto pair : decisivePairs) {
+        const llvm::Value *from;
+        const llvm::Value *decisive;
+        std::tie(from, decisive) = pair;
+
+        if (!relations.contains(decisive) && !relations.has(from, Relations::PT))
+            continue;
+
+        auto &decisiveH = relations.contains(decisive) ? relations.getHandle(decisive)
+                                                       : relations.getPointedTo(from);
+
+        for (auto handleRel : relations.getRelated(decisiveH, Relations().sle())) {
+            if (handleRel.second.has(Relations::EQ))
                 continue;
 
-            auto val = *relations.getEqual(related.first).begin();
-            const llvm::Instruction *anyRelated = llvm::dyn_cast<llvm::Instruction>(val);
-            if (!anyRelated || anyRelated->getFunction() != load->getFunction())
-                continue;
+            auto &relatedH = handleRel.first;
 
-            for (const AllocatedSizeView &view : views) {
-                if (relations.are(related.first, Relations::SLE, view.elementCount)) {
-                    if (loadSize <= view.elementSize)
-                        return readSize <= view.elementSize;
+            if (auto gep = relations.getInstance<llvm::GetElementPtrInst>(relatedH)) {
+                if (relations.are(load->getPointerOperand(), Relations::EQ,
+                                  gep->getPointerOperand()))
+                    return isValidForGraph(relations, validMemory, gep, readSize);
+
+                auto index = getRelevantIndex(gep);
+                for (auto view : views) {
+                    for (auto &smallerSizePair :
+                         relations.getRelated(view.elementCount, Relations().sge())) {
+                        if (relations.getInstance<llvm::AllocaInst>(*highest)) {
+                            if (relations.are(index, Relations::EQ, smallerSizePair.first))
+                                return readSize <= view.elementSize;
+                        } else {
+                            // TODO handle cstrcat
+                        }
+                    }
+                }
+            }
+
+            auto zero =
+                    llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(load->getContext()), 0);
+            if (relations.are(zero, Relations::SLT, relatedH) &&
+                relations.getInstance<llvm::AllocaInst>(*highest)) {
+                for (auto view : views) {
+                    if (relations.are(relatedH, Relations::SLE, view.elementCount)) {
+                        if (loadSize <= view.elementSize) {
+                            if (readSize <= view.elementSize) {
+                                return true;
+                            }
+                            return false;
+                        }
+                    }
                 }
             }
         }
@@ -241,7 +345,6 @@ bool ValueRelationsPlugin::merge(const ValueRelations &relations, const CallRela
     return merged.merge(callRels.callSite->relations);
 }
 
-using Borders = ValueRelationsPlugin::Borders;
 Borders getBorderVals(const std::vector<BorderValue> &borderValues,
                       const ValueRelations &relations) {
     Borders result;

@@ -38,6 +38,10 @@ class ValueRelationsPlugin : public InstrPlugin {
                          const std::vector<bool> &validMemory, const llvm::Instruction *inst,
                          uint64_t readSize) const;
 
+    bool storedToInLoop(const dg::vr::VRLocation &join, const llvm::Value *from) const;
+    std::vector<std::pair<const llvm::Value *, const llvm::Value *>>
+    getDecisive(const dg::vr::VRLocation &loadLoc) const;
+
     bool satisfiesPreconditions(const dg::vr::CallRelation &callRels,
                                 const llvm::Function *function) const;
 
