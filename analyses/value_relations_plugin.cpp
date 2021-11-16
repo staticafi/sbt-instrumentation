@@ -316,7 +316,9 @@ bool ValueRelationsPlugin::rangeLimitedBy(const ValueRelations &relations,
         return ::rangeLimitedBy(relations, lower, h, upper);
 
     auto initNPair = getInitial(relations, h);
-    assert(initNPair.first && initNPair.second);
+    if (!initNPair.first || !initNPair.second)
+        return false;
+
     const ValueRelations &predRels = *initNPair.first;
     const auto &initNH = *initNPair.second;
 
