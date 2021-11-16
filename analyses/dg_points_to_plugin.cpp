@@ -489,29 +489,11 @@ bool PointsToPlugin::getPointsTo(llvm::Value* a, std::vector<llvm::Value*>& ptse
 }
 
 static std::set<PSNode *>
-gatherReachableObjects(dg::pta::PointerAnalysisFSInv::MemoryMapT *mm) {
+gatherReachableObjects(dg::pta::PointerAnalysisFSInv::MemoryMapT *mm,
+                       const std::set<PSNode *>& from) {
     // FIXME: use proper queue...
-    std::set<PSNode *> reachable;
-
-    std::set<PSNode *> queue;
-    for (auto& it : *mm) {
-        // skip allocations not in main and also heap objects
-        // (which cannot stand on its own in the code
-        // -- their address must be stored somewhere)
-        PSNodeAlloc *target = PSNodeAlloc::cast(it.first);
-        if (target->isHeap())
-            continue;
-        if (auto val = target->getUserData<llvm::Value>()) {
-            if (auto A = llvm::dyn_cast<llvm::AllocaInst>(val)) {
-                if (!A->getParent()->getParent()->getName().equals("main")) {
-                    continue;
-                }
-            }
-        }
-
-        queue.insert(it.first);
-        reachable.insert(it.first);
-    }
+    std::set<PSNode *> reachable = from;
+    std::set<PSNode *> queue = from;
 
     while (!queue.empty()) {
         PSNode *obj = *queue.begin();
@@ -531,6 +513,38 @@ gatherReachableObjects(dg::pta::PointerAnalysisFSInv::MemoryMapT *mm) {
         }
     }
     return reachable;
+}
+
+static std::set<PSNode *>
+overwrittenObjects(dg::pta::PointerAnalysisFSInv::MemoryMapT *pm,
+                   dg::pta::PointerAnalysisFSInv::MemoryMapT *mm) {
+    std::set<PSNode *> missing;
+    for (auto &pit : *pm) {
+        auto it = mm->find(pit.first);
+        if (it == mm->end()) {
+            missing.insert(pit.first);
+            continue;
+        }
+        for (auto &pit2 : *(pit.second.get())) {
+            auto off = pit2.first;
+            auto &S = pit2.second;
+
+            auto it2 = it->second->find(off);
+            if (it2 == it->second->end()) {
+                for (const auto& ptr : S) {
+                    missing.insert(ptr.target);
+                }
+                continue;
+            }
+
+            for (const auto& ptr : S) {
+                if (it2->second.count(ptr) == 0) {
+                    missing.insert(ptr.target);
+                }
+            }
+        }
+    }
+    return missing;
 }
 
 ///
@@ -553,26 +567,21 @@ std::string PointsToPlugin::storeMayLeak(llvm::Value *v) {
         return "maybe";
     }
 
-    auto sobjects = gatherReachableObjects(mm);
-
     for (auto *pred : snode->predecessors()) {
         auto pm = pred->getData<dg::pta::PointerAnalysisFSInv::MemoryMapT>();
         if (!pm) {
             return "maybe";
         }
 
-        auto pobjects = gatherReachableObjects(pm);
-        std::set<PSNode *> diff;
-        std::set_difference(pobjects.begin(), pobjects.end(),
-                            sobjects.begin(), sobjects.end(),
-                            std::inserter(diff, diff.end()));
-        for (auto *obj : diff) {
+        auto missing = overwrittenObjects(pm, mm);
+        auto leaked = gatherReachableObjects(pm, missing);
+        for (auto *obj : leaked) {
             auto alloc = PSNodeAlloc::get(obj);
             if (alloc && alloc->isHeap()) {
-                //llvm::errs() << "Leaking store:" << *SI << "\n";
-                //llvm::errs() << "leaking: "
-                //             << *alloc->getUserData<llvm::Value>() << "\n";
-                possiblyLeaked.insert(alloc);
+               //llvm::errs() << "Leaking store:" << *SI << "\n";
+               //llvm::errs() << "leaking: "
+               //             << *alloc->getUserData<llvm::Value>() << "\n";
+                possiblyLeaked.insert(obj);
                 return "true";
             }
         }
