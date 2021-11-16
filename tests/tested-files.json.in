@@ -15,6 +15,7 @@
                     "mult_array-alloca-1",
                     "selectionsort-alloca-1",
 
+                    "cstrcat-alloca-2",
                     "cstrchr-alloca-2",
                     "cstrcpy-alloca-1",
                     "cstrcspn-alloca-1",
@@ -28,6 +29,7 @@
                     "openbsd_cmemset-alloca-1",
                     "openbsd_cstpcpy-alloca-1",
                     "openbsd_cstpncpy-alloca-1",
+                    "openbsd_cstrcat-alloca-2",
                     "openbsd_cstrcpy-alloca-2",
                     "openbsd_cstrlen-alloca-1",
                     "openbsd_cstrncpy-alloca-2",
