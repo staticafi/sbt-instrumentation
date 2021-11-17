@@ -79,9 +79,10 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            uint64_t readSize) const {
     const auto *alloca = relations.getInstance<llvm::AllocaInst>(gep->getPointerOperand());
     if (!alloca || !isValidForGraph(relations, validMemory, alloca, readSize)) {
-        const VRLocation *gepLoc = codeGraph.getVRLocation(gep).getSuccLocation(0);
         const llvm::Value *index = nullptr;
-        for (auto handleRel : relations.getRelated(gep, Relations().slt())) {
+        for (auto handleRel : relations.getRelated(gep, Relations().sle())) {
+            if (handleRel.second.has(Relations::EQ))
+                continue;
             auto gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first);
             if (!gep)
                 continue;
@@ -89,17 +90,27 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                     *relations.getHandle(gep->getPointerOperand()));
             if (possible) {
                 alloca = possible;
+                assert(gep->getNumIndices() > 0);
                 index = *gep->indices().begin();
             }
         }
         if (!alloca)
             return false;
+
+        const auto &views = getAllocatedViews(relations, validMemory, alloca);
+        if (relations.are(alloca, Relations::SLE, gep)) {
+            for (auto view : views) {
+                if (index && relations.are(index, Relations::SLT, view.elementCount))
+                    return readSize <= view.elementSize;
+            }
+        }
+
+        const VRLocation *gepLoc = codeGraph.getVRLocation(gep).getSuccLocation(0);
         if (!gepLoc->join)
             return false;
         const llvm::Type *gepType = gep->getType()->getPointerElementType();
         uint64_t gepElemSize = AllocatedArea::getBytes(gepType);
 
-        const auto &views = getAllocatedViews(relations, validMemory, alloca);
 
         auto decisivePairs = getDecisive(*gepLoc);
 

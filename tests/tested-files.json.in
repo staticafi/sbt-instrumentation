@@ -17,6 +17,7 @@
 
                     "cstrcat-alloca-2",
                     "cstrchr-alloca-2",
+                    "cstrcmp-alloca-2",
                     "cstrcpy-alloca-1",
                     "cstrcspn-alloca-1",
                     "cstrlen-alloca-2",
@@ -30,6 +31,7 @@
                     "openbsd_cstpcpy-alloca-1",
                     "openbsd_cstpncpy-alloca-1",
                     "openbsd_cstrcat-alloca-2",
+                    "openbsd_cstrcmp-alloca-1",
                     "openbsd_cstrcpy-alloca-2",
                     "openbsd_cstrlen-alloca-1",
                     "openbsd_cstrncpy-alloca-2",
