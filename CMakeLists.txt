@@ -23,6 +23,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-rtti")
 # LLVM
 # --------------------------------------------------
 find_package(LLVM REQUIRED CONFIG)
+message(STATUS "LLVM_DIR: " ${LLVM_DIR})
 list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
 include(AddLLVM)
 
@@ -59,8 +60,7 @@ else()
   message(STATUS "LLVM linking: static")
   # Find the libraries that correspond to the LLVM components
   # that we wish to use
-  llvm_map_components_to_libnames(LLVM_LIBS bitwriter core irreader
-                                            linker support)
+  llvm_map_components_to_libnames(LLVM_LIBS bitwriter irreader linker)
 endif()
 
 # --------------------------------------------------
@@ -69,6 +69,7 @@ endif()
 add_definitions(-DHAVE_LLVM)
 
 if(DG_PATH)
+  message(STATUS "DG path " ${DG_PATH})
   include_directories(${DG_PATH}/include/)
 else()
   include_directories(${CMAKE_SOURCE_DIR}/dg/include)
@@ -79,10 +80,12 @@ endif()
 find_library(libdganalysis dganalysis PATHS ${DG_PATH}/lib/)
 find_library(libdgllvmpta dgllvmpta PATHS ${DG_PATH}/lib/)
 find_library(libdgpta dgpta PATHS ${DG_PATH}/lib/)
+find_library(libdgllvmvra dgllvmvra PATHS ${DG_PATH}/lib/)
+find_library(libdgvra dgvra PATHS ${DG_PATH}/lib/)
 
-if(libdganalysis AND libdgllvmpta AND libdgpta)
-  message(STATUS "DG libraries found: ${libdganalysis}, ${libdgllvmpta}, ${libdgpta}")
-  set(DG_LIBS ${libdganalysis} ${libdgllvmpta} ${libdgpta})
+if(libdganalysis AND libdgllvmpta AND libdgpta AND libdgllvmvra AND libdgvra)
+  message(STATUS "DG libraries found: ${libdganalysis}, ${libdgllvmpta}, ${libdgpta}, ${libdgllvmvra}, ${libdgvra}")
+  set(DG_LIBS ${libdgllvmvra} ${libdgvra} ${libdganalysis} ${libdgllvmpta} ${libdgpta})
 else()
   message(FATAL_ERROR "DG not found! Try specifying -DDG_PATH=<path>.")
 endif()
@@ -101,8 +104,8 @@ else()
     message(STATUS "System version is older than 1.9.2")
   endif()
 
-  message(STATUS "Using bootsrapped jsoncpp library")
-  set(JSON_FILES jsoncpp.cpp)
+  message(STATUS "Using bootstrapped jsoncpp library")
+  set(JSON_FILES ${CMAKE_SOURCE_DIR}/src/jsoncpp.cpp)
 endif()
 
 # --------------------------------------------------
