@@ -1,6 +1,5 @@
 {
-    "benchmarks_path" : "@SV_BENCHMARKS_PATH@/c/",
-    "benchmark_groups" : {
+    "benchmarks_path" : "@SV_BENCHMARKS_PATH@/c/", "benchmark_groups" : {
         "all_correct" : [
             {
                 "name" : "array-memsafety",
@@ -14,7 +13,27 @@
                     "java_BubbleSort-alloca-1",
                     "lis-alloca-1",
                     "mult_array-alloca-1",
-                    "selectionsort-alloca-1"
+                    "selectionsort-alloca-1",
+
+                    "cstrchr-alloca-2",
+                    "cstrcpy-alloca-1",
+                    "cstrcspn-alloca-1",
+                    "cstrlen-alloca-2",
+                    "cstrncpy-alloca-2",
+                    "cstrpbrk-alloca-2",
+                    "cstrspn-alloca-1",
+                    "openbsd_cbzero-alloca-2",
+                    "openbsd_cmemchr-alloca-2",
+                    "openbsd_cmemrchr-alloca-2",
+                    "openbsd_cmemset-alloca-1",
+                    "openbsd_cstpcpy-alloca-1",
+                    "openbsd_cstpncpy-alloca-1",
+                    "openbsd_cstrcpy-alloca-2",
+                    "openbsd_cstrlen-alloca-1",
+                    "openbsd_cstrncpy-alloca-2",
+                    "openbsd_cstrnlen-alloca-1",
+                    "openbsd_cstrpbrk-alloca-2",
+                    "strreplace-alloca-2"
                 ]
             },
             {
@@ -25,11 +44,78 @@
                 ]
             }
         ],
+        "negative" : [
+            {
+                "name" : "array-memsafety",
+                "benchmarks" : [
+                    "add_last_unsafe",
+                    "bubblesort_unsafe",
+                    "count_down_unsafe",
+                    "cstrcat_unsafe",
+                    "cstrchr_unsafe",
+                    "cstrlen_unsafe",
+                    "cstrncat_unsafe",
+                    "cstrncpy_unsafe",
+                    "cstrpbrk_unsafe",
+                    "knapsack_alloca_unsafe",
+                    "lis_unsafe",
+                    "mult_array_unsafe",
+                    "reverse_array_alloca_unsafe",
+                    "reverse_array_unsafe",
+                    "selectionsort_unsafe",
+                    "stroeder1_unsafe"
+                ]
+            }
+        ],
         "problematic" : [
             {
                 "name" : "array-memsafety",
                 "benchmarks" : [
-                    "cstrlen-alloca-2"
+                    "cstrlen-alloca-2",
+                    "openbsd_cbzero-alloca-2",
+                    "cstrncpy-alloca-2",
+                    "openbsd_cstpncpy-alloca-1"
+                ]
+            }
+        ],
+        "all_cstr" : [
+            {
+                "name" : "array-memsafety",
+                "benchmarks" : [
+                    "add_last-alloca-1",
+                    "cstrcat-alloca-2",
+                    "cstrchr-alloca-2",
+                    "cstrcmp-alloca-2",
+                    "cstrcpy-alloca-1",
+                    "cstrcspn-alloca-1",
+                    "cstrlen-alloca-2",
+                    "cstrncat-alloca-2",
+                    "cstrncmp-alloca-1",
+                    "cstrncpy-alloca-2",
+                    "cstrpbrk-alloca-2",
+                    "cstrspn-alloca-1",
+                    "openbsd_cbzero-alloca-2",
+                    "openbsd_cmemchr-alloca-2",
+                    "openbsd_cmemrchr-alloca-2",
+                    "openbsd_cmemset-alloca-1",
+                    "openbsd_cstpcpy-alloca-1",
+                    "openbsd_cstpncpy-alloca-1",
+                    "openbsd_cstrcat-alloca-2",
+                    "openbsd_cstrcmp-alloca-1",
+                    "openbsd_cstrcpy-alloca-2",
+                    "openbsd_cstrcspn-alloca-2",
+                    "openbsd_cstrlcpy-alloca-1",
+                    "openbsd_cstrlen-alloca-1",
+                    "openbsd_cstrncat-alloca-2",
+                    "openbsd_cstrncmp-alloca-2",
+                    "openbsd_cstrncpy-alloca-2",
+                    "openbsd_cstrnlen-alloca-1",
+                    "openbsd_cstrpbrk-alloca-2",
+                    "openbsd_cstrspn-alloca-2",
+                    "openbsd_cstrstr-alloca-2",
+                    "strreplace-alloca-2",
+                    "subseq-alloca-2",
+                    "substring-alloca-2"
                 ]
             }
         ],
@@ -104,12 +190,6 @@
             }
         ],
         "many_01" : [
-            {
-                "name" : "busybox-1.22.0",
-                "benchmarks" : [
-                    "test-incomplete-1"
-                ]
-            },
             {
                 "name" : "uthash-2.0.2",
                 "benchmarks" : [
@@ -252,14 +332,7 @@
                     "uthash_SAX_test5-3",
                     "uthash_SFH_test1-2"
                 ]
-            },
-            {
-                "name" : "busybox-1.22.0",
-                "benchmarks" : [
-                    "tac-1"
-                ]
             }
-
         ]
     }
 }

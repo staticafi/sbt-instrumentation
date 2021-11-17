@@ -76,7 +76,7 @@ llvm::Value *getSize(llvm::Module &module, llvm::Instruction &inst) {
                                   getAllocatedSize(&inst, module));
 }
 
-enum class CheckType { REQUIRE_TRUE, PRINT_ALL, PRINT_NONE };
+enum class CheckType { REQUIRE_TRUE, SOME_FALSE, PRINT_ALL, PRINT_NONE };
 
 void testBenchmark(const std::string &path, const std::string &benchmark, CheckType type) {
     auto targetFile = compileBenchmark(path, benchmark);
@@ -94,6 +94,8 @@ void testBenchmark(const std::string &path, const std::string &benchmark, CheckT
 
     ValueRelationsPlugin plugin(module.get());
 
+    bool someFalse = false;
+
     for (auto &function : *module) {
         for (auto &block : function) {
             for (auto &inst : block) {
@@ -104,22 +106,31 @@ void testBenchmark(const std::string &path, const std::string &benchmark, CheckT
                     continue;
 
                 std::string answer = plugin.query("isValidPointer", {ptr, size});
+                INFO(dg::debug::getValName(ptr));
 
-                if (llvm::isa<llvm::GetElementPtrInst>(ptr)) {
-                    if (type == CheckType::REQUIRE_TRUE) {
-                        INFO(dg::debug::getValName(ptr));
+                if (!llvm::isa<llvm::AllocaInst>(ptr)) {
+                    INFO(answer);
+                    switch (type) {
+                    case CheckType::REQUIRE_TRUE:
                         CHECK(answer == "true");
-                    } else if (type == CheckType::PRINT_ALL) {
-                        INFO(dg::debug::getValName(ptr));
-                        INFO(answer);
+                        break;
+                    case CheckType::SOME_FALSE:
+                        someFalse |= answer != "true";
+                        break;
+                    case CheckType::PRINT_ALL:
                         CHECK(false); // force printing of info messages
-                    } else {
+                        break;
+                    case CheckType::PRINT_NONE:
                         CHECK(true); // count success
+                        break;
                     }
                 }
             }
         }
     }
+
+    if (type == CheckType::SOME_FALSE)
+        CHECK(someFalse);
 }
 
 void testGroup(const std::string &benchmarksPath, Json::Value &group, CheckType type) {
@@ -149,9 +160,13 @@ TEST_CASE("main") {
         testGroup(benchmarksPath, groups["all_correct"], CheckType::REQUIRE_TRUE);
     }
 
+    SECTION("negative") { testGroup(benchmarksPath, groups["negative"], CheckType::SOME_FALSE); }
+
     SECTION("problematic") {
-        testGroup(benchmarksPath, groups["problematic"], CheckType::PRINT_ALL);
+        testGroup(benchmarksPath, groups["problematic"], CheckType::REQUIRE_TRUE);
     }
+
+    SECTION("cstr") { testGroup(benchmarksPath, groups["all_cstr"], CheckType::REQUIRE_TRUE); }
 
     SECTION("old_problematic") {
         testGroup(benchmarksPath, groups["old_problematic"], CheckType::PRINT_NONE);
