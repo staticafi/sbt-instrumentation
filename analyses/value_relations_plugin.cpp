@@ -111,7 +111,6 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
         const llvm::Type *gepType = gep->getType()->getPointerElementType();
         uint64_t gepElemSize = AllocatedArea::getBytes(gepType);
 
-
         auto decisivePairs = getDecisive(*gepLoc);
 
         for (auto pair : decisivePairs) {
@@ -465,17 +464,16 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
         return false;
 
     auto *loadLoc = codeGraph.getVRLocation(load).getSuccLocation(0);
-    if (!loadLoc->join) {
-        for (auto handleRel : relations.getRelated(load, Relations().sle())) {
-            if (const auto *gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first)) {
-                if (relations.are(gep->getPointerOperand(), Relations::EQ, alloca) &&
-                    isValidForGraph(relations, validMemory, gep, readSize)) {
-                    return true;
-                }
+    for (auto handleRel : relations.getRelated(load, Relations().sle())) {
+        if (const auto *gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first)) {
+            if (relations.are(gep->getPointerOperand(), Relations::EQ, alloca) &&
+                isValidForGraph(relations, validMemory, gep, readSize)) {
+                return true;
             }
         }
-        return false;
     }
+    if (!loadLoc->join)
+        return false;
 
     const auto &init = getInitialInThis(relations, load);
 

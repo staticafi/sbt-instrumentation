@@ -33,11 +33,15 @@
                     "openbsd_cstrcat-alloca-2",
                     "openbsd_cstrcmp-alloca-1",
                     "openbsd_cstrcpy-alloca-2",
+                    "openbsd_cstrcspn-alloca-2",
                     "openbsd_cstrlen-alloca-1",
                     "openbsd_cstrncpy-alloca-2",
                     "openbsd_cstrnlen-alloca-1",
                     "openbsd_cstrpbrk-alloca-2",
-                    "strreplace-alloca-2"
+                    "openbsd_cstrspn-alloca-2",
+                    "strreplace-alloca-2",
+                    "subseq-alloca-2",
+                    "substring-alloca-2"
                 ]
             },
             {
