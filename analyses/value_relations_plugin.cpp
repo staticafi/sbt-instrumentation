@@ -257,6 +257,10 @@ ValueRelations::Handle ValueRelationsPlugin::getInitialInThis(const ValueRelatio
 
     auto *result =
             RelationsAnalyzer::getCorrespondingByContent(relations, *pair.first, *pair.second);
+    if (result)
+        return *result;
+    
+    result = RelationsAnalyzer::getCorrespondingByFrom(relations, *pair.first, *pair.second);
     assert(result);
     return *result;
 }
@@ -265,7 +269,8 @@ std::vector<std::pair<const llvm::Value *, const llvm::Value *>>
 ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
     std::vector<std::pair<const llvm::Value *, const llvm::Value *>> result;
     for (auto *leaveEdge : loadLoc.join->loopEnds) {
-        assert(leaveEdge->op->isAssumeBool());
+        if (!leaveEdge->op->isAssumeBool())
+            continue;
         for (const llvm::ICmpInst *icmp :
              structure.getRelevantConditions(static_cast<VRAssumeBool *>(leaveEdge->op.get()))) {
             const ValueRelations &forkRels = codeGraph.getVRLocation(icmp).relations;
@@ -350,9 +355,7 @@ bool ValueRelationsPlugin::rangeLimitedBy(const ValueRelations &relations,
             }
         }
     }
-    assert(!eqvals.empty());
-    // verify range in this loop
-    if (!rangeLimitedByAny(relations, lower, h, eqvals))
+    if (eqvals.empty() || !rangeLimitedByAny(relations, lower, h, eqvals))
         return false;
 
     // verify previous changes
