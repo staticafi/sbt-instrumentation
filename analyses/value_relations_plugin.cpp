@@ -79,9 +79,10 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            uint64_t readSize) const {
     const auto *alloca = relations.getInstance<llvm::AllocaInst>(gep->getPointerOperand());
     if (!alloca || !isValidForGraph(relations, validMemory, alloca, readSize)) {
-        const VRLocation *gepLoc = codeGraph.getVRLocation(gep).getSuccLocation(0);
         const llvm::Value *index = nullptr;
-        for (auto handleRel : relations.getRelated(gep, Relations().slt())) {
+        for (auto handleRel : relations.getRelated(gep, Relations().sle())) {
+            if (handleRel.second.has(Relations::EQ))
+                continue;
             auto gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first);
             if (!gep)
                 continue;
@@ -89,17 +90,26 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                     *relations.getHandle(gep->getPointerOperand()));
             if (possible) {
                 alloca = possible;
+                assert(gep->getNumIndices() > 0);
                 index = *gep->indices().begin();
             }
         }
         if (!alloca)
             return false;
+
+        const auto &views = getAllocatedViews(relations, validMemory, alloca);
+        if (relations.are(alloca, Relations::SLE, gep)) {
+            for (auto view : views) {
+                if (index && relations.are(index, Relations::SLT, view.elementCount))
+                    return readSize <= view.elementSize;
+            }
+        }
+
+        const VRLocation *gepLoc = codeGraph.getVRLocation(gep).getSuccLocation(0);
         if (!gepLoc->join)
             return false;
         const llvm::Type *gepType = gep->getType()->getPointerElementType();
         uint64_t gepElemSize = AllocatedArea::getBytes(gepType);
-
-        const auto &views = getAllocatedViews(relations, validMemory, alloca);
 
         auto decisivePairs = getDecisive(*gepLoc);
 
@@ -247,6 +257,10 @@ ValueRelations::Handle ValueRelationsPlugin::getInitialInThis(const ValueRelatio
 
     auto *result =
             RelationsAnalyzer::getCorrespondingByContent(relations, *pair.first, *pair.second);
+    if (result)
+        return *result;
+    
+    result = RelationsAnalyzer::getCorrespondingByFrom(relations, *pair.first, *pair.second);
     assert(result);
     return *result;
 }
@@ -255,7 +269,8 @@ std::vector<std::pair<const llvm::Value *, const llvm::Value *>>
 ValueRelationsPlugin::getDecisive(const VRLocation &loadLoc) const {
     std::vector<std::pair<const llvm::Value *, const llvm::Value *>> result;
     for (auto *leaveEdge : loadLoc.join->loopEnds) {
-        assert(leaveEdge->op->isAssumeBool());
+        if (!leaveEdge->op->isAssumeBool())
+            continue;
         for (const llvm::ICmpInst *icmp :
              structure.getRelevantConditions(static_cast<VRAssumeBool *>(leaveEdge->op.get()))) {
             const ValueRelations &forkRels = codeGraph.getVRLocation(icmp).relations;
@@ -316,7 +331,9 @@ bool ValueRelationsPlugin::rangeLimitedBy(const ValueRelations &relations,
         return ::rangeLimitedBy(relations, lower, h, upper);
 
     auto initNPair = getInitial(relations, h);
-    assert(initNPair.first && initNPair.second);
+    if (!initNPair.first || !initNPair.second)
+        return false;
+
     const ValueRelations &predRels = *initNPair.first;
     const auto &initNH = *initNPair.second;
 
@@ -338,9 +355,7 @@ bool ValueRelationsPlugin::rangeLimitedBy(const ValueRelations &relations,
             }
         }
     }
-    assert(!eqvals.empty());
-    // verify range in this loop
-    if (!rangeLimitedByAny(relations, lower, h, eqvals))
+    if (eqvals.empty() || !rangeLimitedByAny(relations, lower, h, eqvals))
         return false;
 
     // verify previous changes
@@ -383,6 +398,67 @@ bool ValueRelationsPlugin::rangeLimitedBy(const ValueRelations &relations,
     return false;
 }
 
+std::vector<const llvm::GetElementPtrInst *> getRangeLimitingGeps(const ValueRelations &relations,
+                                                                  ValueRelations::Handle h,
+                                                                  Relations::Type rel) {
+    std::vector<const llvm::GetElementPtrInst *> result;
+    for (auto handleRel : relations.getRelated(h, Relations().set(rel))) {
+        if (const auto *gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first)) {
+            result.emplace_back(gep);
+        }
+    }
+    return result;
+}
+
+const llvm::Value *getStrictLimit(const ValueRelations &rels, const llvm::Value *index) {
+    const auto *binop = rels.getInstance<llvm::BinaryOperator>(index);
+    if (!binop)
+        return nullptr;
+    auto opcode = binop->getOpcode();
+    if (opcode != llvm::BinaryOperator::Sub && opcode != llvm::BinaryOperator::Add)
+        return nullptr;
+
+    const auto *c0 = llvm::dyn_cast<llvm::ConstantInt>(binop->getOperand(0));
+    const auto *c1 = llvm::dyn_cast<llvm::ConstantInt>(binop->getOperand(1));
+    if (opcode == llvm::BinaryOperator::Add && c0->isMinusOne())
+        return binop->getOperand(1);
+    if ((opcode == llvm::BinaryOperator::Add && c1->isMinusOne()) ||
+        (opcode == llvm::BinaryOperator::Sub && c1->isOne()))
+        return binop->getOperand(0);
+    return nullptr;
+}
+
+bool enoughSpace(const ValueRelations &relations, const llvm::Value *limit1,
+                 const llvm::Value *limit2, const llvm::Value *size) {
+    for (const auto &indexGreater : relations.getRelated(limit1, Relations().sle())) {
+        if (const auto *dist = relations.getInstance<llvm::BinaryOperator>(indexGreater.first)) {
+            if (dist->getOpcode() == llvm::BinaryOperator::Sub &&
+                relations.are(dist->getOperand(0), Relations::EQ, size) &&
+                relations.are(dist->getOperand(1), Relations::EQ, limit2))
+                return true;
+        }
+    }
+    for (const auto &indexGreater : relations.getRelated(limit2, Relations().sle())) {
+        if (const auto *dist = relations.getInstance<llvm::BinaryOperator>(indexGreater.first)) {
+            if (dist->getOpcode() == llvm::BinaryOperator::Sub &&
+                relations.are(dist->getOperand(0), Relations::EQ, size) &&
+                relations.are(dist->getOperand(1), Relations::EQ, limit1))
+                return true;
+        }
+    }
+    for (const auto &sizeLesser : relations.getRelated(size, Relations().sge())) {
+        if (const auto *dist = relations.getInstance<llvm::BinaryOperator>(sizeLesser.first)) {
+            if (dist->getOpcode() == llvm::BinaryOperator::Add &&
+                ((relations.are(dist->getOperand(0), Relations::EQ, limit1) &&
+                  relations.are(dist->getOperand(1), Relations::EQ, limit2)) ||
+                 (relations.are(dist->getOperand(0), Relations::EQ, limit2) &&
+                  relations.are(dist->getOperand(1), Relations::EQ, limit1))))
+                return true;
+        }
+    }
+    return false;
+}
+
 bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
                                            const std::vector<bool> &validMemory,
                                            const llvm::LoadInst *load, uint64_t readSize) const {
@@ -391,17 +467,16 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
         return false;
 
     auto *loadLoc = codeGraph.getVRLocation(load).getSuccLocation(0);
-    if (!loadLoc->join) {
-        for (auto handleRel : relations.getRelated(load, Relations().sle())) {
-            if (const auto *gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first)) {
-                if (relations.are(gep->getPointerOperand(), Relations::EQ, alloca) &&
-                    isValidForGraph(relations, validMemory, gep, readSize)) {
-                    return true;
-                }
+    for (auto handleRel : relations.getRelated(load, Relations().sle())) {
+        if (const auto *gep = relations.getInstance<llvm::GetElementPtrInst>(handleRel.first)) {
+            if (relations.are(gep->getPointerOperand(), Relations::EQ, alloca) &&
+                isValidForGraph(relations, validMemory, gep, readSize)) {
+                return true;
             }
         }
-        return false;
     }
+    if (!loadLoc->join)
+        return false;
 
     const auto &init = getInitialInThis(relations, load);
 
@@ -423,23 +498,27 @@ bool ValueRelationsPlugin::isValidForGraph(const ValueRelations &relations,
         auto &decisiveH = relations.contains(decisive) ? *relations.getHandle(decisive)
                                                        : relations.getPointedTo(from);
 
-        for (auto handleRel : relations.getRelated(decisiveH, Relations().sle())) {
-            if (handleRel.second.has(Relations::EQ))
+        for (const auto *decisiveGep : getRangeLimitingGeps(relations, decisiveH, Relations::SLE)) {
+            const auto *decisiveIndex = getStrictLimit(relations, getRelevantIndex(decisiveGep));
+            if (!decisiveIndex)
                 continue;
 
-            auto &relatedH = handleRel.first;
-
-            if (auto gep = relations.getInstance<llvm::GetElementPtrInst>(relatedH)) {
-                if (!isValidForGraph(relations, validMemory, gep, readSize))
-                    continue;
-                auto index = getRelevantIndex(gep);
+            if (relations.getInstance<llvm::AllocaInst>(init)) {
                 for (auto view : views) {
-                    if (relations.getInstance<llvm::AllocaInst>(init)) {
-                        if (relations.are(index, Relations::SLE, view.elementCount)) {
+                    if (relations.are(decisiveIndex, Relations::SLE, view.elementCount)) {
+                        return readSize <= view.elementSize;
+                    }
+                }
+            } else {
+                for (const auto *loadGep :
+                     getRangeLimitingGeps(relations, *relations.getHandle(load), Relations::SGE)) {
+                    const auto *loadIndex = getStrictLimit(relations, getRelevantIndex(loadGep));
+                    if (!loadIndex)
+                        continue;
+
+                    for (auto view : views) {
+                        if (enoughSpace(relations, decisiveIndex, loadIndex, view.elementCount))
                             return readSize <= view.elementSize;
-                        }
-                    } else {
-                        // TODO handle cstrcat
                     }
                 }
             }
@@ -629,7 +708,6 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
         bool result = fillInBorderVals(function, merged);
         if (!result)
             return "unknown";
-
 
         result = isValidForGraph(merged, validMemory, inst, readSize);
         if (!result)
