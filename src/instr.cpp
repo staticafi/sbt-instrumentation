@@ -1014,8 +1014,7 @@ bool checkInstruction(Instruction* ins, Function* F, RewriterConfig rw_config, i
  * @return size of global variable.
  */
 uint64_t getGlobalVarSize(GlobalVariable* GV, const Module& M) {
-    Type* Ty = GV->getType()->getElementType();
-
+    Type* Ty = GV->getValueType();
     if (!Ty->isSized())
         return 0;
 
