@@ -19,3 +19,4 @@ Makefile
 cmake_install.cmake
 tags
 build
+build-*
