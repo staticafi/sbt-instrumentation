@@ -1,0 +1,265 @@
+{
+    "benchmarks_path" : "@SV_BENCHMARKS_PATH@/c/",
+    "benchmark_groups" : {
+        "all_correct" : [
+            {
+                "name" : "array-memsafety",
+                "benchmarks" : [
+                    "array01-alloca-2",
+                    "array02-alloca-2",
+                    "array03-alloca-2",
+                    "bubblesort-alloca-2",
+                    "count_down-alloca-1",
+                    "insertionsort-alloca-1",
+                    "java_BubbleSort-alloca-1",
+                    "lis-alloca-1",
+                    "mult_array-alloca-1",
+                    "selectionsort-alloca-1"
+                ]
+            },
+            {
+                "name" : "termination-crafted",
+                "benchmarks" : [
+                    "Arrays01-EquivalentConstantIndices-1",
+                    "LexIndexValue-Array-1"
+                ]
+            }
+        ],
+        "problematic" : [
+            {
+                "name" : "array-memsafety",
+                "benchmarks" : [
+                    "cstrlen-alloca-2"
+                ]
+            }
+        ],
+        "old_problematic" : [
+            {
+                "name" : "array-examples",
+                "benchmarks" : [
+                    "relax-1"
+                ]
+            },
+            {
+                "name" : "memsafety",
+                "benchmarks" : [
+                    "test-0235-1",
+                    "test-0235-2",
+                    "test-0235-3",
+                    "test-0504"
+                ]
+            },
+            {
+                "name" : "list-ext-properties",
+                "benchmarks" : [
+                    "list-ext",
+                    "test-0232_1-1"
+                ]
+            },
+            {
+                "name" : "ddv-machzwd",
+                "benchmarks" : [
+                    "ddv_machzwd_outb"
+                ]
+            },
+            {
+                "name" : "list-simple",
+                "benchmarks" : [
+                    "dll2n_update_all_reverse"
+                ]
+            },
+            {
+                "name" : "ntdrivers-simplified",
+                "benchmarks" : [
+                    "diskperf_simpl1.cil"
+                ]
+            },
+            {
+                "name" : "memsafety-ext3",
+                "benchmarks" : [
+                    "scopes5"
+                ]
+            },
+            {
+                "name" : "busybox-1.22.0",
+                "benchmarks" : [
+                    "date-1",
+                    "expand-2",
+                    "fold-1",
+                    "head-1",
+                    "head-2",
+                    "mkdir-2",
+                    "printf-2",
+                    "tac-1",
+                    "tee-2",
+                    "touch-2",
+                    "usleep-2",
+                    "wc-2",
+                    "who-2",
+                    "test-incomplete-1",
+                    "od-1",
+                    "sleep-1",
+                    "uniq-2"
+                ]
+            }
+        ],
+        "many_01" : [
+            {
+                "name" : "busybox-1.22.0",
+                "benchmarks" : [
+                    "test-incomplete-1"
+                ]
+            },
+            {
+                "name" : "uthash-2.0.2",
+                "benchmarks" : [
+                    "uthash_JEN_test3-2",
+                    "uthash_FNV_test2-2",
+                    "uthash_FNV_test3-2",
+                    "uthash_FNV_test10-3",
+                    "uthash_OAT_test1-1",
+                    "uthash_SFH_test5-2",
+                    "uthash_FNV_test4-3",
+                    "uthash_BER_test5-2",
+                    "uthash_SFH_test10-3",
+                    "uthash_SFH_test5-3",
+                    "uthash_OAT_test10-1",
+                    "uthash_SFH_test2-1",
+                    "uthash_BER_test10-3",
+                    "uthash_OAT_test1-2",
+                    "uthash_SAX_test1-2",
+                    "uthash_BER_test4-1",
+                    "uthash_BER_test1-2",
+                    "uthash_FNV_test2-1",
+                    "uthash_BER_test5-1",
+                    "uthash_BER_test4-3",
+                    "uthash_SFH_test9-2",
+                    "uthash_OAT_test7-2",
+                    "uthash_SFH_test5-1",
+                    "uthash_FNV_test1-1",
+                    "uthash_JEN_test4-3",
+                    "uthash_BER_test6-2",
+                    "uthash_OAT_test4-1",
+                    "uthash_SAX_test4-1",
+                    "uthash_JEN_test6-2",
+                    "uthash_JEN_test10-2",
+                    "uthash_SFH_test6-2",
+                    "uthash_SAX_test3-1",
+                    "uthash_SAX_test7-1",
+                    "uthash_BER_test1-1",
+                    "uthash_SFH_test10-1",
+                    "uthash_JEN_test8-1",
+                    "uthash_BER_test10-2",
+                    "uthash_BER_test8-1",
+                    "uthash_JEN_test7-1",
+                    "uthash_SAX_test4-2",
+                    "uthash_BER_test10-1",
+                    "uthash_SAX_test6-2",
+                    "uthash_SAX_test9-1",
+                    "uthash_SAX_test4-3",
+                    "uthash_SFH_test3-1",
+                    "uthash_FNV_test5-1",
+                    "uthash_FNV_test7-1",
+                    "uthash_SFH_test3-2",
+                    "uthash_OAT_test6-1",
+                    "uthash_OAT_test8-2",
+                    "uthash_SAX_test2-2",
+                    "uthash_OAT_test7-1",
+                    "uthash_SAX_test8-2",
+                    "uthash_SFH_test6-1",
+                    "uthash_BER_test7-1",
+                    "uthash_JEN_test10-3",
+                    "uthash_SAX_test5-2",
+                    "uthash_SFH_test8-2",
+                    "uthash_JEN_test5-3",
+                    "uthash_JEN_test4-1",
+                    "uthash_BER_test6-1",
+                    "uthash_OAT_test9-1",
+                    "uthash_OAT_test4-3",
+                    "uthash_OAT_test10-3",
+                    "uthash_SFH_test7-1",
+                    "uthash_OAT_test2-1",
+                    "uthash_JEN_test9-2",
+                    "uthash_BER_test3-2",
+                    "uthash_OAT_test3-1",
+                    "uthash_OAT_test8-1",
+                    "uthash_OAT_test10-2",
+                    "uthash_SAX_test1-1",
+                    "uthash_SAX_test7-2",
+                    "uthash_FNV_test8-2",
+                    "uthash_SFH_test8-1",
+                    "uthash_JEN_test1-2",
+                    "uthash_JEN_test1-1",
+                    "uthash_SAX_test10-1",
+                    "uthash_FNV_test9-2",
+                    "uthash_OAT_test3-2",
+                    "uthash_SFH_test2-2",
+                    "uthash_FNV_test10-1",
+                    "uthash_BER_test7-2",
+                    "uthash_FNV_test1-2",
+                    "uthash_JEN_test2-2",
+                    "uthash_OAT_test5-3",
+                    "uthash_BER_test9-2",
+                    "uthash_SFH_test7-2",
+                    "uthash_FNV_test5-3",
+                    "uthash_JEN_test5-2",
+                    "uthash_OAT_test5-1",
+                    "uthash_BER_test5-3",
+                    "uthash_OAT_test6-2",
+                    "uthash_FNV_test7-2",
+                    "uthash_SAX_test3-2",
+                    "uthash_OAT_test5-2",
+                    "uthash_JEN_test9-1",
+                    "uthash_BER_test2-2",
+                    "uthash_FNV_test4-2",
+                    "uthash_OAT_test2-2",
+                    "uthash_SAX_test5-1",
+                    "uthash_JEN_test7-2",
+                    "uthash_SFH_test10-2",
+                    "uthash_JEN_test4-2",
+                    "uthash_FNV_test9-1",
+                    "uthash_SAX_test9-2",
+                    "uthash_FNV_test6-1",
+                    "uthash_SAX_test10-2",
+                    "uthash_FNV_test3-1",
+                    "uthash_FNV_test8-1",
+                    "uthash_FNV_test6-2",
+                    "uthash_SFH_test1-1",
+                    "uthash_JEN_test3-1",
+                    "uthash_OAT_test4-2",
+                    "uthash_SAX_test8-1",
+                    "uthash_JEN_test2-1",
+                    "uthash_BER_test2-1",
+                    "uthash_BER_test4-2",
+                    "uthash_FNV_test5-2",
+                    "uthash_JEN_test6-1",
+                    "uthash_SAX_test10-3",
+                    "uthash_SFH_test9-1",
+                    "uthash_BER_test8-2",
+                    "uthash_SAX_test2-1",
+                    "uthash_BER_test3-1",
+                    "uthash_SFH_test4-3",
+                    "uthash_SFH_test4-1",
+                    "uthash_FNV_test10-2",
+                    "uthash_SAX_test6-1",
+                    "uthash_JEN_test5-1",
+                    "uthash_OAT_test9-2",
+                    "uthash_JEN_test10-1",
+                    "uthash_BER_test9-1",
+                    "uthash_JEN_test8-2",
+                    "uthash_SFH_test4-2",
+                    "uthash_FNV_test4-1",
+                    "uthash_SAX_test5-3",
+                    "uthash_SFH_test1-2"
+                ]
+            },
+            {
+                "name" : "busybox-1.22.0",
+                "benchmarks" : [
+                    "tac-1"
+                ]
+            }
+
+        ]
+    }
+}
