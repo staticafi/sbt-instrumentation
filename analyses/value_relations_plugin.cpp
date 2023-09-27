@@ -8,8 +8,9 @@
 #include "dg/llvm/ValueRelations/RelationsAnalyzer.h"
 #include "dg/llvm/ValueRelations/StructureAnalyzer.h"
 
-using namespace dg::vr;
-using Borders = ValueRelationsPlugin::Borders;
+ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
+    : InstrPlugin("ValueRelationsPlugin"), structure(*module, codeGraph) {
+    using namespace dg::vr;
 
 ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module *module)
         : InstrPlugin("ValueRelationsPlugin"), structure(*module, codeGraph) {
@@ -713,6 +714,7 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
         if (!result)
             return "unknown";
     }
+
     return "true";
     // // else we have to check that access is valid in every case
     // for (const CallRelation& callRelation : callRelations) {
