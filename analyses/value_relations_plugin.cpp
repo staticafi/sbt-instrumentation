@@ -184,6 +184,40 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value* ptr, llvm::Value *
             return result;
     }
     return "true";
+    // // else we have to check that access is valid in every case
+    // for (const CallRelation& callRelation : callRelations) {
+    //     ValueRelations merged = relations;
+
+    //     bool hasConflict = false;
+    //     for (auto& equalPair : callRelation.equalPairs) {
+    //         if (merged.hasConflictingRelation(equalPair.first, equalPair.second, Relations::EQ)) {
+    //             hasConflict = true;
+    //             break; // this vrlocation is unreachable with given parameters
+    //         }
+    //         merged.setEqual(equalPair.first, equalPair.second);
+    //     }
+
+    //     const ValueRelations& callSiteRelations = callRelation.callSite->relations;
+
+    //     // this vrlocation is unreachable with relations from given call relation
+    //     hasConflict = hasConflict || !merged.merge(callSiteRelations);
+
+    //     // since location is unreachable, it does not make sence to qualify the memory access
+    //     if (hasConflict)
+    //         continue;
+
+    //     std::vector<bool> validMemory(structure.getNumberOfAllocatedAreas());
+
+    //     if (relations.getValidAreas().empty() || callSiteRelations.getValidAreas().empty())
+    //         return "unknown";
+    //     for (unsigned i = 0; i < structure.getNumberOfAllocatedAreas(); ++i)
+    //         validMemory[i] = relations.getValidAreas()[i] || callSiteRelations.getValidAreas()[i];
+
+    //     std::string result = isValidForGraph(merged, validMemory, gep, readSize);
+    //     if (result != "true")
+    //         return result;
+    // }
+    // return "true";
 }
 
 extern "C" InstrPlugin* create_object(llvm::Module* module) {
