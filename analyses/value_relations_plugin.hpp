@@ -14,9 +14,7 @@
 
 class ValueRelationsPlugin : public InstrPlugin
 {
-    std::map<const llvm::Instruction *, dg::vr::VRLocation *> locationMapping;
-    std::map<const llvm::BasicBlock *, std::unique_ptr<dg::vr::VRBBlock>> blockMapping;
-
+    dg::vr::VRCodeGraph codeGraph;
     dg::vr::StructureAnalyzer structure;
 
     const unsigned maxPass = 20;
@@ -49,4 +47,3 @@ public:
 };
 
 #endif
-
