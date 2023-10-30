@@ -179,16 +179,19 @@ Range RangeAnalysisPlugin::getRange(ConstraintGraph& CG,
     return r;
 }
 
-bool checkOverflowAdd(const APInt& ax, const APInt& ay, const IntegerType& t) {
-    double x = ax.signedRoundToDouble();
-    double y = ay.signedRoundToDouble();
+bool checkOverflowAdd(const APInt& ax, const APInt& ay, const IntegerType& t)
+{
+    // ax > 0 && ay > 0 && maxValue < ax + ay
+    if(ax.isStrictlyPositive() && ay.isStrictlyPositive() &&
+       (APInt::getSignedMaxValue(t.getBitWidth()) - ax - ay).isNegative()) {
+           return true;
+    }
 
-    if((x > 0) && (y > 0) &&
-       (x > (std::pow(2, t.getBitWidth() - 1) - 1) - y))\
-    return true;
-
-    if((x < 0) && (y < 0) && (x < (-std::pow(2, t.getBitWidth() - 1)) - y))
-        return true;
+    // ax < 0 && ay < 0 && minValue > ax + ay
+    if(ax.isNegative() && ay.isNegative() &&
+       (APInt::getSignedMinValue(t.getBitWidth()) - ax - ay).isStrictlyPositive()) {
+           return true;
+    }
 
     return false;
 }
