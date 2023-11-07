@@ -181,29 +181,24 @@ Range RangeAnalysisPlugin::getRange(ConstraintGraph& CG,
 
 bool checkOverflowAdd(const APInt& ax, const APInt& ay, const IntegerType& t)
 {
-    // ax > 0 && ay > 0 && maxValue < ax + ay
-    if(ax.isStrictlyPositive() && ay.isStrictlyPositive() &&
-       (APInt::getSignedMaxValue(t.getBitWidth()) - ax - ay).isNegative()) {
-           return true;
-    }
+    const auto bw = t.getBitWidth();
 
-    // ax < 0 && ay < 0 && minValue > ax + ay
-    if(ax.isNegative() && ay.isNegative() &&
-       (APInt::getSignedMinValue(t.getBitWidth()) - ax - ay).isStrictlyPositive()) {
-           return true;
-    }
+    // the ranges can have bigger bit-width, truncate to the actual one
+    const auto ax_trunc = ax.truncUSat(bw);
+    const auto ay_trunc = ay.truncUSat(bw);
 
-    return false;
+    bool overflow = false;
+    ax_trunc.uadd_ov(ay_trunc, overflow);
+    return overflow;
 }
 
 std::string RangeAnalysisPlugin::canOverflowAdd(const Range& a,
         const Range& b, const IntegerType& t)
 {
-    if (checkOverflowAdd(a.getUpper(), b.getUpper(), t))
+    if (checkOverflowAdd(a.getUpper(), b.getUpper(), t) ||
+	checkOverflowAdd(a.getLower(), b.getLower(), t)) {
         return "true";
-
-    if (checkOverflowAdd(a.getLower(), b.getLower(), t))
-        return "true";
+    }
 
     return "false";
 }
