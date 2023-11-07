@@ -188,7 +188,7 @@ bool checkOverflowAdd(const APInt& ax, const APInt& ay, const IntegerType& t)
     const auto ay_trunc = ay.truncUSat(bw);
 
     bool overflow = false;
-    ax_trunc.uadd_ov(ay_trunc, overflow);
+    ax_trunc.sadd_ov(ay_trunc, overflow);
     return overflow;
 }
 
