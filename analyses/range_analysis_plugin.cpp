@@ -211,7 +211,7 @@ bool checkOverflowSub(APInt ax, APInt ay, const IntegerType& t) {
     const auto ay_trunc = ay.truncSSat(bw);
 
     bool overflow = false;
-    ax_trunc.sub_ov(ay_trunc, overflow);
+    ax_trunc.ssub_ov(ay_trunc, overflow);
     return overflow;
 }
 
