@@ -184,8 +184,8 @@ bool checkOverflowAdd(const APInt& ax, const APInt& ay, const IntegerType& t)
     const auto bw = t.getBitWidth();
 
     // the ranges can have bigger bit-width, truncate to the actual one
-    const auto ax_trunc = ax.truncUSat(bw);
-    const auto ay_trunc = ay.truncUSat(bw);
+    const auto ax_trunc = ax.truncSSat(bw);
+    const auto ay_trunc = ay.truncSSat(bw);
 
     bool overflow = false;
     ax_trunc.sadd_ov(ay_trunc, overflow);
@@ -204,32 +204,24 @@ std::string RangeAnalysisPlugin::canOverflowAdd(const Range& a,
 }
 
 bool checkOverflowSub(APInt ax, APInt ay, const IntegerType& t) {
-    double x = ax.signedRoundToDouble();
-    double y = ay.signedRoundToDouble();
+    const auto bw = t.getBitWidth();
 
-    if((y > 0) && (x < (-std::pow(2, t.getBitWidth() - 1)) +  y))
-        return true;
+    // the ranges can have bigger bit-width, truncate to the actual one
+    const auto ax_trunc = ax.truncSSat(bw);
+    const auto ay_trunc = ay.truncSSat(bw);
 
-    if((y < 0) && (x > (std::pow(2, t.getBitWidth() - 1) - 1) + y))
-        return true;
-
-    return false;
+    bool overflow = false;
+    ax_trunc.sub_ov(ay_trunc, overflow);
+    return overflow;
 }
 
 std::string RangeAnalysisPlugin::canOverflowSub(const Range& a,
         const Range& b, const IntegerType& t)
 {
-    if (checkOverflowSub(a.getUpper(), b.getUpper(), t))
+    if (checkOverflowSub(a.getUpper(), b.getLower(), t) ||
+	checkOverflowSub(a.getLower(), b.getUpper(), t)) {
         return "true";
-
-    if (checkOverflowSub(a.getLower(), b.getLower(), t))
-        return "true";
-
-    if (checkOverflowSub(a.getUpper(), b.getLower(), t))
-        return "true";
-
-    if (checkOverflowSub(a.getLower(), b.getUpper(), t))
-        return "true";
+    }
 
     return "false";
 }
