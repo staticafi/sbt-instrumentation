@@ -1,6 +1,7 @@
 #include "range_analysis_plugin.hpp"
 #include <limits>
 #include <cmath>
+#include <tuple>
 
 #include <llvm/IR/Operator.h>
 
@@ -188,7 +189,7 @@ bool checkOverflowAdd(const APInt& ax, const APInt& ay, const IntegerType& t)
     const auto ay_trunc = ay.truncSSat(bw);
 
     bool overflow = false;
-    ax_trunc.sadd_ov(ay_trunc, overflow);
+    std::ignore = ax_trunc.sadd_ov(ay_trunc, overflow);
     return overflow;
 }
 
@@ -211,7 +212,7 @@ bool checkOverflowSub(APInt ax, APInt ay, const IntegerType& t) {
     const auto ay_trunc = ay.truncSSat(bw);
 
     bool overflow = false;
-    ax_trunc.ssub_ov(ay_trunc, overflow);
+    std::ignore = ax_trunc.ssub_ov(ay_trunc, overflow);
     return overflow;
 }
 
@@ -227,45 +228,26 @@ std::string RangeAnalysisPlugin::canOverflowSub(const Range& a,
 }
 
 bool checkOverflowMul(APInt ax, APInt ay, const IntegerType& t) {
-    double x = ax.signedRoundToDouble();
-    double y = ay.signedRoundToDouble();
+    const auto bw = t.getBitWidth();
 
-    if (x == 0 || y == 0)
-        return false;
+    // the ranges can have bigger bit-width, truncate to the actual one
+    const auto ax_trunc = ax.truncSSat(bw);
+    const auto ay_trunc = ay.truncSSat(bw);
 
-    if (x > (std::pow(2, t.getBitWidth() - 1) - 1) / y)
-        return true;
-
-    if (x < (-std::pow(2, t.getBitWidth() - 1)) / y)
-        return true;
-
-    return false;
+    bool overflow = false;
+    std::ignore = ax_trunc.smul_ov(ay_trunc, overflow);
+    return overflow;
 }
 
 std::string RangeAnalysisPlugin::canOverflowMul(const Range& a,
         const Range& b, const IntegerType& t)
 {
-    if (checkOverflowMul(a.getUpper(), b.getUpper(), t))
+    if (checkOverflowMul(a.getUpper(), b.getUpper(), t) ||
+	checkOverflowMul(a.getLower(), b.getLower(), t) ||
+	checkOverflowMul(a.getUpper(), b.getLower(), t) ||
+	checkOverflowMul(a.getLower(), b.getUpper(), t)) {
         return "true";
-
-    if (checkOverflowMul(a.getLower(), b.getLower(), t))
-        return "true";
-
-    if (checkOverflowMul(a.getUpper(), b.getLower(), t))
-        return "true";
-
-    if (checkOverflowMul(a.getLower(), b.getUpper(), t))
-        return "true";
-
-    if (a.getLower().signedRoundToDouble() <= (-std::pow(2, t.getBitWidth()))
-         && b.getLower().signedRoundToDouble() <= -1
-         && b.getUpper().signedRoundToDouble() >= -1)
-        return "true";
-
-    if (b.getLower().signedRoundToDouble() <= (-std::pow(2, t.getBitWidth()))
-         && a.getLower().signedRoundToDouble() <= -1
-         && a.getUpper().signedRoundToDouble() >= -1)
-        return "true";
+    }
 
     return "false";
 }
