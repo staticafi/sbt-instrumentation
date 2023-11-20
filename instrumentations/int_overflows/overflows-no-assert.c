@@ -85,8 +85,8 @@ void __INSTR_check_mul_i64(int64_t x, int64_t y) {
     if (y > 0 && x > (INT64_MAX / y)) {
         __VERIFIER_error();
     }
-g
-    if (y < 0 && x < (INT64_MIN / y)) {
+
+    if (y < -1 && x > (INT64_MIN / y)) {
         __VERIFIER_error();
     }
 
@@ -94,7 +94,7 @@ g
         __VERIFIER_error();
     }
 
-    if (x < 0 && y < (INT64_MIN / x)) {
+    if (x < -1 && y > (INT64_MIN / x)) {
         __VERIFIER_error();
     }
 
