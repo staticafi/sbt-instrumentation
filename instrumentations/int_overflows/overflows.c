@@ -83,7 +83,16 @@ void __INSTR_check_mul_i64(int64_t x, int64_t y) {
     if (y > 0 && x > (INT64_MAX / y)) {
 	    assert(0 && "Multiplication: integer overflow!");
     }
+
     if (y < 0 && x > (INT64_MIN / y)) {
+        assert(0 && "Multiplication: integer underflow!");
+    }
+
+    if (x > 0 && y > (INT64_MAX / x)) {
+	    assert(0 && "Multiplication: integer overflow!");
+    }
+
+    if (x < 0 && y > (INT64_MIN / x)) {
         assert(0 && "Multiplication: integer underflow!");
     }
 
