@@ -109,7 +109,7 @@
                         "operands": ["<t1>", "<t2>", "__symbiotic_check_overflow"]
                     },
                     "where": "before",
-                    "conditions": [{"query":["canOverflow", "<t1>"], "expectedResults":["true", "unknown"]}],
+                    "conditions": [{"query":["canOverflow", "<op>"], "expectedResults":["true", "unknown"]}],
                     "in": "*"
                 },
                 {
