@@ -8,9 +8,8 @@
 #include "dg/llvm/ValueRelations/RelationsAnalyzer.h"
 #include "dg/llvm/ValueRelations/StructureAnalyzer.h"
 
-ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module* module)
-    : InstrPlugin("ValueRelationsPlugin"), structure(*module, codeGraph) {
-    using namespace dg::vr;
+using namespace dg::vr;
+using Borders = ValueRelationsPlugin::Borders;
 
 ValueRelationsPlugin::ValueRelationsPlugin(llvm::Module *module)
         : InstrPlugin("ValueRelationsPlugin"), structure(*module, codeGraph) {
