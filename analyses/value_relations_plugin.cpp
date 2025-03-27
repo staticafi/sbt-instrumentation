@@ -715,7 +715,6 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
             return "unknown";
     }
 
-    return "true";
     // // else we have to check that access is valid in every case
     // for (const CallRelation& callRelation : callRelations) {
     //     ValueRelations merged = relations;
@@ -749,7 +748,7 @@ std::string ValueRelationsPlugin::isValidPointer(llvm::Value *ptr, llvm::Value *
     //     if (result != "true")
     //         return result;
     // }
-    // return "true";
+    return "unknown";
 }
 
 extern "C" InstrPlugin *create_object(llvm::Module *module) {
