@@ -81,7 +81,7 @@ void __INSTR_check_mul_i64(int64_t x, int64_t y) {
         return;
 
     if (y > 0 && x > (INT64_MAX / y)) {
-	    assert(0 && "Multiplication: integer overflow!");
+	assert(0 && "Multiplication: integer overflow!");
     }
 
     if (y < -1 && x > (INT64_MIN / y)) {
@@ -89,7 +89,7 @@ void __INSTR_check_mul_i64(int64_t x, int64_t y) {
     }
 
     if (x > 0 && y > (INT64_MAX / x)) {
-	    assert(0 && "Multiplication: integer overflow!");
+	assert(0 && "Multiplication: integer overflow!");
     }
 
     if (x < -1 && y > (INT64_MIN / x)) {
@@ -97,7 +97,7 @@ void __INSTR_check_mul_i64(int64_t x, int64_t y) {
     }
 
     if (x > 0 && y > (INT64_MAX / x)) {
-	    assert(0 && "Multiplication: integer overflow!");
+	assert(0 && "Multiplication: integer overflow!");
     }
 
     if (x < 0 && y > (INT64_MIN / x)) {
@@ -105,9 +105,9 @@ void __INSTR_check_mul_i64(int64_t x, int64_t y) {
     }
 
     if ((x == -1) && (y == INT64_MIN))
-	  assert(0 && "Multiplication: integer overflow!");
+	assert(0 && "Multiplication: integer overflow!");
     if ((y == -1) && (x == INT64_MIN))
-	  assert(0 && "Multiplication: integer overflow!");
+	assert(0 && "Multiplication: integer overflow!");
 }
 
 void __INSTR_check_div_i64(int64_t op1, int64_t op2) {
