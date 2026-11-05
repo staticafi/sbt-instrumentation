@@ -18,7 +18,9 @@ class Analyzer
 
 public:
     static std::unique_ptr<InstrPlugin> analyze(const std::string &path,
-                                                llvm::Module* module);
+                                                llvm::Module* module,
+                                                const InstrPluginOptions& opts
+                                                    = InstrPluginOptions());
     static bool shouldInstrument(const RememberedValues& rememberedValues,
                                  InstrPlugin* plugin,
                                  const Condition &condition,

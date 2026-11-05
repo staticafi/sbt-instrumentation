@@ -807,11 +807,16 @@ bool PointsToPlugin::supports(const std::string& query) {
     return false;
 }
 
-extern "C" InstrPlugin* create_object(llvm::Module* module) {
-        auto *ptplugin = new PointsToPlugin(module);
+extern "C" InstrPlugin* create_object_with_options(llvm::Module* module,
+                                                   const InstrPluginOptions& opts) {
+        auto *ptplugin = new PointsToPlugin(module, opts);
         if (ptplugin->failed()) {
             delete ptplugin;
             return nullptr;
         }
         return ptplugin;
+}
+
+extern "C" InstrPlugin* create_object(llvm::Module* module) {
+        return create_object_with_options(module, InstrPluginOptions());
 }

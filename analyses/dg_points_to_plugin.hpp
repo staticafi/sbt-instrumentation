@@ -150,12 +150,15 @@ public:
 
     bool failed() const { return false; }
 
-    PointsToPlugin(llvm::Module* module) : InstrPlugin("PointsTo") {
+    PointsToPlugin(llvm::Module* module,
+                   const InstrPluginOptions& pluginOpts = InstrPluginOptions())
+            : InstrPlugin("PointsTo") {
         llvm::errs() << "Running DG points-to analysis with inv...\n";
 
         dg::LLVMPointerAnalysisOptions opts;
         opts.analysisType = dg::LLVMPointerAnalysisOptions::AnalysisType::inv;
         opts.maxIterations = 50000; // empirically set
+        opts.allocationMayFail = pluginOpts.allocationMayFail;
 
         PTA = std::unique_ptr<dg::DGLLVMPointerAnalysis>(new dg::DGLLVMPointerAnalysis(module, opts));
         bool finished = PTA->run();
