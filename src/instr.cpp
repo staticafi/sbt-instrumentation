@@ -56,6 +56,8 @@ void usage(char *name) {
     cerr << "Options:" << endl;
     cerr << "--version     Prints the git version." << endl;
     cerr << "--no-linking  Disables linking of definitions of instrumentation functions." << endl;
+    cerr << "--alloc-may-fail  Assume that allocation functions (malloc, calloc, realloc)" << endl;
+    cerr << "              may fail and return NULL (passed to the analyses)." << endl;
 }
 
 /**
@@ -1303,7 +1305,8 @@ void saveModule(LLVMInstrumentation& instr) {
  * @return true if plugins were succesfully loaded,
  * false, otherwise
  */
-bool loadPlugins(LLVMInstrumentation& instr) {
+bool loadPlugins(LLVMInstrumentation& instr,
+                 const InstrPluginOptions& pluginOpts) {
     if (instr.rewriter.analysisPaths.size() == 0) {
         logger.write_info("No plugin specified.");
         return true;
@@ -1311,7 +1314,7 @@ bool loadPlugins(LLVMInstrumentation& instr) {
 
     for (const auto& paths : instr.rewriter.analysisPaths) {
         for (const auto& path : paths) {
-            auto plugin = Analyzer::analyze(path, &instr.module);
+            auto plugin = Analyzer::analyze(path, &instr.module, pluginOpts);
             if (plugin) {
                 logger.write_info("Plugin " + plugin->getName() + " loaded " +
                                   "(" + path +").");
@@ -1404,8 +1407,22 @@ int main(int argc, char *argv[]) {
     instr.rewriter = std::move(rw);
     instr.outputName = argv[4];
 
+    bool noLinking = false;
+    InstrPluginOptions pluginOpts;
+    for (int i = 5; i < argc; ++i) {
+        if (strcmp(argv[i], "--no-linking") == 0) {
+            noLinking = true;
+        } else if (strcmp(argv[i], "--alloc-may-fail") == 0) {
+            pluginOpts.allocationMayFail = true;
+        } else {
+            cerr << "Unknown option: " << argv[i] << endl;
+            usage(argv[0]);
+            return 1;
+        }
+    }
+
     logger.write_info("Loading plugins...");
-    if (!loadPlugins(instr))
+    if (!loadPlugins(instr, pluginOpts))
         return 1;
 
     // Instrument
@@ -1418,7 +1435,7 @@ int main(int argc, char *argv[]) {
 
     // If option --no-linking is present, do not link definitions
     // of instrumentation functions
-    if (argc > 5 && strcmp(argv[5], "--no-linking") == 0 && resultOK) {
+    if (noLinking && resultOK) {
         saveModule(instr);
         logger.write_info("DONE.");
         return 0;

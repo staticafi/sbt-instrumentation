@@ -11,7 +11,8 @@
 using namespace std;
 
 unique_ptr<InstrPlugin> Analyzer::analyze(const string &path,
-                                          llvm::Module* module)
+                                          llvm::Module* module,
+                                          const InstrPluginOptions& opts)
 {
 
     if (path.empty())
@@ -25,6 +26,14 @@ unique_ptr<InstrPlugin> Analyzer::analyze(const string &path,
         cerr << "Cannot open library: " << path << "\n";
         cerr << err << endl;
         return nullptr;
+    }
+
+    // plugins that care about the options provide this optional entry point
+    void *symbolOpts = DL.getAddressOfSymbol("create_object_with_options");
+    if (symbolOpts) {
+        auto createOpts = reinterpret_cast<InstrPlugin *(*)(
+                llvm::Module*, const InstrPluginOptions&)>(symbolOpts);
+        return unique_ptr<InstrPlugin>(createOpts(module, opts));
     }
 
     InstrPlugin* (*create)(llvm::Module*);

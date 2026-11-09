@@ -3,6 +3,15 @@
 
 #include <string>
 
+/**
+ * Options that are passed to the plugins that are interested in them
+ * (via the optional 'create_object_with_options' entry point).
+ */
+struct InstrPluginOptions {
+    // may allocation functions (malloc, calloc, realloc) return NULL?
+    bool allocationMayFail{false};
+};
+
 class InstrPlugin
 {
     private:
