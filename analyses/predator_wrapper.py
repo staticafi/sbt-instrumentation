@@ -64,12 +64,12 @@ def parse_errors(line):
         (': error: not enough space to store value of a pointer', ['invalid']),
         (': error: invalid L-value', ['invalid']),
 
-        (': error: (free|realloc)\(\) called with offset', ['free']),
-        (': error: invalid free\(\)', ['free']),
+        (r': error: (free|realloc)\(\) called with offset', ['free']),
+        (r': error: invalid free\(\)', ['free']),
         (': error: double free', ['free']),
         (': error: attempt to free a non-existing non-heap object', ['free']),
         (': error: attempt to free a non-heap object', ['free']),
-        (': error: (free|realloc)\(\) called on non-pointer value', ['free']),
+        (r': error: (free|realloc)\(\) called on non-pointer value', ['free']),
 
         (': (error|warning): memory leak detected', ['leak']),
     ]
@@ -98,12 +98,15 @@ def parse_errors(line):
 
     return set(result)
 
+def line_reports_unreachable_main_end(line):
+    return re.search(r': warning: end of function main\(\) has not been reached', line) != None
+
 def line_reports_ignorable_warning(line):
     ignorable_warning_regexes = map(re.compile, [
-        ': warning: end of function .*\(\) has not been reached',
+        r': warning: end of function .*\(\) has not been reached',
         ': warning: unreachable label',
         ': error: error label "ERROR" has been reached',
-        ': (error|warning): __VERIFIER_error\(\) reached',
+        r': (error|warning): __VERIFIER_error\(\) reached',
     ])
 
     return any(map(lambda x: x.search(line) != None, ignorable_warning_regexes))
@@ -163,7 +166,18 @@ def run_predator(timeout, clang, infile):
 
                 if len(line_errors) == 0:
                     has_warning_class = (re.search(r'\[([^]])+\]', line) != None)
-                    if line_reports_ignorable_warning(line):
+                    if line_reports_unreachable_main_end(line):
+                        # Predator believes that no execution reaches the end
+                        # of main, e.g., because it takes an undefined extern
+                        # variable as 0 and an assumption about it blocks all
+                        # the paths. Then it did not check the rest of the
+                        # program and its "no errors" is vacuous.
+                        err('Predator did not reach the end of main(), so the result is unknown')
+                        log('The report is based on this line:')
+                        log(line)
+                        proc.kill()
+                        return ('unknown', set())
+                    elif line_reports_ignorable_warning(line):
                         log('Ignore {}'.format(line))
                         pass
                     elif line_reports_unsupported_feature(line):
@@ -187,7 +201,7 @@ def run_predator(timeout, clang, infile):
                 else:
                     log('line reports errors: {}'.format(line))
 
-                if re.search('clEasyRun\(\) took', line):
+                if re.search(r'clEasyRun\(\) took', line):
                     err('Predator finished')
                     return ('ok', error_locations)
 
