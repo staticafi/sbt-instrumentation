@@ -101,9 +101,25 @@ private:
 
     bool predatorSuccess;
 
+    static bool createsThreads(const llvm::Module* module) {
+        for (const char *name : {"pthread_create", "thrd_create"}) {
+            const auto *F = module->getFunction(name);
+            if (F && !F->use_empty())
+                return true;
+        }
+        return false;
+    }
+
 public:
     PredatorPlugin(llvm::Module* module) : InstrPlugin("Predator") {
         predatorSuccess = false;
+        if (createsThreads(module)) {
+            // Predator does not support threads, it would analyze only the
+            // main thread and its results would be unsound
+            llvm::errs() << "PredatorPlugin: the program creates threads, "
+                            "not running Predator\n";
+            return;
+        }
         llvm::errs() << "PredatorPlugin: Running Predator...\n";
         runPredator(module);
         loadPredatorOutput();
